@@ -9,10 +9,10 @@ final class CreateRenderTemplateVersionsTable implements MigrationInterface
 {
     public function up(SchemaBuilderInterface $schema): void
     {
-        if ($schema->hasTable('lemma_render_template_versions')) {
+        if ($schema->hasTable('render_template_versions')) {
             return;
         }
-        $schema->createTable('lemma_render_template_versions', function ($table) {
+        $schema->createTable('render_template_versions', function ($table) {
             $table->bigInteger('id')->primary()->autoIncrement();
             $table->string('uuid', 12);
             $table->string('template_uuid', 12);
@@ -27,11 +27,11 @@ final class CreateRenderTemplateVersionsTable implements MigrationInterface
 
     public function down(SchemaBuilderInterface $schema): void
     {
-        $schema->dropTableIfExists('lemma_render_template_versions');
+        $schema->dropTableIfExists('render_template_versions');
     }
 
     public function getDescription(): string
     {
-        return 'Create lemma_render_template_versions (append-only, immutable template sources).';
+        return 'Create render_template_versions (append-only, immutable template sources).';
     }
 }

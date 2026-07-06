@@ -9,10 +9,10 @@ final class CreateRenderTemplatesTable implements MigrationInterface
 {
     public function up(SchemaBuilderInterface $schema): void
     {
-        if ($schema->hasTable('lemma_render_templates')) {
+        if ($schema->hasTable('render_templates')) {
             return;
         }
-        $schema->createTable('lemma_render_templates', function ($table) {
+        $schema->createTable('render_templates', function ($table) {
             $table->bigInteger('id')->primary()->autoIncrement();
             $table->string('uuid', 12);
             $table->string('theme', 64);
@@ -30,11 +30,11 @@ final class CreateRenderTemplatesTable implements MigrationInterface
 
     public function down(SchemaBuilderInterface $schema): void
     {
-        $schema->dropTableIfExists('lemma_render_templates');
+        $schema->dropTableIfExists('render_templates');
     }
 
     public function getDescription(): string
     {
-        return 'Create lemma_render_templates (DB template override identity per theme+path).';
+        return 'Create render_templates (DB template override identity per theme+path).';
     }
 }

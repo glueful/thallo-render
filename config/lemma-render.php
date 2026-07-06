@@ -12,7 +12,7 @@ return [
     'theme' => env('RENDER_THEME', 'default'),
 
     // Entry uuid rendered at `/` (through index.twig) — the DEPLOY DEFAULT: the
-    // Settings › General homepage (lemma_settings row, editable in the admin)
+    // Settings › General homepage (settings row, editable in the admin)
     // overrides this while it resolves to published public content. Empty =
     // standalone index.twig. A set-but-unresolvable ENV value is a LOUD 500
     // config error (never a themed 404); a broken DB override logs + falls back.

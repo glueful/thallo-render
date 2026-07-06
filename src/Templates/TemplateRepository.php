@@ -24,7 +24,7 @@ final class TemplateRepository
     {
         $map = [];
         foreach (
-            $this->db->table('lemma_render_templates')
+            $this->db->table('render_templates')
                 ->select(['path', 'current_version_uuid'])
                 ->where('theme', '=', $theme)
                 ->where('active', '=', 1)
@@ -41,7 +41,7 @@ final class TemplateRepository
     /** @return array<string,mixed>|null the raw row, any active state */
     public function find(string $theme, string $path): ?array
     {
-        $row = $this->db->table('lemma_render_templates')
+        $row = $this->db->table('render_templates')
             ->where('theme', '=', $theme)
             ->where('path', '=', $path)
             ->first();
@@ -55,7 +55,7 @@ final class TemplateRepository
         if ($tpl === null || (int) $tpl['active'] !== 1 || !is_string($tpl['current_version_uuid'])) {
             return null;
         }
-        $version = $this->db->table('lemma_render_template_versions')
+        $version = $this->db->table('render_template_versions')
             ->where('uuid', '=', (string) $tpl['current_version_uuid'])
             ->first();
         if ($version === null) {
@@ -72,7 +72,7 @@ final class TemplateRepository
     {
         $out = [];
         foreach (
-            $this->db->table('lemma_render_templates')
+            $this->db->table('render_templates')
                 ->select(['path', 'updated_at'])
                 ->where('theme', '=', $theme)
                 ->where('active', '=', 1)
@@ -98,7 +98,7 @@ final class TemplateRepository
             $tpl = $this->find($theme, $path);
             if ($tpl === null) {
                 $templateUuid = Utils::generateNanoID();
-                $this->db->table('lemma_render_templates')->insert([
+                $this->db->table('render_templates')->insert([
                     'uuid' => $templateUuid,
                     'theme' => $theme,
                     'path' => $path,
@@ -111,14 +111,14 @@ final class TemplateRepository
                 $templateUuid = (string) $tpl['uuid'];
             }
             $versionUuid = Utils::generateNanoID();
-            $this->db->table('lemma_render_template_versions')->insert([
+            $this->db->table('render_template_versions')->insert([
                 'uuid' => $versionUuid,
                 'template_uuid' => $templateUuid,
                 'source' => $source,
                 'created_by' => $createdBy,
                 'created_at' => $now,
             ]);
-            $this->db->table('lemma_render_templates')
+            $this->db->table('render_templates')
                 ->where('uuid', '=', $templateUuid)
                 ->update(['current_version_uuid' => $versionUuid, 'active' => 1, 'updated_at' => $now]);
             $pdo->commit();
@@ -136,7 +136,7 @@ final class TemplateRepository
         if ($tpl === null || (int) $tpl['active'] !== 1) {
             return false;
         }
-        $this->db->table('lemma_render_templates')
+        $this->db->table('render_templates')
             ->where('uuid', '=', (string) $tpl['uuid'])
             ->update(['active' => 0, 'updated_at' => gmdate('Y-m-d H:i:s')]);
         return true;
@@ -157,7 +157,7 @@ final class TemplateRepository
         $current = is_string($tpl['current_version_uuid']) ? $tpl['current_version_uuid'] : '';
         $out = [];
         foreach (
-            $this->db->table('lemma_render_template_versions')
+            $this->db->table('render_template_versions')
                 ->select(['uuid', 'created_by', 'created_at'])
                 ->where('template_uuid', '=', (string) $tpl['uuid'])
                 ->orderBy('id', 'DESC')
@@ -181,7 +181,7 @@ final class TemplateRepository
         if ($tpl === null) {
             return null;
         }
-        $row = $this->db->table('lemma_render_template_versions')
+        $row = $this->db->table('render_template_versions')
             ->where('uuid', '=', $versionUuid)
             ->where('template_uuid', '=', (string) $tpl['uuid'])
             ->first();
