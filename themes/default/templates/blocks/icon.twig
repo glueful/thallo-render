@@ -1,0 +1,5 @@
+{% set url = data.url|default('')|safe_url %}
+{% set glyph %}{{ icon(data.icon|default('')) ?? data.icon|default('') }}{% endset %}
+<div class="lemma-block lemma-block-icon lemma-block-icon--{{ data.size|default('medium') }} lemma-block-icon--{{ data.align|default('start') }}">
+  {% if url %}<a class="lemma-block-icon__link" href="{{ url }}" aria-label="{{ data.label|default(data.icon)|default('') }}">{{ glyph }}</a>{% else %}{{ glyph }}{% endif %}
+</div>

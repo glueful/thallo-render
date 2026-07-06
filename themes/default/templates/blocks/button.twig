@@ -1,0 +1,5 @@
+{% set url = data.url|default('')|safe_url %}
+<div class="lemma-block lemma-block-button lemma-block-button--{{ data.align|default('left') }}">
+  {% if url %}<a class="lemma-block-button__link lemma-block-button__link--{{ data.variant|default('solid') }} lemma-block-button__link--{{ data.size|default('md') }}" href="{{ url }}">{{ data.label|editable_text('label') }}</a>
+  {% else %}<span class="lemma-block-button__link lemma-block-button__link--{{ data.variant|default('solid') }} lemma-block-button__link--{{ data.size|default('md') }}">{{ data.label|editable_text('label') }}</span>{% endif %}
+</div>

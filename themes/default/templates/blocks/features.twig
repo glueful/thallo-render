@@ -1,0 +1,11 @@
+<section class="lemma-block lemma-block-features lemma-block-features--cols-{{ data.columns|default('3') }}">
+  <div class="lemma-block-features__inner">
+    {% if data.title or data.intro %}
+    <div class="lemma-block-features__header">
+      {% if data.title %}<h2 class="lemma-block-features__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
+      {% if data.intro %}<p class="lemma-block-features__intro">{{ data.intro|editable_text('intro') }}</p>{% endif %}
+    </div>
+    {% endif %}
+    <div class="lemma-block-features__grid">{{ blocks(data.items) }}</div>
+  </div>
+</section>

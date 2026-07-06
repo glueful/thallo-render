@@ -1,0 +1,5 @@
+{% set url = data.url|default('')|safe_url %}
+{% set name = data.label|default(data.icon|default('')|replace({'brand:': ''})) %}
+<div class="lemma-block lemma-block-social_link">
+  {% if url %}<a class="lemma-block-social_link__link" href="{{ url }}" aria-label="{{ name }}">{{ icon(data.icon|default('')) ?? name }}</a>{% endif %}
+</div>

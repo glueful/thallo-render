@@ -1,0 +1,7 @@
+{% if pagination.total_pages > 1 %}
+  <nav class="pagination">
+    {% if pagination.prev_path %}<a href="{{ pagination.prev_path }}" rel="prev">Newer</a>{% endif %}
+    <span>Page {{ pagination.page }} of {{ pagination.total_pages }}</span>
+    {% if pagination.next_path %}<a href="{{ pagination.next_path }}" rel="next">Older</a>{% endif %}
+  </nav>
+{% endif %}

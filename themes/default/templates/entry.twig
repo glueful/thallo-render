@@ -1,0 +1,19 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ entry.fields.title ?? site.name }}{% endblock %}
+{% block content %}
+  <article>
+    {# show_title from the COMPOSED presentation context (spec §5a) —
+       block-built pages whose hero owns the heading turn it off. #}
+    {% if presentation.show_title ?? true %}
+      <div class="entry-content"><h1>{{ entry.fields.title }}</h1></div>
+    {% endif %}
+    {# A blocks-typed body renders through blocks() as DIRECT flow (spec P2 —
+       block roots own their width); a scalar body stays ESCAPED inside the
+       constrained .entry-content: the reference theme cannot know that a
+       field named "body" is sanitized rich text rather than arbitrary text. #}
+    {% if entry.fields.body is defined %}
+      {% if entry.fields.body is iterable %}{{ blocks(entry.fields.body) }}
+      {% else %}<div class="entry-content"><div class="body">{{ entry.fields.body }}</div></div>{% endif %}
+    {% endif %}
+  </article>
+{% endblock %}

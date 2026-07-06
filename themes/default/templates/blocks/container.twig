@@ -1,0 +1,10 @@
+{% set img = data.background_image ? media(data.background_image) : null %}
+{% set vars = [] %}
+{% if data.background_color %}{% set vars = vars|merge(['--container-bg: ' ~ data.background_color]) %}{% endif %}
+{% if img %}{% set vars = vars|merge(['--container-bg-image: url(' ~ img ~ ')']) %}{% endif %}
+{% if data.overlay_color %}{% set vars = vars|merge(['--container-overlay: ' ~ data.overlay_color]) %}{% endif %}
+{% if data.overlay_opacity is defined and data.overlay_opacity is not null %}{% set vars = vars|merge(['--container-overlay-opacity: ' ~ (data.overlay_opacity / 100)]) %}{% endif %}
+<div class="lemma-block lemma-block-container lemma-block-container--{{ data.width|default('contained') }} lemma-block-container--pad-{{ data.padding|default('medium') }} lemma-block-container--h-{{ data.min_height|default('auto') }} lemma-block-container--bgsize-{{ data.bg_size|default('cover') }} lemma-block-container--bgrepeat-{{ data.bg_repeat|default('no-repeat') }} lemma-block-container--bgpos-{{ data.bg_position|default('center') }}"{% if vars is not empty %} style="{{ vars|join('; ') }}"{% endif %}>
+  {% if data.overlay_color %}<div class="lemma-block-container__overlay"></div>{% endif %}
+  <div class="lemma-block-container__inner">{{ blocks(data.content) }}</div>
+</div>

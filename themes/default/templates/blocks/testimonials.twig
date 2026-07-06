@@ -1,0 +1,6 @@
+<section class="lemma-block lemma-block-testimonials lemma-block-testimonials--{{ data.layout|default('grid') }}">
+  <div class="lemma-block-testimonials__inner">
+    {% if data.title %}<h2 class="lemma-block-testimonials__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
+    <div class="lemma-block-testimonials__items">{{ blocks(data.items) }}</div>
+  </div>
+</section>

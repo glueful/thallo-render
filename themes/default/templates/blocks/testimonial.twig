@@ -1,0 +1,11 @@
+{% set avatar = data.avatar ? media(data.avatar) : null %}
+<figure class="lemma-block lemma-block-testimonial">
+  <blockquote class="lemma-block-testimonial__quote">{{ data.quote|editable_text('quote') }}</blockquote>
+  <figcaption class="lemma-block-testimonial__footer">
+    {% if avatar %}<img class="lemma-block-testimonial__avatar" src="{{ avatar }}" alt="">{% endif %}
+    <div class="lemma-block-testimonial__meta">
+      {% if data.author %}<span class="lemma-block-testimonial__author">{{ data.author|editable_text('author') }}</span>{% endif %}
+      {% if data.role %}<span class="lemma-block-testimonial__role">{{ data.role|editable_text('role') }}</span>{% endif %}
+    </div>
+  </figcaption>
+</figure>

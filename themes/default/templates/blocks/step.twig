@@ -1,0 +1,7 @@
+<div class="lemma-block lemma-block-step">
+  <span class="lemma-block-step__badge" aria-hidden="true"></span>
+  <div class="lemma-block-step__body">
+    <h3 class="lemma-block-step__title">{{ data.title|editable_text('title') }}</h3>
+    {% if data.description %}<p class="lemma-block-step__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+  </div>
+</div>

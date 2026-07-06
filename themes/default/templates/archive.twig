@@ -1,0 +1,19 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ term.fields.title|default(term.fields.slug)|default(term.uuid) }} — {{ site.name }}{% endblock %}
+{% block content %}
+  <h1>{{ term.fields.title|default(term.fields.slug)|default(term.uuid) }}</h1>
+  <ul class="listing archive">
+    {% for item in items %}
+      <li>
+        {% if item.href %}
+          <a href="{{ item.href }}">{{ item.fields.title|default(item.uuid) }}</a>
+        {% else %}
+          {{ item.fields.title|default(item.uuid) }}
+        {% endif %}
+      </li>
+    {% else %}
+      <li class="empty">Nothing here yet.</li>
+    {% endfor %}
+  </ul>
+  {% include '_pagination.twig' %}
+{% endblock %}

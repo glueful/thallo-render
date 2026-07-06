@@ -1,0 +1,25 @@
+{
+  "name": "glueful/thallo-render",
+  "description": "Rendered delivery for Lemma: server-rendered pages from published content via filesystem Twig themes, as a removable capability pack.",
+  "type": "glueful-extension",
+  "license": "MIT",
+  "authors": [
+    { "name": "Michael Tawiah Sowah", "email": "michael@glueful.dev" }
+  ],
+  "version": "0.1.0",
+  "require": {
+    "php": "^8.3",
+    "glueful/thallo-contracts": "*",
+    "glueful/framework": "^1.65.2",
+    "twig/twig": "^3.0"
+  },
+  "autoload": {
+    "psr-4": { "Thallo\\Render\\": "src/" }
+  },
+  "extra": {
+    "glueful": {
+      "provider": "Thallo\\Render\\RenderServiceProvider"
+    }
+  },
+  "minimum-stability": "stable"
+}

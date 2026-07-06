@@ -1,0 +1,19 @@
+{% extends 'layout.twig' %}
+{% block title %}{{ field }} — {{ site.name }}{% endblock %}
+{% block content %}
+  <h1>{{ field }}</h1>
+  <ul class="terms">
+    {% for term in terms %}
+      <li>
+        {% if term.href %}
+          <a href="{{ term.href }}">{{ term.slug ?? term.uuid }}</a>
+        {% else %}
+          {{ term.slug ?? term.uuid }}
+        {% endif %}
+        <span class="count">({{ term.count }})</span>
+      </li>
+    {% else %}
+      <li class="empty">No terms yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

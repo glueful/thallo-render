@@ -1,0 +1,33 @@
+{# Admin-only chrome preview (region-preview plan): the exact region markup
+   layout.twig emits, around a placeholder body. Loaded as a BLOB document in
+   the admin (P1 pin) — the absolute base href makes host-relative
+   /theme-assets/* resolve like the live page. Never indexed, never routed. #}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <base href="{{ base_href }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Chrome preview</title>
+  <link rel="stylesheet" href="{{ asset('site.css') }}">
+  <link rel="stylesheet" href="{{ asset('blocks.css') }}">
+</head>
+<body>
+  {% if header %}
+    <header class="site-header lemma-region lemma-region-header lemma-region-header--{{ header.settings.width|default('contained') }}{% if header.settings.sticky|default(false) %} lemma-region-header--sticky{% endif %}">
+      <div class="site-header__inner">{{ blocks(header.blocks) }}</div>
+    </header>
+  {% endif %}
+  <main style="max-width: 72rem; margin: 0 auto; padding: 2rem 1rem;">
+    <div style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 5rem 2rem; text-align: center; color: #94a3b8; font: 0.95rem system-ui;">
+      Page content
+    </div>
+  </main>
+  {% if footer %}
+    <footer class="site-footer lemma-region lemma-region-footer lemma-region-footer--{{ footer.settings.width|default('contained') }}">
+      <div class="site-footer__inner">{{ blocks(footer.blocks) }}</div>
+    </footer>
+  {% endif %}
+</body>
+</html>

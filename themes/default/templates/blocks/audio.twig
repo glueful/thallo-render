@@ -1,0 +1,5 @@
+{% set src = data.audio ? media(data.audio) : null %}
+<figure class="lemma-block lemma-block-audio">
+  {% if data.title %}<figcaption class="lemma-block-audio__title">{{ data.title|editable_text('title') }}</figcaption>{% endif %}
+  {% if src %}<audio class="lemma-block-audio__player" src="{{ src }}" controls preload="metadata"></audio>{% endif %}
+</figure>
