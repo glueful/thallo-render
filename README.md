@@ -1,9 +1,9 @@
-# glueful/lemma-render
+# glueful/thallo-render
 
-**Rendered delivery** for [Lemma](https://getlemma.dev) — the CMS serves real HTML pages
+**Rendered delivery** for [Thallo](https://thallo.dev) — the CMS serves real HTML pages
 from published content through filesystem **Twig themes** — packaged as a **removable
 capability pack** (V2 rendered-delivery sub-project 2; see `docs/V2_DESIGN.md`). With the
-pack absent or `lemma.render` disabled, the install is exactly the headless product:
+pack absent or `thallo.render` disabled, the install is exactly the headless product:
 unmatched public paths return the router's standard JSON 404.
 
 ## How a page renders
@@ -24,7 +24,7 @@ addressability layer:
    published entries return the **read-only public delivery shape** (`seo` included —
    byte-identical to the headless API) plus the content-type slug for template selection.
 
-Reserved paths (`lemma_render.reserved_prefixes` — segment semantics — and
+Reserved paths (`render.reserved_prefixes` — segment semantics — and
 `reserved_exact`) return the framework's standard JSON 404 so API clients never receive
 themed HTML.
 
@@ -32,7 +32,7 @@ themed HTML.
 
 A theme is `themes/{name}/` with `theme.json`, `templates/`, `assets/`. The pack embeds
 the **default reference theme**; an app theme overrides it by name
-(`lemma_render.theme`, env `RENDER_THEME`) with **per-template fallback** — omit
+(`render.theme`, env `RENDER_THEME`) with **per-template fallback** — omit
 `404.twig` and the default theme's serves. Ladder: missing app theme → default; present
 but invalid `theme.json` → loud 500; broken pack default → hard 500; template missing in
 both → `error.twig` → plain-text 500 (never a loop).
@@ -60,7 +60,7 @@ Hierarchy: `entry/{type-slug}.twig` → `entry.twig`; `index.twig` (homepage);
 `404.twig`; `error.twig`; `layout.twig`. Context: `entry` (treat as read-only), `site`
 (`name`/`locale`), and functions:
 
-- `menu('main')` — via the `MenuReader` contract; **`[]` when lemma-navigation is absent
+- `menu('main')` — via the `MenuReader` contract; **`[]` when thallo-navigation is absent
   or disabled** (no hard dependency).
 - `path(entryUuid)` — live public path, **null unless published** (no dead links, ever).
 - `asset('css/site.css')` — `/theme-assets/...`; rejects absolute URLs, `..`, leading
@@ -71,12 +71,12 @@ Hierarchy: `entry/{type-slug}.twig` → `entry.twig`; `index.twig` (homepage);
 their schema's rich-text fields.
 
 Twig compiles to `storage/cache/twig/{theme}` with `auto_reload` (recompiles on template
-change). **The active theme is resolved at boot (v1):** changing `lemma_render.theme`
+change). **The active theme is resolved at boot (v1):** changing `render.theme`
 requires an app restart / extension-cache rebuild.
 
 ## Homepage
 
-`GET /` always renders `index.twig`. Set `lemma_render.homepage_entry` (env
+`GET /` always renders `index.twig`. Set `render.homepage_entry` (env
 `RENDER_HOMEPAGE_ENTRY`) to put that entry in the context; unset renders the standalone
 welcome. A set-but-unresolvable value (missing/unpublished/routeless/deleted) is a
 **500 config error** — logged always, message in the body only under debug mode.
@@ -92,7 +92,7 @@ word as an archive field segment. Templates: `listing/{type}.twig` →
 `listing.twig`, `archive/{type}.twig` → `archive.twig`; context ships `items`
 (each with a ready `href`; `null` = routeless), `pagination`
 (`prev_path`/`next_path` precomputed), and for archives `term` + `field`.
-Cached pages carry the broad `lemma:type:{type}` surrogate tag, so ANY publish
+Cached pages carry the broad `thallo:type:{type}` surrogate tag, so ANY publish
 of the type purges every listing page immediately.
 
 Term INDEX pages live at `/{type}/terms/{field}` — every term of the field with its
@@ -104,8 +104,8 @@ unknown/non-filterable fields render the themed 404.
 
 | Key (env) | Default |
 |---|---|
-| `lemma_render.listing_types` (`RENDER_LISTING_TYPES`, comma-separated) | `''` — feature dormant |
-| `lemma_render.listing_per_page` (`RENDER_LISTING_PER_PAGE`) | `10` |
+| `render.listing_types` (`RENDER_LISTING_TYPES`, comma-separated) | `''` — feature dormant |
+| `render.listing_per_page` (`RENDER_LISTING_PER_PAGE`) | `10` |
 
 ## Preview in the theme
 
@@ -154,26 +154,26 @@ nothing. Reference values inside `data` arrive expanded (published item:
 `data.post.fields.title`, `path(data.post.entry_uuid)`; `null` when the target is
 unpublished or gated; raw uuid only at the expansion-depth cap). Asset values stay
 raw blob uuids for `media()`. Pages embedding expanded targets carry the target's
-`lemma:entry:{uuid}` cache tag, so they purge when the target republishes.
+`thallo:entry:{uuid}` cache tag, so they purge when the target republishes.
 
-`php glueful lemma:blocks:seed` (alias `blocks:seed`) seeds ten starter block types
+`php glueful thallo:blocks:seed` (alias `blocks:seed`) seeds ten starter block types
 (Layout/Content/Media) with matching default-theme templates — idempotent, skips any
 existing slug, never overwrites admin edits. Media blocks render through `media(uuid)`
 (public, anonymously retrievable blobs only — set `UPLOADS_ACCESS=upload_only` or
 `public`; private/gated blobs render nothing). Link fields render through the
 `safe_url` filter (relative, https, http, mailto only). Style enums map to
-`lemma-block-{slug}--{value}` modifier classes — restyle by targeting them. The
+`thallo-block-{slug}--{value}` modifier classes — restyle by targeting them. The
 starter styling ships standalone as `assets/blocks.css`: block TEMPLATES fall back
 to the pack default per-template, but assets don't — a custom theme adopts the
 starter blocks by copying (or rewriting) that one file.
 
 **Canvas annotation (preview only):** every preview-session render wraps each
-`blocks()` instance in a layout-inert `<div class="lemma-preview-block"
-data-lemma-block="{id}">` carrier (`display: contents` from the static
+`blocks()` instance in a layout-inert `<div class="thallo-preview-block"
+data-thallo-block="{id}">` carrier (`display: contents` from the static
 `/_preview.css`) and injects the token-free `/_preview-bridge.js` — the visual
 canvas maps DOM to block ids through it. Live renders carry neither. **Shape
 limit:** block templates that must be literal children of semantic containers
-(`ul > li`, `table > tr`) are not compatible with canvas annotation; Lemma blocks
+(`ul > li`, `table > tr`) are not compatible with canvas annotation; Thallo blocks
 are page/layout fragments, so no starter block is affected.
 
 In a canvas session the bridge also renders a small toolbar on the selected
@@ -203,7 +203,7 @@ overlaid.
 
 Prose blocks (the exactly-one-rich-text convention) are also editable
 in-place: annotated renders wrap the sanitized rich-field output in a
-`.lemma-edit-region` marker (emitted by `safe_html` itself, only for prose
+`.thallo-edit-region` marker (emitted by `safe_html` itself, only for prose
 blocks), and double-clicking one in the canvas turns it into a plain
 contenteditable whose text flows back to the admin's block tree. Typed HTML
 is sanitized at save and re-sanitized by `safe_html` at render.
@@ -241,7 +241,7 @@ a mistyped field name simply never becomes editable.
 (`POST /block-types/{slug}/migrations` with `{ops:[{op:"rename",from,to}|{op:"delete",name}]}`)
 — the schema flips immediately and a queued backfill rewrites every current draft
 and publication (saves/publishes of entries containing the type 409 until it
-completes; re-drive a failed run with `php glueful lemma:blocks:migration:backfill
+completes; re-drive a failed run with `php glueful thallo:blocks:migration:backfill
 {uuid}`). Version rollback re-projects block data through migrations that postdate
 the version. An UNUSED type can be hard-deleted (`DELETE /block-types/{slug}`;
 usage via `GET /block-types/{slug}/usage`) — deactivation remains the everyday
@@ -266,13 +266,13 @@ event-driven like everything else.
 
 | Key (env) | Default |
 |---|---|
-| `lemma_render.theme` (`RENDER_THEME`) | `default` |
-| `lemma_render.homepage_entry` (`RENDER_HOMEPAGE_ENTRY`) | `''` |
-| `lemma_render.site_name` (`RENDER_SITE_NAME`) | `Lemma` |
-| `lemma_render.reserved_prefixes` | `v1, admin, extensions, theme-assets` |
-| `lemma_render.reserved_exact` | `sitemap.xml, robots.txt` |
-| `lemma_render.cache_enabled` (`RENDER_CACHE_ENABLED`) | `true` |
-| `lemma_render.cache_ttl` (`RENDER_CACHE_TTL`) | `3600` |
+| `render.theme` (`RENDER_THEME`) | `default` |
+| `render.homepage_entry` (`RENDER_HOMEPAGE_ENTRY`) | `''` |
+| `render.site_name` (`RENDER_SITE_NAME`) | `Thallo` |
+| `render.reserved_prefixes` | `v1, admin, extensions, theme-assets` |
+| `render.reserved_exact` | `sitemap.xml, robots.txt` |
+| `render.cache_enabled` (`RENDER_CACHE_ENABLED`) | `true` |
+| `render.cache_ttl` (`RENDER_CACHE_TTL`) | `3600` |
 
 Page views are deliberately not rate-limited (this is the whole-site surface, not an
 API); the abuse posture is the page cache below — bogus paths can neither fill the
@@ -294,8 +294,8 @@ responses, and errors are never cached.
 | `RENDER_CACHE_TTL` | `3600` | safety-net TTL per entry; tags do the real invalidation |
 
 **Invalidation.** Every cached page is tagged with the same surrogate keys the
-delivery API uses (`lemma:entry:{uuid}`, `lemma:type:{slug}`) plus
-`lemma:render:page`. Publishing, unpublishing, or deleting content purges the
+delivery API uses (`thallo:entry:{uuid}`, `thallo:type:{slug}`) plus
+`thallo:render:page`. Publishing, unpublishing, or deleting content purges the
 affected pages through the engine's existing cache listener — no render-specific
 wiring. Menu changes (`MenuUpdated`) purge every cached page. Theme FILE edits
 are not event-visible: run `php glueful render:cache:clear` (or wait out the
@@ -310,9 +310,9 @@ caching.
 
 ## Install / remove
 
-Bundled by default in the Lemma create-project template. Existing app:
-`composer require glueful/lemma-render`, `./lemma extensions:enable lemma-render`.
-Disable via the switchboard (`'capabilities' => ['lemma.render' => false]`) or remove —
+Bundled by default in the Thallo create-project template. Existing app:
+`composer require glueful/thallo-render`, `./thallo extensions:enable thallo-render`.
+Disable via the switchboard (`'capabilities' => ['thallo.render' => false]`) or remove —
 the headless product is untouched.
 
 ## Out of scope (v1 — see V2_DESIGN §6)
