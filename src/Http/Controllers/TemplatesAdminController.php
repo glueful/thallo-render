@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * DB-edited templates admin API (spec §5–§6). Triple-gated at the route layer
- * (capability → auth → lemma_permission:templates.manage). Save = live: syntactic path
+ * (capability → auth → content_permission:templates.manage). Save = live: syntactic path
  * check → theme check (RenderThemeValidator via the PreviewThemeValidator binding) →
  * policy lint (422 with ALL line-numbered violations) → transactional save →
  * TemplateUpdated (also on delete/restore — every mutation that changes what renders).

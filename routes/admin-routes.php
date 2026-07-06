@@ -12,7 +12,7 @@ use Glueful\Routing\Router;
  *   1. capability + kill-switch — this file loads only when lemma.render is enabled
  *      AND render.db_templates is true (else 404).
  *   2. auth — group middleware.
- *   3. lemma_permission — templates.manage on every route.
+ *   3. content_permission — templates.manage on every route.
  *
  * Route grammar (spec §6 + custom-css follow-up): {path} spans slashes, so VERSION
  * routes register FIRST and every {path} is constrained to end in a known extension
@@ -27,37 +27,37 @@ $router->group(
         $router->get('/templates/{path}/versions/{uuid}', [TemplatesAdminController::class, 'showVersion'])
             ->where('path', '.+\.(?:twig|css|js|json)')
             ->where('uuid', '[A-Za-z0-9_-]{12}')
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
         $router->post('/templates/{path}/versions/{uuid}/restore', [TemplatesAdminController::class, 'restore'])
             ->where('path', '.+\.(?:twig|css|js|json)')
             ->where('uuid', '[A-Za-z0-9_-]{12}')
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
         $router->get('/templates/{path}/versions', [TemplatesAdminController::class, 'versions'])
             ->where('path', '.+\.(?:twig|css|js|json)')
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
 
         // Selectable themes (theme-setting spec §4): consumed by the Settings ->
         // General Theme card, so it carries the SETTINGS permission
-        // (content.manage — mirror of routes/lemma_admin.php's settings/general),
+        // (content.manage — mirror of routes/admin.php's settings/general),
         // not templates.manage.
         $router->get('/themes', [TemplatesAdminController::class, 'themes'])
-            ->middleware('lemma_permission:content.manage');
+            ->middleware('content_permission:content.manage');
 
         // Clone-theme: scaffold themes/{name}/ from an existing theme. Same
         // operator trust tier as template editing.
         $router->post('/themes', [TemplatesAdminController::class, 'createTheme'])
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
 
         $router->get('/templates', [TemplatesAdminController::class, 'index'])
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
         $router->get('/templates/{path}', [TemplatesAdminController::class, 'show'])
             ->where('path', '.+\.(?:twig|css|js|json)')
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
         $router->put('/templates/{path}', [TemplatesAdminController::class, 'save'])
             ->where('path', '.+\.(?:twig|css|js|json)')
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
         $router->delete('/templates/{path}', [TemplatesAdminController::class, 'delete'])
             ->where('path', '.+\.(?:twig|css|js|json)')
-            ->middleware('lemma_permission:templates.manage');
+            ->middleware('content_permission:templates.manage');
     },
 );
