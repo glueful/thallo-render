@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 return [
     // NOTE: enable/disable is NOT configured here — the capability switchboard in the app's
-    // config/lemma.php ('capabilities' => ['lemma.render' => false]) is the only gate.
+    // config/thallo.php ('capabilities' => ['thallo.render' => false]) is the only gate.
 
     // Active theme name: an app-level themes/{name}/ directory, falling back to the
     // pack-embedded default theme. RESOLVED AT BOOT (v1): changing it requires an app
@@ -19,7 +19,7 @@ return [
     'homepage_entry' => env('RENDER_HOMEPAGE_ENTRY', ''),
 
     // site.name in the template context.
-    'site_name' => env('RENDER_SITE_NAME', 'Lemma'),
+    'site_name' => env('RENDER_SITE_NAME', 'Thallo'),
 
     // First-PATH-SEGMENT prefixes the catch-all must never render ('v1' reserves /v1 and
     // /v1/... but NOT /v1abc). Reserved hits return the framework's standard JSON 404.
@@ -60,6 +60,6 @@ return [
     // custom.css, in bytes. Encoding + size are the ONLY gates — CSS is never
     // syntax-validated (a broken rule loses in the browser; it cannot 500 the site).
     'custom_css' => [
-        'max_bytes' => (int) env('LEMMA_CUSTOM_CSS_MAX_BYTES', 262144),
+        'max_bytes' => (int) env('CUSTOM_CSS_MAX_BYTES', 262144),
     ],
 ];

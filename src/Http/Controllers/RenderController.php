@@ -87,7 +87,7 @@ final class RenderController
         // unresolvable value is the LOUD 500 below).
         $homepageEntry = $this->homepage !== null
             ? $this->homepage->homepageEntry()
-            : (string) config($this->context, 'lemma_render.homepage_entry', '');
+            : (string) config($this->context, 'render.homepage_entry', '');
         $locale = (string) config($this->context, 'i18n.default_locale', 'en');
         $entry = null;
         $typeSlug = '';
@@ -426,7 +426,7 @@ final class RenderController
         $target = $this->targets?->resolve($entryUuid, $locale);
         $adminUrl = rtrim(
             $this->adminUrlProvider?->adminUrl()
-                ?? (string) config($this->context, 'lemma_render.admin_url', ''),
+                ?? (string) config($this->context, 'render.admin_url', ''),
             '/',
         );
         $canLink = $adminUrl !== '' && $typeSlug !== '';
@@ -753,7 +753,7 @@ final class RenderController
         $this->extension->setLocale($locale);
         $context = [
             'site' => [
-                'name' => (string) config($this->context, 'lemma_render.site_name', 'Lemma'),
+                'name' => (string) config($this->context, 'render.site_name', 'Thallo'),
                 'locale' => $locale,
                 'locales' => [],
             ],
@@ -881,7 +881,7 @@ final class RenderController
     private function homepageConfigFailure(string $configured): Response
     {
         $error = new HomepageConfigError(
-            "lemma_render.homepage_entry (\"{$configured}\") does not resolve to published, routed content.",
+            "render.homepage_entry (\"{$configured}\") does not resolve to published, routed content.",
         );
         // Always logged; the message reaches the BODY only in debug mode (never leak in prod).
         $this->logger->error('thallo-render: ' . $error->getMessage());

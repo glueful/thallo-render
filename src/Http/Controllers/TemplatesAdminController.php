@@ -424,7 +424,7 @@ final class TemplatesAdminController
         if (!mb_check_encoding($source, 'UTF-8')) {
             return 'custom.css must be valid UTF-8.';
         }
-        $max = (int) config($this->context, 'lemma_render.custom_css.max_bytes', 262144);
+        $max = (int) config($this->context, 'render.custom_css.max_bytes', 262144);
         if (strlen($source) > $max) {
             return "custom.css exceeds the size limit ({$max} bytes).";
         }

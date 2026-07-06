@@ -242,8 +242,8 @@ final class RenderServiceProvider extends ServiceProvider
         return new RenderErrorCache(
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            (bool) config($context, 'lemma_render.cache_enabled', true),
-            (int) config($context, 'lemma_render.cache_ttl', 3600),
+            (bool) config($context, 'render.cache_enabled', true),
+            (int) config($context, 'render.cache_ttl', 3600),
         );
     }
 
@@ -255,15 +255,15 @@ final class RenderServiceProvider extends ServiceProvider
             // this identity is what makes zero-new-purge-code true.
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            (bool) config($context, 'lemma_render.cache_enabled', true),
-            (int) config($context, 'lemma_render.cache_ttl', 3600),
+            (bool) config($context, 'render.cache_enabled', true),
+            (int) config($context, 'render.cache_ttl', 3600),
         );
     }
 
     public static function makeRenderController(ContainerInterface $container): RenderController
     {
         $context = $container->get(ApplicationContext::class);
-        $dbTemplates = (bool) config($context, 'lemma_render.db_templates', true);
+        $dbTemplates = (bool) config($context, 'render.db_templates', true);
         return new RenderController(
             $context,
             $container->get(\Thallo\Contracts\Delivery\PublicRouteResolver::class),
@@ -314,7 +314,7 @@ final class RenderServiceProvider extends ServiceProvider
                 ? $container->get(ThemeSettingProvider::class)
                 : null,
             $container->get(PreviewThemeValidator::class),
-            (string) config($context, 'lemma_render.theme', 'default'),
+            (string) config($context, 'render.theme', 'default'),
             $container->get(\Psr\Log\LoggerInterface::class),
         );
     }
@@ -385,7 +385,7 @@ final class RenderServiceProvider extends ServiceProvider
     {
         $context = $container->get(ApplicationContext::class);
         $db = null;
-        if ((bool) config($context, 'lemma_render.db_templates', true)) {
+        if ((bool) config($context, 'render.db_templates', true)) {
             $db = new DatabaseTemplateLoader(
                 $container->get(TemplateRepository::class),
                 $container->get(TemplateLinter::class),
@@ -407,15 +407,15 @@ final class RenderServiceProvider extends ServiceProvider
     {
         $context = $container->get(ApplicationContext::class);
         return new ReservedPaths(
-            array_values(array_map(strval(...), (array) config($context, 'lemma_render.reserved_prefixes', []))),
-            array_values(array_map(strval(...), (array) config($context, 'lemma_render.reserved_exact', []))),
+            array_values(array_map(strval(...), (array) config($context, 'render.reserved_prefixes', []))),
+            array_values(array_map(strval(...), (array) config($context, 'render.reserved_exact', []))),
         );
     }
 
     public function register(ApplicationContext $context): void
     {
-        // Package configs are NOT auto-loaded — merge the pack's tree under 'lemma_render'.
-        $this->mergeConfig('lemma_render', require __DIR__ . '/../config/lemma-render.php');
+        // Package configs are NOT auto-loaded — merge the pack's tree under 'render'.
+        $this->mergeConfig('render', require __DIR__ . '/../config/render.php');
     }
 
     public function boot(ApplicationContext $context): void
@@ -427,12 +427,12 @@ final class RenderServiceProvider extends ServiceProvider
         $registry = app($context, CapabilityRegistry::class);
 
         $registry->register(new Capability(
-            'lemma.render',
+            'thallo.render',
             label: 'Rendered delivery',
             description: 'Server-rendered pages from published content via filesystem Twig themes.',
         ));
 
-        if ($registry->isEnabled('lemma.render')) {
+        if ($registry->isEnabled('thallo.render')) {
             $this->loadRoutesFrom(__DIR__ . '/../routes/public-routes.php');
 
             // Theme assets are served DYNAMICALLY by RenderController::themeAsset
@@ -456,7 +456,7 @@ final class RenderServiceProvider extends ServiceProvider
             // DB-edited templates (spec §5/§7): admin routes + purge listener only
             // when the feature is on — the kill-switch removes every
             // template-mutation pathway.
-            if ((bool) config($context, 'lemma_render.db_templates', true)) {
+            if ((bool) config($context, 'render.db_templates', true)) {
                 $this->loadRoutesFrom(__DIR__ . '/../routes/admin-routes.php');
                 $events->addListener(
                     TemplateUpdated::class,
