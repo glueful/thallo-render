@@ -13,14 +13,14 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * `lemma:theme:clone <name> [--from=default]` — scaffold a new app theme by
+ * `render:theme:clone <name> [--from=default]` — scaffold a new app theme by
  * copying an existing one into themes/{name}/. The CLI form works on every
  * deployment (the admin button needs a writable app dir); the copied theme
  * inherits nothing implicitly — it IS a full copy, editable in place or via
  * the admin's per-theme DB overrides.
  */
 #[AsCommand(
-    name: 'lemma:theme:clone',
+    name: 'render:theme:clone',
     description: 'Clone a theme into a new themes/{name} directory.',
 )]
 final class ThemeCloneCommand extends BaseCommand
