@@ -298,7 +298,7 @@ final class RenderController
         // token: the cookie is the token itself, dies with its TTL, Secure iff HTTPS.
         if ($session !== null && $result['kind'] === 'content') {
             $response->headers->setCookie(new \Symfony\Component\HttpFoundation\Cookie(
-                'lemma_preview',
+                'thallo_preview',
                 $token,
                 $session->expiresAt,
                 '/',
@@ -445,7 +445,7 @@ final class RenderController
     public function exit(): Response
     {
         $response = new Response('', 302, ['Location' => '/']);
-        $response->headers->clearCookie('lemma_preview', '/');
+        $response->headers->clearCookie('thallo_preview', '/');
         return $response;
     }
 
@@ -586,7 +586,7 @@ final class RenderController
      * Listing/archive pages (listing spec §4). Template family follows the kind
      * (listing/{type}.twig → listing.twig; archive/{type}.twig → archive.twig); the
      * context ships ready pagination paths so themes never build page URLs; the
-     * Cache-Tag ALWAYS carries the broad lemma:type:{type} — page contents change when
+     * Cache-Tag ALWAYS carries the broad thallo:type:{type} — page contents change when
      * one new entry publishes, so per-item tags alone cannot keep cached pages fresh.
      *
      * @param array<string,mixed> $result
@@ -653,17 +653,17 @@ final class RenderController
         foreach ((array) ($result['listing']['items'] ?? []) as $item) {
             $uuid = is_string($item['uuid'] ?? null) ? $item['uuid'] : '';
             if ($uuid !== '') {
-                $tags[] = 'lemma:entry:' . $uuid;
+                $tags[] = 'thallo:entry:' . $uuid;
             }
         }
         $termUuid = is_string($result['term']['uuid'] ?? null) ? $result['term']['uuid'] : '';
         if ($termUuid !== '') {
-            $tags[] = 'lemma:entry:' . $termUuid;
+            $tags[] = 'thallo:entry:' . $termUuid;
         }
-        $tags[] = 'lemma:type:' . $typeSlug;
+        $tags[] = 'thallo:type:' . $typeSlug;
         $termType = is_string($result['term_type'] ?? null) ? $result['term_type'] : '';
         if ($termType !== '' && $termType !== $typeSlug) {
-            $tags[] = 'lemma:type:' . $termType;
+            $tags[] = 'thallo:type:' . $termType;
         }
         $this->mergeCacheTags($response, array_values(array_unique($tags)));
     }
@@ -681,7 +681,7 @@ final class RenderController
         if ($uuid === '' || $typeSlug === '') {
             return;
         }
-        $this->mergeCacheTags($response, ["lemma:entry:{$uuid}", "lemma:type:{$typeSlug}"]);
+        $this->mergeCacheTags($response, ["thallo:entry:{$uuid}", "thallo:type:{$typeSlug}"]);
     }
 
     /**

@@ -10,7 +10,7 @@ use Glueful\Routing\Router;
 /** @var Router $router */
 
 /*
- * The rendered site surface (loads only when lemma.render is enabled). GET /{path} with
+ * The rendered site surface (loads only when thallo.render is enabled). GET /{path} with
  * a slash-spanning constraint lives in the router's '*' bucket — tried after every
  * static route and literal-first-segment bucket, i.e. a TRUE lowest-priority catch-all
  * (V2 §2). The controller's reserved-path guard returns standard JSON 404s for /v1 etc.

@@ -441,7 +441,7 @@ final class RenderContextExtension extends AbstractExtension
                     $html[] = $this->debug
                         ? '<div style="border:1px dashed red;padding:.5rem">Missing block template: '
                             . htmlspecialchars($template, ENT_QUOTES) . '</div>'
-                        : '<!-- lemma: no template for block "' . htmlspecialchars($type, ENT_QUOTES) . '" -->';
+                        : '<!-- thallo: no template for block "' . htmlspecialchars($type, ENT_QUOTES) . '" -->';
                     continue;
                 }
                 $data = is_array($item['data'] ?? null) ? $item['data'] : [];

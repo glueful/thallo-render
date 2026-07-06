@@ -10,7 +10,7 @@ use Thallo\Render\ThemeLocator;
 use Psr\Container\ContainerInterface;
 
 /**
- * TemplateUpdated → invalidateTags(['lemma:render:page']) — ONLY when the edited theme
+ * TemplateUpdated → invalidateTags(['thallo:render:page']) — ONLY when the edited theme
  * is the ACTIVE theme (spec §5): inactive themes never populate the shared caches
  * (preview sessions are uncached). The one tag covers the page cache AND the fixed
  * 404/410 bodies (RenderErrorCache tags them identically). Broad purge over cleverness
@@ -32,6 +32,6 @@ final class PurgeRenderCacheOnTemplateUpdate
         if ($event->theme !== $active) {
             return;
         }
-        $this->container->get(CacheStore::class)->invalidateTags(['lemma:render:page']);
+        $this->container->get(CacheStore::class)->invalidateTags(['thallo:render:page']);
     }
 }

@@ -9,7 +9,7 @@ use Glueful\Routing\Router;
 
 /*
  * DB-edited templates admin API. Triple-gated like the other packs:
- *   1. capability + kill-switch — this file loads only when lemma.render is enabled
+ *   1. capability + kill-switch — this file loads only when thallo.render is enabled
  *      AND render.db_templates is true (else 404).
  *   2. auth — group middleware.
  *   3. content_permission — templates.manage on every route.

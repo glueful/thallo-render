@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  * bogus URLs (the per-path middleware only sees a 404 after the render already ran).
  *
  * ONE body per theme per status (render:{theme}:404 / render:{theme}:410), tagged
- * lemma:render:page and emitted as a Cache-Tag header so server AND CDN purges compose.
+ * thallo:render:page and emitted as a Cache-Tag header so server AND CDN purges compose.
  * Only responses that match the expected status and are text/html are stored — a
  * failed error render (plain-text 500 fallback) is never cached. Same CacheStore
  * binding as the rest of the render cache (spec §3 pin).
@@ -53,7 +53,7 @@ final class RenderErrorCache
         if (is_array($stored)) {
             return new Response((string) $stored['body'], $status, [
                 'Content-Type' => (string) $stored['contentType'],
-                'Cache-Tag' => 'lemma:render:page',
+                'Cache-Tag' => 'thallo:render:page',
             ]);
         }
 
@@ -68,8 +68,8 @@ final class RenderErrorCache
             ['body' => (string) $response->getContent(), 'contentType' => $contentType],
             $this->ttl,
         );
-        $this->cache->addTags($key, ['lemma:render:page']);
-        $response->headers->set('Cache-Tag', 'lemma:render:page');
+        $this->cache->addTags($key, ['thallo:render:page']);
+        $response->headers->set('Cache-Tag', 'thallo:render:page');
         return $response;
     }
 }

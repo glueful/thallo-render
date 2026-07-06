@@ -9,7 +9,7 @@ use Thallo\Contracts\Settings\ThemeChanged;
 use Psr\Container\ContainerInterface;
 
 /**
- * ThemeChanged → invalidateTags(['lemma:render:page']) — the theme touches
+ * ThemeChanged → invalidateTags(['thallo:render:page']) — the theme touches
  * EVERY page and the themed 404/410 error bodies, so the purge is the same
  * broad tag the region/menu/template listeners use (theme-setting spec §5).
  * Cache keys are theme-scoped (render:{theme}:…) so stale entries were never
@@ -27,6 +27,6 @@ final class PurgeRenderCacheOnThemeChange
         if (!$event instanceof ThemeChanged) {
             return;
         }
-        $this->container->get(CacheStore::class)->invalidateTags(['lemma:render:page']);
+        $this->container->get(CacheStore::class)->invalidateTags(['thallo:render:page']);
     }
 }

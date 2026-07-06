@@ -8,7 +8,7 @@ use Glueful\Cache\CacheStore;
 use Psr\Container\ContainerInterface;
 
 /**
- * RegionUpdated → invalidateTags(['lemma:render:page']) (global-regions spec §11):
+ * RegionUpdated → invalidateTags(['thallo:render:page']) (global-regions spec §11):
  * chrome regions appear on EVERY rendered page, so a region save purges every
  * cached page including the fixed 404/410 bodies (they render the chrome too).
  * Broad purge over cleverness. The CacheStore is resolved per-invocation, not
@@ -22,6 +22,6 @@ final class PurgeRenderCacheOnRegionUpdate
 
     public function onRegionUpdated(object $event): void
     {
-        $this->container->get(CacheStore::class)->invalidateTags(['lemma:render:page']);
+        $this->container->get(CacheStore::class)->invalidateTags(['thallo:render:page']);
     }
 }

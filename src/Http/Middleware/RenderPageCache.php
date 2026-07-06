@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Storage goes through the SAME CacheStore binding InvalidateCacheTagsListener
  * invalidates. Every cached 200 is tagged with the surrogate keys the controller
- * emits in Cache-Tag (lemma:entry:{uuid}, lemma:type:{slug}) plus lemma:render:page.
+ * emits in Cache-Tag (thallo:entry:{uuid}, thallo:type:{slug}) plus thallo:render:page.
  * On a non-tag driver addTags() is a no-op and freshness degrades to the TTL window
  * (spec §3 fallback) — nothing breaks.
  */
@@ -74,7 +74,7 @@ final class RenderPageCache implements RouteMiddleware
         if ($status === 200) {
             $entry = $this->entry($body, 200, $contentType, $cacheTag);
             $this->cache->set($key, $entry, $this->ttl);
-            $this->cache->addTags($key, [...$this->surrogateTags($cacheTag), 'lemma:render:page']);
+            $this->cache->addTags($key, [...$this->surrogateTags($cacheTag), 'thallo:render:page']);
             // Serve stored entries on the miss path too, so hit and miss responses
             // carry identical headers (ETag / Cache-Control).
             return $this->respond($request, $entry);
