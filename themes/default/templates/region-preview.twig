@@ -15,7 +15,7 @@
 </head>
 <body>
   {% if header %}
-    <header class="site-header lemma-region lemma-region-header lemma-region-header--{{ header.settings.width|default('contained') }}{% if header.settings.sticky|default(false) %} lemma-region-header--sticky{% endif %}">
+    <header class="site-header thallo-region thallo-region-header thallo-region-header--{{ header.settings.width|default('contained') }}{% if header.settings.sticky|default(false) %} thallo-region-header--sticky{% endif %}">
       <div class="site-header__inner">{{ blocks(header.blocks) }}</div>
     </header>
   {% endif %}
@@ -25,7 +25,7 @@
     </div>
   </main>
   {% if footer %}
-    <footer class="site-footer lemma-region lemma-region-footer lemma-region-footer--{{ footer.settings.width|default('contained') }}">
+    <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ footer.settings.width|default('contained') }}">
       <div class="site-footer__inner">{{ blocks(footer.blocks) }}</div>
     </footer>
   {% endif %}

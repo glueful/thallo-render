@@ -1,10 +1,10 @@
 {% set items = menu(data.menu|default('')) %}
 {% set reveal = data.submenu_trigger|default('hover') %}
 {% set subicon = data.submenu_icon|default('chevron-down') %}
-<div class="lemma-block lemma-block-navigation lemma-block-navigation--{{ data.orientation|default('horizontal') }} lemma-block-navigation--align-{{ data.align|default('start') }} lemma-block-navigation--size-{{ data.size|default('md') }} lemma-block-navigation--active-{{ data.active_style|default('underline') }} lemma-block-navigation--hover-{{ data.hover_style|default('color') }} lemma-block-navigation--reveal-{{ reveal }}">
+<div class="thallo-block thallo-block-navigation thallo-block-navigation--{{ data.orientation|default('horizontal') }} thallo-block-navigation--align-{{ data.align|default('start') }} thallo-block-navigation--size-{{ data.size|default('md') }} thallo-block-navigation--active-{{ data.active_style|default('underline') }} thallo-block-navigation--hover-{{ data.hover_style|default('color') }} thallo-block-navigation--reveal-{{ reveal }}">
   {% if items %}
-    <nav class="lemma-block-navigation__nav">
-      <ul class="lemma-block-navigation__list">
+    <nav class="thallo-block-navigation__nav">
+      <ul class="thallo-block-navigation__list">
         {% for item in items %}
           {# One submenu level (nav-v2 spec §4): grandchildren FLATTEN into the dropdown. #}
           {% set kids = [] %}
@@ -17,20 +17,20 @@
           {% set itemPath = '/' ~ (item.url|default('')|split('://')|last|split('/', 2)|last) %}
           {% set active = current_path is defined and itemPath == current_path %}
           {% if kids is empty %}
-            <li class="lemma-block-navigation__item{% if active %} lemma-block-navigation__item--active{% endif %}">
+            <li class="thallo-block-navigation__item{% if active %} thallo-block-navigation__item--active{% endif %}">
               <a href="{{ item.url }}">{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}</a>
             </li>
           {% elseif reveal == 'click' %}
             {# details-name exclusivity is progressive enhancement (spec P2):
                unsupported browsers may keep several open — acceptable v1. #}
-            <li class="lemma-block-navigation__item lemma-block-navigation__item--parent{% if active %} lemma-block-navigation__item--active{% endif %}">
-              <details class="lemma-block-navigation__details" name="nav-{{ block.id }}">
+            <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
+              <details class="thallo-block-navigation__details" name="nav-{{ block.id }}">
                 <summary>{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}{% if subicon != 'none' %}{{ icon(subicon) }}{% endif %}</summary>
-                <ul class="lemma-block-navigation__submenu">
+                <ul class="thallo-block-navigation__submenu">
                   {% if item.url|default('') %}<li><a href="{{ item.url }}">{{ item.label }}</a></li>{% endif %}
                   {% for kid in kids %}
                     {% set kidPath = '/' ~ (kid.url|default('')|split('://')|last|split('/', 2)|last) %}
-                    <li{% if current_path is defined and kidPath == current_path %} class="lemma-block-navigation__item--active"{% endif %}>
+                    <li{% if current_path is defined and kidPath == current_path %} class="thallo-block-navigation__item--active"{% endif %}>
                       <a href="{{ kid.url }}">{% if kid.icon|default('') %}{{ icon(kid.icon) }}{% endif %}{{ kid.label }}</a>
                     </li>
                   {% endfor %}
@@ -38,12 +38,12 @@
               </details>
             </li>
           {% else %}
-            <li class="lemma-block-navigation__item lemma-block-navigation__item--parent{% if active %} lemma-block-navigation__item--active{% endif %}">
+            <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
               {% if item.url|default('') %}<a href="{{ item.url }}">{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}{% if subicon != 'none' %}{{ icon(subicon) }}{% endif %}</a>{% else %}<span tabindex="0">{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}{% if subicon != 'none' %}{{ icon(subicon) }}{% endif %}</span>{% endif %}
-              <ul class="lemma-block-navigation__submenu">
+              <ul class="thallo-block-navigation__submenu">
                 {% for kid in kids %}
                   {% set kidPath = '/' ~ (kid.url|default('')|split('://')|last|split('/', 2)|last) %}
-                    <li{% if current_path is defined and kidPath == current_path %} class="lemma-block-navigation__item--active"{% endif %}>
+                    <li{% if current_path is defined and kidPath == current_path %} class="thallo-block-navigation__item--active"{% endif %}>
                     <a href="{{ kid.url }}">{% if kid.icon|default('') %}{{ icon(kid.icon) }}{% endif %}{{ kid.label }}</a>
                   </li>
                 {% endfor %}

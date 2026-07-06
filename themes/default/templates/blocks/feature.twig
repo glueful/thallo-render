@@ -1,8 +1,8 @@
 {% set url = data.url|default('')|safe_url %}
-<div class="lemma-block lemma-block-feature">
-  {% if data.icon %}<span class="lemma-block-feature__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
-  <div class="lemma-block-feature__body">
-    <h3 class="lemma-block-feature__title">{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>
-    {% if data.description %}<p class="lemma-block-feature__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+<div class="thallo-block thallo-block-feature">
+  {% if data.icon %}<span class="thallo-block-feature__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
+  <div class="thallo-block-feature__body">
+    <h3 class="thallo-block-feature__title">{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>
+    {% if data.description %}<p class="thallo-block-feature__description">{{ data.description|editable_text('description') }}</p>{% endif %}
   </div>
 </div>

@@ -1,13 +1,13 @@
-<section class="lemma-block lemma-block-logo_cloud{% if data.grayscale|default(false) %} lemma-block-logo_cloud--grayscale{% endif %}{% if data.scroll|default(false) %} lemma-block-logo_cloud--scroll{% endif %}">
-  <div class="lemma-block-logo_cloud__inner">
-    {% if data.title %}<h2 class="lemma-block-logo_cloud__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
-    <div class="lemma-block-logo_cloud__strip">
-      <div class="lemma-block-logo_cloud__track">
-        {% for uuid in data.images|default([]) %}{% set src = media(uuid) %}{% if src %}<img class="lemma-block-logo_cloud__logo" src="{{ src }}" alt="">{% endif %}{% endfor %}
+<section class="thallo-block thallo-block-logo_cloud{% if data.grayscale|default(false) %} thallo-block-logo_cloud--grayscale{% endif %}{% if data.scroll|default(false) %} thallo-block-logo_cloud--scroll{% endif %}">
+  <div class="thallo-block-logo_cloud__inner">
+    {% if data.title %}<h2 class="thallo-block-logo_cloud__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
+    <div class="thallo-block-logo_cloud__strip">
+      <div class="thallo-block-logo_cloud__track">
+        {% for uuid in data.images|default([]) %}{% set src = media(uuid) %}{% if src %}<img class="thallo-block-logo_cloud__logo" src="{{ src }}" alt="">{% endif %}{% endfor %}
       </div>
       {% if data.scroll|default(false) %}
-      <div class="lemma-block-logo_cloud__track" aria-hidden="true">
-        {% for uuid in data.images|default([]) %}{% set src = media(uuid) %}{% if src %}<img class="lemma-block-logo_cloud__logo" src="{{ src }}" alt="">{% endif %}{% endfor %}
+      <div class="thallo-block-logo_cloud__track" aria-hidden="true">
+        {% for uuid in data.images|default([]) %}{% set src = media(uuid) %}{% if src %}<img class="thallo-block-logo_cloud__logo" src="{{ src }}" alt="">{% endif %}{% endfor %}
       </div>
       {% endif %}
     </div>

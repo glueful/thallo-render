@@ -1,6 +1,6 @@
 {% set logo = site_logo() %}
 {% set logoDark = site_logo('dark') %}
-{% set inner %}{% if logo and logoDark %}<img class="lemma-block-logo__image lemma-block-logo__image--light" src="{{ logo }}" alt="{{ site.name|default('') }}"><img class="lemma-block-logo__image lemma-block-logo__image--dark" src="{{ logoDark }}" alt="{{ site.name|default('') }}">{% elseif logo %}<img class="lemma-block-logo__image" src="{{ logo }}" alt="{{ site.name|default('') }}">{% else %}<span class="lemma-block-logo__name">{{ site.name|default('') }}</span>{% endif %}{% endset %}
-<div class="lemma-block lemma-block-logo lemma-block-logo--{{ data.size|default('medium') }}{% if logo and logoDark %} lemma-block-logo--has-dark{% endif %}">
-  {% if data.link_home is not defined or data.link_home %}<a class="lemma-block-logo__link" href="/">{{ inner }}</a>{% else %}{{ inner }}{% endif %}
+{% set inner %}{% if logo and logoDark %}<img class="thallo-block-logo__image thallo-block-logo__image--light" src="{{ logo }}" alt="{{ site.name|default('') }}"><img class="thallo-block-logo__image thallo-block-logo__image--dark" src="{{ logoDark }}" alt="{{ site.name|default('') }}">{% elseif logo %}<img class="thallo-block-logo__image" src="{{ logo }}" alt="{{ site.name|default('') }}">{% else %}<span class="thallo-block-logo__name">{{ site.name|default('') }}</span>{% endif %}{% endset %}
+<div class="thallo-block thallo-block-logo thallo-block-logo--{{ data.size|default('medium') }}{% if logo and logoDark %} thallo-block-logo--has-dark{% endif %}">
+  {% if data.link_home is not defined or data.link_home %}<a class="thallo-block-logo__link" href="/">{{ inner }}</a>{% else %}{{ inner }}{% endif %}
 </div>

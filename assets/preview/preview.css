@@ -2,21 +2,21 @@
    layout-inert; rings are canvas-session visuals driven by the bridge.
    display:contents elements paint no boxes, so rings go on the wrapper's
    CHILDREN via > *; the -target classes are the first-child fallback. */
-.lemma-preview-block { display: contents; }
-[data-lemma-block].lemma-canvas-hover > *,
-.lemma-canvas-hover-target { outline: 2px dashed rgba(37, 99, 235, 0.6); outline-offset: 2px; }
-[data-lemma-block].lemma-canvas-selected > *,
-.lemma-canvas-selected-target { outline: 2px solid rgba(37, 99, 235, 0.9); outline-offset: 2px; }
+.thallo-preview-block { display: contents; }
+[data-thallo-block].thallo-canvas-hover > *,
+.thallo-canvas-hover-target { outline: 2px dashed rgba(37, 99, 235, 0.6); outline-offset: 2px; }
+[data-thallo-block].thallo-canvas-selected > *,
+.thallo-canvas-selected-target { outline: 2px solid rgba(37, 99, 235, 0.9); outline-offset: 2px; }
 
 /* Stage toolbar (stage-toolbar spec §3): positioned by DOM placement + these
    STATIC rules only — never inline geometry (CSP pin). The anchor class goes
    on the selected block's first element child; the toolbar sits absolute
    against it with constant offsets. */
-.lemma-canvas-anchor { position: relative; }
+.thallo-canvas-anchor { position: relative; }
 /* Shim anchor for void-element hosts (hr dividers, images): zero-height,
    full-width, so the toolbar's right-edge offset still aligns to the block. */
-.lemma-canvas-shim { display: inline-block; width: 100%; height: 0; }
-.lemma-canvas-toolbar {
+.thallo-canvas-shim { display: inline-block; width: 100%; height: 0; }
+.thallo-canvas-toolbar {
   position: absolute;
   top: -14px;
   right: 8px;
@@ -28,8 +28,8 @@
   background: #18181b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
-.lemma-canvas-toolbar button,
-.lemma-canvas-format-bar button {
+.thallo-canvas-toolbar button,
+.thallo-canvas-format-bar button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,38 +42,38 @@
   color: #e4e4e7;
   cursor: pointer;
 }
-.lemma-canvas-toolbar button:hover,
-.lemma-canvas-format-bar button:hover { background: #3f3f46; }
-.lemma-canvas-toolbar svg,
-.lemma-canvas-format-bar svg { width: 14px; height: 14px; }
+.thallo-canvas-toolbar button:hover,
+.thallo-canvas-format-bar button:hover { background: #3f3f46; }
+.thallo-canvas-toolbar svg,
+.thallo-canvas-format-bar svg { width: 14px; height: 14px; }
 
 /* Edit-in-place (edit-in-place spec §3): the active region swaps the selection
    ring for an editing style. Static rules only (CSP pin). inline-block while
    editing: an outline on an INLINE box draws around each wrapped line fragment
    (a staircase on multiline text) — one box gives one rectangle, and the
    layout shift is confined to the active editing session. */
-.lemma-canvas-editing {
+.thallo-canvas-editing {
   display: inline-block;
   outline: 2px solid rgba(16, 185, 129, 0.9);
   outline-offset: 2px;
   cursor: text;
 }
-.lemma-canvas-editing:focus { outline-color: rgba(16, 185, 129, 1); }
+.thallo-canvas-editing:focus { outline-color: rgba(16, 185, 129, 1); }
 
 /* Empty editable regions (editable-string-fields spec §0): blank values the
    template still renders (e.g. hero.heading) need a click target. */
-.lemma-edit-region:empty { display: inline-block; min-width: 3ch; min-height: 1em; }
+.thallo-edit-region:empty { display: inline-block; min-width: 3ch; min-height: 1em; }
 
 /* Free drag (free-drag spec §1): grip affordance + dragging dim. The wrapper
    is display:contents, so the dim styles its children. */
-.lemma-canvas-toolbar [data-action="drag"] { cursor: grab; touch-action: none; }
-[data-lemma-block].lemma-canvas-dragging > * { opacity: 0.55; }
+.thallo-canvas-toolbar [data-action="drag"] { cursor: grab; touch-action: none; }
+[data-thallo-block].thallo-canvas-dragging > * { opacity: 0.55; }
 
 /* Selection-following format bubble (format-bubble spec §2): appearance and
    the static base live HERE; the bridge sets ONLY transform via CSSOM
    (reworded CSP pin — strict style-src does not restrict CSSOM geometry).
    Fixed positioning matches the selection rect's viewport coordinates. */
-.lemma-canvas-format-bar {
+.thallo-canvas-format-bar {
   position: fixed;
   top: 0;
   left: 0;
@@ -87,10 +87,10 @@
   background: #18181b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
-.lemma-canvas-format-bar.lemma-canvas-format-visible { visibility: visible; }
-.lemma-canvas-format-row { display: flex; gap: 2px; }
+.thallo-canvas-format-bar.thallo-canvas-format-visible { visibility: visible; }
+.thallo-canvas-format-row { display: flex; gap: 2px; }
 /* Active-state (polish batch §1): the caret/selection carries this mark. */
-.lemma-canvas-format-bar button.lemma-canvas-format-active {
+.thallo-canvas-format-bar button.thallo-canvas-format-active {
   background: #3f3f46;
   color: #60a5fa;
 }
@@ -98,13 +98,13 @@
 /* Inline link panel (link-panel spec §1): a second row inside the bubble —
    the column layout shrink-wraps the bubble to the widest row. The apply
    button inherits the shared bubble-button rules above. */
-.lemma-canvas-link-panel {
+.thallo-canvas-link-panel {
   display: none;
   gap: 2px;
   align-items: center;
 }
-.lemma-canvas-link-panel.lemma-canvas-link-open { display: flex; }
-.lemma-canvas-link-panel input {
+.thallo-canvas-link-panel.thallo-canvas-link-open { display: flex; }
+.thallo-canvas-link-panel input {
   width: 220px;
   border: 0;
   border-radius: 4px;
@@ -114,13 +114,13 @@
   font-size: 12px;
   outline: none;
 }
-.lemma-canvas-link-panel input::placeholder { color: #a1a1aa; }
-.lemma-canvas-link-panel.lemma-canvas-link-invalid input { box-shadow: 0 0 0 1px #ef4444 inset; }
+.thallo-canvas-link-panel input::placeholder { color: #a1a1aa; }
+.thallo-canvas-link-panel.thallo-canvas-link-invalid input { box-shadow: 0 0 0 1px #ef4444 inset; }
 
 /* Cursor-following drag ghost (polish batch §2): a compact stripped clone of
    the dragged block riding the pointer. Geometry (transform) is set by the
    bridge via CSSOM; everything visual lives here. */
-.lemma-canvas-drag-ghost {
+.thallo-canvas-drag-ghost {
   position: fixed;
   top: 0;
   left: 0;
@@ -140,15 +140,15 @@
    render shows the resolved template or nothing. An empty shortcode wrapper
    in the canvas gets a visible dashed box carrying the shortcode name so the
    block stays clickable/selectable. */
-.lemma-preview-block > .lemma-block-shortcode:empty,
-.lemma-preview-block > .lemma-block-shortcode:not(:has(*)) {
+.thallo-preview-block > .thallo-block-shortcode:empty,
+.thallo-preview-block > .thallo-block-shortcode:not(:has(*)) {
   display: block;
   min-height: 2.5rem;
   border: 1.5px dashed rgba(100, 116, 139, 0.6);
   border-radius: 6px;
   position: relative;
 }
-.lemma-preview-block > .lemma-block-shortcode:not(:has(*))::after {
+.thallo-preview-block > .thallo-block-shortcode:not(:has(*))::after {
   content: "shortcode: " attr(data-shortcode);
   position: absolute;
   inset: 0;

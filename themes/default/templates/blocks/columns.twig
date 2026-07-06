@@ -4,18 +4,18 @@
    emits no token; base CSS is equal columns. align tokens only for
    non-defaults; stretch/absent keeps today's markup byte-identical. #}
 {% set widthTokens = {
-  '2': {'50-50': 'lemma-block-columns--w-50-50', '33-67': 'lemma-block-columns--w-33-67',
-        '67-33': 'lemma-block-columns--w-67-33', '25-75': 'lemma-block-columns--w-25-75',
-        '75-25': 'lemma-block-columns--w-75-25'},
-  '3': {'33-33-33': 'lemma-block-columns--w-33-33-33', '25-50-25': 'lemma-block-columns--w-25-50-25',
-        '50-25-25': 'lemma-block-columns--w-50-25-25', '25-25-50': 'lemma-block-columns--w-25-25-50'},
+  '2': {'50-50': 'thallo-block-columns--w-50-50', '33-67': 'thallo-block-columns--w-33-67',
+        '67-33': 'thallo-block-columns--w-67-33', '25-75': 'thallo-block-columns--w-25-75',
+        '75-25': 'thallo-block-columns--w-75-25'},
+  '3': {'33-33-33': 'thallo-block-columns--w-33-33-33', '25-50-25': 'thallo-block-columns--w-25-50-25',
+        '50-25-25': 'thallo-block-columns--w-50-25-25', '25-25-50': 'thallo-block-columns--w-25-25-50'},
 } %}
-{% set alignTokens = {'top': 'lemma-block-columns--align-top', 'center': 'lemma-block-columns--align-center', 'bottom': 'lemma-block-columns--align-bottom'} %}
+{% set alignTokens = {'top': 'thallo-block-columns--align-top', 'center': 'thallo-block-columns--align-center', 'bottom': 'thallo-block-columns--align-bottom'} %}
 {% set widthRow = widthTokens[layout]|default({}) %}
 {% set widthToken = widthRow[data.widths|default('')]|default('') %}
 {% set alignToken = alignTokens[data.align|default('')]|default('') %}
-<div class="lemma-block lemma-block-columns lemma-block-columns--{{ layout }}{% if widthToken %} {{ widthToken }}{% endif %}{% if alignToken %} {{ alignToken }}{% endif %}">
-  <div class="lemma-block-columns__col">{{ blocks(data.col_1) }}</div>
-  <div class="lemma-block-columns__col">{{ blocks(data.col_2) }}</div>
-  {% if layout == '3' %}<div class="lemma-block-columns__col">{{ blocks(data.col_3) }}</div>{% endif %}
+<div class="thallo-block thallo-block-columns thallo-block-columns--{{ layout }}{% if widthToken %} {{ widthToken }}{% endif %}{% if alignToken %} {{ alignToken }}{% endif %}">
+  <div class="thallo-block-columns__col">{{ blocks(data.col_1) }}</div>
+  <div class="thallo-block-columns__col">{{ blocks(data.col_2) }}</div>
+  {% if layout == '3' %}<div class="thallo-block-columns__col">{{ blocks(data.col_3) }}</div>{% endif %}
 </div>

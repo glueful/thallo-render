@@ -45,7 +45,7 @@ final class IconSet
         return $this->memo[$name] = $this->decorate(trim($raw));
     }
 
-    /** Inject class="lemma-icon" (appended to an existing class) + aria-hidden into the opening tag. */
+    /** Inject class="thallo-icon" (appended to an existing class) + aria-hidden into the opening tag. */
     private function decorate(string $svg): string
     {
         $end = strpos($svg, '>');
@@ -54,9 +54,9 @@ final class IconSet
         }
         $tag = substr($svg, 0, $end);
         if (preg_match('/class="([^"]*)"/', $tag, $m) === 1) {
-            $tag = str_replace($m[0], 'class="' . $m[1] . ' lemma-icon"', $tag);
+            $tag = str_replace($m[0], 'class="' . $m[1] . ' thallo-icon"', $tag);
         } else {
-            $tag .= ' class="lemma-icon"';
+            $tag .= ' class="thallo-icon"';
         }
         if (!str_contains($tag, 'aria-hidden=')) {
             $tag .= ' aria-hidden="true"';

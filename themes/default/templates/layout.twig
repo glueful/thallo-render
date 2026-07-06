@@ -72,7 +72,7 @@
   {% set headerHtml = headerHidden ? null : region_blocks('header') %}
   {% if headerHtml %}
     {% set hs = region_settings('header') %}
-    <header class="site-header lemma-region lemma-region-header lemma-region-header--{{ hs.width|default('contained') }}{% if hs.sticky|default(false) %} lemma-region-header--sticky{% endif %}">
+    <header class="site-header thallo-region thallo-region-header thallo-region-header--{{ hs.width|default('contained') }}{% if hs.sticky|default(false) %} thallo-region-header--sticky{% endif %}">
       <div class="site-header__inner">{{ headerHtml }}</div>
     </header>
   {% elseif not headerHidden %}
@@ -111,7 +111,7 @@
   {% set footerHtml = footerHidden ? null : region_blocks('footer') %}
   {% if footerHtml %}
     {% set fs = region_settings('footer') %}
-    <footer class="site-footer lemma-region lemma-region-footer lemma-region-footer--{{ fs.width|default('contained') }}">
+    <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ fs.width|default('contained') }}">
       <div class="site-footer__inner">{{ footerHtml }}</div>
     </footer>
   {% elseif not footerHidden %}

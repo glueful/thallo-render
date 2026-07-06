@@ -1,4 +1,4 @@
-// Lemma canvas bridge (visual-canvas spec §3 + stage-toolbar spec §1–§3).
+// Thallo canvas bridge (visual-canvas spec §3 + stage-toolbar spec §1–§3).
 // SILENT until a canvas parent says hello; a plain preview tab never messages
 // anyone. The nonce is a correlation token, not auth — it stops stale frames/
 // same-window noise from impersonating the active canvas session. Token-free
@@ -24,7 +24,7 @@
 
   function post(type, payload) {
     if (!session) return
-    var msg = { type: 'lemma:' + type, nonce: session.nonce }
+    var msg = { type: 'thallo:' + type, nonce: session.nonce }
     if (payload) {
       for (var key in payload) {
         if (Object.prototype.hasOwnProperty.call(payload, key)) msg[key] = payload[key]
@@ -35,13 +35,13 @@
 
   function idsIndex() {
     return Array.prototype.map.call(
-      document.querySelectorAll('[data-lemma-block]'),
-      function (el) { return el.getAttribute('data-lemma-block') }
+      document.querySelectorAll('[data-thallo-block]'),
+      function (el) { return el.getAttribute('data-thallo-block') }
     )
   }
 
   function wrapperFor(target) {
-    return target && target.closest ? target.closest('[data-lemma-block]') : null
+    return target && target.closest ? target.closest('[data-thallo-block]') : null
   }
 
   function clearClass(cls) {
@@ -59,7 +59,7 @@
   }
 
   function findBlock(id) {
-    return document.querySelector('[data-lemma-block="' + cssEscape(id) + '"]')
+    return document.querySelector('[data-thallo-block="' + cssEscape(id) + '"]')
   }
 
   // ── Toolbar (stage-toolbar spec §3) ─────────────────────────────────────────
@@ -75,7 +75,7 @@
   function ensureToolbar() {
     if (toolbar) return toolbar
     toolbar = document.createElement('div')
-    toolbar.className = 'lemma-canvas-toolbar'
+    toolbar.className = 'thallo-canvas-toolbar'
     ACTIONS.forEach(function (a) {
       var btn = document.createElement('button')
       btn.type = 'button'
@@ -100,25 +100,25 @@
   function detachToolbar() {
     if (toolbar && toolbar.parentNode) toolbar.parentNode.removeChild(toolbar)
     if (anchorEl) {
-      if (anchorEl.classList.contains('lemma-canvas-shim') && anchorEl.parentNode) {
+      if (anchorEl.classList.contains('thallo-canvas-shim') && anchorEl.parentNode) {
         anchorEl.parentNode.removeChild(anchorEl) // bridge-owned — remove entirely
       } else {
-        anchorEl.classList.remove('lemma-canvas-anchor')
+        anchorEl.classList.remove('thallo-canvas-anchor')
       }
       anchorEl = null
     }
   }
 
   function selectWrapper(w) {
-    clearClass('lemma-canvas-selected')
+    clearClass('thallo-canvas-selected')
     detachToolbar()
-    w.classList.add('lemma-canvas-selected')
-    selectedId = w.getAttribute('data-lemma-block')
+    w.classList.add('thallo-canvas-selected')
+    selectedId = w.getAttribute('data-thallo-block')
     var host = w.firstElementChild
     if (host && NO_CHILD_HOSTS[host.tagName]) {
       // hr/img/… render no children: anchor a shim sibling instead.
       var shim = document.createElement('span')
-      shim.className = 'lemma-canvas-anchor lemma-canvas-shim'
+      shim.className = 'thallo-canvas-anchor thallo-canvas-shim'
       host.insertAdjacentElement('afterend', shim)
       anchorEl = shim
       shim.appendChild(ensureToolbar())
@@ -127,13 +127,13 @@
       // its class; the toolbar is absolute against it with constant offsets.
       // Text-only renders (no element child) get selection but no toolbar.
       anchorEl = host
-      host.classList.add('lemma-canvas-anchor')
+      host.classList.add('thallo-canvas-anchor')
       host.insertBefore(ensureToolbar(), host.firstChild)
     }
   }
 
   function clearSelection() {
-    clearClass('lemma-canvas-selected')
+    clearClass('thallo-canvas-selected')
     detachToolbar()
     selectedId = null
   }
@@ -143,8 +143,8 @@
     var w = findBlock(id)
     if (!w) return null
     var regions = w.querySelectorAll(
-      '.lemma-edit-region[data-lemma-edit-block="' + cssEscape(id) + '"]'
-        + '[data-lemma-edit-field="' + cssEscape(field) + '"]'
+      '.thallo-edit-region[data-thallo-edit-block="' + cssEscape(id) + '"]'
+        + '[data-thallo-edit-field="' + cssEscape(field) + '"]'
     )
     return regions.length === 1 ? regions[0] : null // one region per (block, field)
   }
@@ -158,7 +158,7 @@
     var w = findBlock(id)
     if (!w) return null
     var regions = w.querySelectorAll(
-      '.lemma-edit-region[data-lemma-edit-block="' + cssEscape(id) + '"]'
+      '.thallo-edit-region[data-thallo-edit-block="' + cssEscape(id) + '"]'
     )
     return regions.length === 1 ? regions[0] : null
   }
@@ -213,11 +213,11 @@
     // Body-mounted (format-bubble spec §1): structurally outside every
     // wrapper, so commits and duplicate clones can never carry it.
     var bar = document.createElement('div')
-    bar.className = 'lemma-canvas-format-bar'
+    bar.className = 'thallo-canvas-format-bar'
     // Two explicit rows (column layout): the bubble shrink-wraps the widest
     // row instead of stretching when the link panel opens.
     var row = document.createElement('div')
-    row.className = 'lemma-canvas-format-row'
+    row.className = 'thallo-canvas-format-row'
     FORMAT_ACTIONS.forEach(function (a) {
       var btn = document.createElement('button')
       btn.type = 'button'
@@ -264,10 +264,10 @@
       }
     }
     if (placed) {
-      bar.classList.add('lemma-canvas-format-visible')
+      bar.classList.add('thallo-canvas-format-visible')
       updateFormatStates(sel.getRangeAt(0))
     } else {
-      bar.classList.remove('lemma-canvas-format-visible')
+      bar.classList.remove('thallo-canvas-format-visible')
       clearFormatStates() // no-stale pin (polish batch §1): hidden = cleared
     }
   }
@@ -293,7 +293,7 @@
     for (var key in STATE_COMMANDS) {
       if (!Object.prototype.hasOwnProperty.call(STATE_COMMANDS, key)) continue
       var btn = bar.querySelector('[data-format="' + key + '"]')
-      if (btn) btn.classList.toggle('lemma-canvas-format-active', queryState(STATE_COMMANDS[key]))
+      if (btn) btn.classList.toggle('thallo-canvas-format-active', queryState(STATE_COMMANDS[key]))
     }
     // Link/unlink state via containment (queryCommandState has no link
     // notion) — the same region-contained-<a> rule the panel prefill uses.
@@ -303,15 +303,15 @@
     var linked = !!(a && editing.region.contains(a))
     var linkBtn = bar.querySelector('[data-format="link"]')
     var unlinkBtn = bar.querySelector('[data-format="unlink"]')
-    if (linkBtn) linkBtn.classList.toggle('lemma-canvas-format-active', linked)
-    if (unlinkBtn) unlinkBtn.classList.toggle('lemma-canvas-format-active', linked)
+    if (linkBtn) linkBtn.classList.toggle('thallo-canvas-format-active', linked)
+    if (unlinkBtn) unlinkBtn.classList.toggle('thallo-canvas-format-active', linked)
   }
 
   function clearFormatStates() {
     if (!editing || !editing.formatBar) return
     Array.prototype.forEach.call(
-      editing.formatBar.querySelectorAll('.lemma-canvas-format-active'),
-      function (el) { el.classList.remove('lemma-canvas-format-active') }
+      editing.formatBar.querySelectorAll('.thallo-canvas-format-active'),
+      function (el) { el.classList.remove('thallo-canvas-format-active') }
     )
   }
 
@@ -367,7 +367,7 @@
   function ensureLinkPanel() {
     if (linkPanel && editing && linkPanel.root.parentNode === editing.formatBar) return linkPanel
     var root = document.createElement('div')
-    root.className = 'lemma-canvas-link-panel'
+    root.className = 'thallo-canvas-link-panel'
     var input = document.createElement('input')
     input.type = 'text'
     input.placeholder = 'Paste a link…'
@@ -383,7 +383,7 @@
     root.appendChild(apply)
     input.addEventListener('keydown', onLinkInputKeydown)
     input.addEventListener('input', function () {
-      root.classList.remove('lemma-canvas-link-invalid')
+      root.classList.remove('thallo-canvas-link-invalid')
     })
     apply.addEventListener('click', function (e) {
       e.preventDefault()
@@ -411,8 +411,8 @@
     var el = node.nodeType === 1 ? node : node.parentNode
     var a = el && el.closest ? el.closest('a') : null
     panel.input.value = a && editing.region.contains(a) ? a.getAttribute('href') || '' : ''
-    panel.root.classList.remove('lemma-canvas-link-invalid')
-    panel.root.classList.add('lemma-canvas-link-open')
+    panel.root.classList.remove('thallo-canvas-link-invalid')
+    panel.root.classList.add('thallo-canvas-link-open')
     linkPanelOpen = true // freeze positioning BEFORE focus collapses the selection
     panel.input.focus()
   }
@@ -428,8 +428,8 @@
     savedLinkRange = null
     linkPanelOpen = false
     if (linkPanel) {
-      linkPanel.root.classList.remove('lemma-canvas-link-open')
-      linkPanel.root.classList.remove('lemma-canvas-link-invalid')
+      linkPanel.root.classList.remove('thallo-canvas-link-open')
+      linkPanel.root.classList.remove('thallo-canvas-link-invalid')
     }
   }
 
@@ -453,7 +453,7 @@
     if (!isSafeLinkUrl(url)) {
       // Invalid (empty included — spec pin: empty is NOT unlink): keep the
       // panel open with the VALUE preserved and focus in the input.
-      linkPanel.root.classList.add('lemma-canvas-link-invalid')
+      linkPanel.root.classList.add('thallo-canvas-link-invalid')
       linkPanel.input.focus()
       return
     }
@@ -496,7 +496,7 @@
     if (!editing) return
     if (editing.debounce) clearTimeout(editing.debounce)
     editing.region.removeAttribute('contenteditable')
-    editing.region.classList.remove('lemma-canvas-editing')
+    editing.region.classList.remove('thallo-canvas-editing')
     editing.region.removeEventListener('input', onEditInput)
     editing.region.removeEventListener('blur', onEditBlur)
     editing.region.removeEventListener('keydown', onEditKeydown)
@@ -577,7 +577,7 @@
     if (kind !== 'rich' && String(region.contentEditable).toLowerCase() !== 'plaintext-only') {
       region.setAttribute('contenteditable', 'true')
     }
-    region.classList.add('lemma-canvas-editing')
+    region.classList.add('thallo-canvas-editing')
     if (kind === 'rich') {
       editing.formatBar = showFormatBar()
       document.addEventListener('selectionchange', positionFormatBubble)
@@ -611,7 +611,7 @@
     // Nearest sibling WRAPPER scanning outward — skips non-wrapper nodes and,
     // by construction, the dragged wrapper itself (review caution).
     var cur = dir > 0 ? el.nextElementSibling : el.previousElementSibling
-    while (cur && !(cur.hasAttribute && cur.hasAttribute('data-lemma-block'))) {
+    while (cur && !(cur.hasAttribute && cur.hasAttribute('data-thallo-block'))) {
       cur = dir > 0 ? cur.nextElementSibling : cur.previousElementSibling
     }
     return cur
@@ -626,7 +626,7 @@
       wrapper: w, originalNext: w.nextElementSibling, lastY: e.clientY,
       ghost: null, scrollTimer: null, scrollDir: 0
     }
-    w.classList.add('lemma-canvas-dragging')
+    w.classList.add('thallo-canvas-dragging')
     // currentTarget (review P3): the listener sits on the grip BUTTON, but
     // e.target is often the nested svg/path — capture must attach to the
     // element that owns the listener.
@@ -650,7 +650,7 @@
     var before = []
     for (var i = 0; i < kids.length; i++) {
       var el = kids[i]
-      if (!(el.hasAttribute && el.hasAttribute('data-lemma-block'))) continue
+      if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
       var h = el.firstElementChild
       if (h && h.animate) before.push({ host: h, top: h.getBoundingClientRect().top })
     }
@@ -677,7 +677,7 @@
     var host = w.firstElementChild
     if (!host) return null
     var ghostEl = document.createElement('div')
-    ghostEl.className = 'lemma-canvas-drag-ghost'
+    ghostEl.className = 'thallo-canvas-drag-ghost'
     var clone = host.cloneNode(true)
     stripCanvasState(clone)
     ghostEl.appendChild(clone)
@@ -734,7 +734,7 @@
     for (var i = 0; i < kids.length; i++) {
       var el = kids[i]
       if (el === w) continue
-      if (!(el.hasAttribute && el.hasAttribute('data-lemma-block'))) continue
+      if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
       // Same-parent guard (review caution): mirror-move's rule on the live path.
       if (el.parentNode !== w.parentNode) continue
       var host = el.firstElementChild
@@ -758,7 +758,7 @@
       var lastWrap = null
       for (var j = kids.length - 1; j >= 0; j--) {
         var cand = kids[j]
-        if (cand !== w && cand.hasAttribute && cand.hasAttribute('data-lemma-block')) {
+        if (cand !== w && cand.hasAttribute && cand.hasAttribute('data-thallo-block')) {
           lastWrap = cand
           break
         }
@@ -782,13 +782,13 @@
       var prev = siblingWrapperFrom(w, -1)
       if (next) {
         post('block-move-to', {
-          id: w.getAttribute('data-lemma-block'),
-          beforeId: next.getAttribute('data-lemma-block')
+          id: w.getAttribute('data-thallo-block'),
+          beforeId: next.getAttribute('data-thallo-block')
         })
       } else if (prev) {
         post('block-move-to', {
-          id: w.getAttribute('data-lemma-block'),
-          afterId: prev.getAttribute('data-lemma-block')
+          id: w.getAttribute('data-thallo-block'),
+          afterId: prev.getAttribute('data-thallo-block')
         })
       }
       suppressClick = true // the click that follows a completed drag
@@ -819,7 +819,7 @@
     if (!drag) return
     if (drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost)
     if (drag.scrollTimer) clearInterval(drag.scrollTimer)
-    drag.wrapper.classList.remove('lemma-canvas-dragging')
+    drag.wrapper.classList.remove('thallo-canvas-dragging')
     document.removeEventListener('pointermove', onDragMove)
     document.removeEventListener('pointerup', onDragUp)
     document.removeEventListener('pointercancel', onDragCancel)
@@ -845,7 +845,7 @@
   function onCanvasKeydown(e) {
     if (selectedId === null || editing || drag) return
     var t = e.target
-    if (t && t.closest && t.closest('.lemma-canvas-toolbar')) return
+    if (t && t.closest && t.closest('.thallo-canvas-toolbar')) return
     if (keyTargetIsFormish(t)) return
     if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       e.preventDefault()
@@ -875,8 +875,8 @@
       e.stopPropagation()
       lastPointer = null // keyboard entry: caret placement falls back to focus()
       post('edit-request', {
-        id: region.getAttribute('data-lemma-edit-block'),
-        field: region.getAttribute('data-lemma-edit-field')
+        id: region.getAttribute('data-thallo-edit-block'),
+        field: region.getAttribute('data-thallo-edit-field')
       })
       return
     }
@@ -891,15 +891,15 @@
 
   // ── Mirrors (stage-toolbar spec §1): DOM-only, parent-commanded ─────────────
   function stripCanvasState(root) {
-    Array.prototype.forEach.call(root.querySelectorAll('.lemma-canvas-toolbar'), function (el) {
+    Array.prototype.forEach.call(root.querySelectorAll('.thallo-canvas-toolbar'), function (el) {
       el.parentNode.removeChild(el)
     })
-    Array.prototype.forEach.call(root.querySelectorAll('.lemma-canvas-shim'), function (el) {
+    Array.prototype.forEach.call(root.querySelectorAll('.thallo-canvas-shim'), function (el) {
       el.parentNode.removeChild(el) // bridge-owned anchor shims never survive cloning
     })
     var classes = [
-      'lemma-canvas-anchor', 'lemma-canvas-selected', 'lemma-canvas-hover',
-      'lemma-canvas-selected-target', 'lemma-canvas-hover-target', 'lemma-canvas-dragging'
+      'thallo-canvas-anchor', 'thallo-canvas-selected', 'thallo-canvas-hover',
+      'thallo-canvas-selected-target', 'thallo-canvas-hover-target', 'thallo-canvas-dragging'
     ]
     classes.forEach(function (cls) {
       root.classList.remove(cls)
@@ -910,24 +910,24 @@
     Array.prototype.forEach.call(root.querySelectorAll('[contenteditable]'), function (el) {
       el.removeAttribute('contenteditable')
     })
-    Array.prototype.forEach.call(root.querySelectorAll('.lemma-canvas-editing'), function (el) {
-      el.classList.remove('lemma-canvas-editing')
+    Array.prototype.forEach.call(root.querySelectorAll('.thallo-canvas-editing'), function (el) {
+      el.classList.remove('thallo-canvas-editing')
     })
   }
 
   // ── Partial DOM patching (dom-patching spec §2) ─────────────────────────────
   function topLevelWrappers(root) {
-    // Spec pin: data-lemma-block with NO data-lemma-block ancestor.
+    // Spec pin: data-thallo-block with NO data-thallo-block ancestor.
     return Array.prototype.filter.call(
-      root.querySelectorAll('[data-lemma-block]'),
+      root.querySelectorAll('[data-thallo-block]'),
       function (el) {
-        return !(el.parentElement && el.parentElement.closest('[data-lemma-block]'))
+        return !(el.parentElement && el.parentElement.closest('[data-thallo-block]'))
       }
     )
   }
 
   function wrapperIds(tops) {
-    return tops.map(function (el) { return el.getAttribute('data-lemma-block') })
+    return tops.map(function (el) { return el.getAttribute('data-thallo-block') })
   }
 
   function hasDuplicates(ids) {
@@ -944,7 +944,7 @@
     stripCanvasState(clone)
     // Body-mounted bridge UI never participates in comparisons.
     Array.prototype.forEach.call(
-      clone.querySelectorAll('.lemma-canvas-format-bar, .lemma-canvas-drag-ghost'),
+      clone.querySelectorAll('.thallo-canvas-format-bar, .thallo-canvas-drag-ghost'),
       function (el) { el.parentNode.removeChild(el) }
     )
     return clone
@@ -993,7 +993,7 @@
         var goneId = selectedId
         clearSelection()
         post('block-deselect', { id: goneId })
-      } else if (!sel.classList.contains('lemma-canvas-selected')) {
+      } else if (!sel.classList.contains('thallo-canvas-selected')) {
         selectWrapper(sel)
       }
     }
@@ -1061,18 +1061,18 @@
     if (!src || !src.parentNode || !idMap) return
     var clone = src.cloneNode(true)
     stripCanvasState(clone) // the source is usually SELECTED — never clone live UI state
-    var ownId = clone.getAttribute('data-lemma-block')
-    if (idMap[ownId]) clone.setAttribute('data-lemma-block', idMap[ownId])
-    Array.prototype.forEach.call(clone.querySelectorAll('[data-lemma-block]'), function (el) {
-      var next = idMap[el.getAttribute('data-lemma-block')]
-      if (next) el.setAttribute('data-lemma-block', next)
+    var ownId = clone.getAttribute('data-thallo-block')
+    if (idMap[ownId]) clone.setAttribute('data-thallo-block', idMap[ownId])
+    Array.prototype.forEach.call(clone.querySelectorAll('[data-thallo-block]'), function (el) {
+      var next = idMap[el.getAttribute('data-thallo-block')]
+      if (next) el.setAttribute('data-thallo-block', next)
     })
     // Edit regions carry their block id too (review P1): without the rewrite a
     // duplicated prose block's region keeps the SOURCE id and edit-grant for
     // the new id can never find it until the next Apply re-renders truth.
-    Array.prototype.forEach.call(clone.querySelectorAll('[data-lemma-edit-block]'), function (el) {
-      var mappedEdit = idMap[el.getAttribute('data-lemma-edit-block')]
-      if (mappedEdit) el.setAttribute('data-lemma-edit-block', mappedEdit)
+    Array.prototype.forEach.call(clone.querySelectorAll('[data-thallo-edit-block]'), function (el) {
+      var mappedEdit = idMap[el.getAttribute('data-thallo-edit-block')]
+      if (mappedEdit) el.setAttribute('data-thallo-edit-block', mappedEdit)
     })
     src.parentNode.insertBefore(clone, src.nextSibling)
   }
@@ -1081,10 +1081,10 @@
     document.addEventListener('mouseover', function (e) {
       if (drag) return
       var w = wrapperFor(e.target)
-      clearClass('lemma-canvas-hover')
+      clearClass('thallo-canvas-hover')
       if (w) {
-        w.classList.add('lemma-canvas-hover')
-        post('block-hover', { id: w.getAttribute('data-lemma-block') })
+        w.classList.add('thallo-canvas-hover')
+        post('block-hover', { id: w.getAttribute('data-thallo-block') })
       }
     })
     // Double-click on a prose block asks the parent for an edit grant
@@ -1095,18 +1095,18 @@
       if (!w) return
       // The REGION under the double-click names the field (spec §2); a
       // wrapper-level double-click falls back to the block's single region.
-      var region = e.target && e.target.closest ? e.target.closest('.lemma-edit-region') : null
+      var region = e.target && e.target.closest ? e.target.closest('.thallo-edit-region') : null
       if (!region || !w.contains(region)) {
         // Wrapper-level fallback: ONLY the block's own single region (review
         // P1) — shared with keyboard Enter so the two paths stay aligned.
-        region = singleRegionOf(w.getAttribute('data-lemma-block'))
+        region = singleRegionOf(w.getAttribute('data-thallo-block'))
       }
       if (!region) return
       e.preventDefault()
       lastPointer = { x: e.clientX, y: e.clientY }
       post('edit-request', {
-        id: region.getAttribute('data-lemma-edit-block'),
-        field: region.getAttribute('data-lemma-edit-field')
+        id: region.getAttribute('data-thallo-edit-block'),
+        field: region.getAttribute('data-thallo-edit-field')
       })
     }, true)
     // Capture phase: block-internal links/buttons are INERT while active
@@ -1127,10 +1127,10 @@
         // (input, apply) are handled by the panel's own listeners and must
         // never commit-and-exit (link-panel spec §2).
         var inBar = e.target && e.target.closest
-          ? e.target.closest('.lemma-canvas-format-bar')
+          ? e.target.closest('.thallo-canvas-format-bar')
           : null
         if (inBar) {
-          var fmtBtn = e.target.closest('.lemma-canvas-format-bar [data-format]')
+          var fmtBtn = e.target.closest('.thallo-canvas-format-bar [data-format]')
           if (fmtBtn) {
             e.preventDefault()
             e.stopPropagation()
@@ -1145,7 +1145,7 @@
         endEditing()
       }
       var btn = e.target && e.target.closest
-        ? e.target.closest('.lemma-canvas-toolbar [data-action]')
+        ? e.target.closest('.thallo-canvas-toolbar [data-action]')
         : null
       if (btn && selectedId !== null) {
         e.preventDefault()
@@ -1174,7 +1174,7 @@
       e.preventDefault()
       e.stopPropagation()
       selectWrapper(w)
-      post('block-select', { id: w.getAttribute('data-lemma-block') })
+      post('block-select', { id: w.getAttribute('data-thallo-block') })
     }, true)
     document.addEventListener('keydown', onCanvasKeydown, true)
     // Scroll preservation (auto-apply spec §3): trailing-throttled reports;
@@ -1193,46 +1193,46 @@
   window.addEventListener('message', function (event) {
     var data = event.data || {}
     if (!session) {
-      if (data.type === 'lemma:canvas-hello' && typeof data.nonce === 'string') {
+      if (data.type === 'thallo:canvas-hello' && typeof data.nonce === 'string') {
         session = { origin: event.origin, nonce: data.nonce }
         activate()
       }
       return
     }
     if (event.origin !== session.origin || data.nonce !== session.nonce) return
-    if (data.type === 'lemma:highlight') {
+    if (data.type === 'thallo:highlight') {
       // Outline-driven selection behaves like a stage click: ring + toolbar.
       var el = findBlock(data.id)
       if (el) selectWrapper(el)
       else clearSelection()
     }
-    if (data.type === 'lemma:scroll-to') {
+    if (data.type === 'thallo:scroll-to') {
       var t = findBlock(data.id)
       if (t && t.firstElementChild) {
         t.firstElementChild.scrollIntoView({ block: 'center', behavior: 'smooth' })
       }
     }
     if (
-      data.type === 'lemma:edit-grant' && typeof data.id === 'string'
+      data.type === 'thallo:edit-grant' && typeof data.id === 'string'
       && typeof data.field === 'string' && typeof data.kind === 'string'
     ) {
       startEditing(data.id, data.field, data.kind)
     }
-    if (data.type === 'lemma:edit-flush') {
+    if (data.type === 'thallo:edit-flush') {
       if (editing) {
         commitEditing()
         endEditing()
       }
       post('edit-flushed') // ALWAYS ack (spec §3) — the parent awaits this
     }
-    if (data.type === 'lemma:restore-scroll' && typeof data.y === 'number') {
+    if (data.type === 'thallo:restore-scroll' && typeof data.y === 'number') {
       window.scrollTo(0, data.y) // instant — a reload restore must not visibly travel
     }
-    if (data.type === 'lemma:stage-refresh') {
+    if (data.type === 'thallo:stage-refresh') {
       onStageRefresh(typeof data.refresh_id === 'string' ? data.refresh_id : '')
     }
-    if (data.type === 'lemma:mirror-move') mirrorMove(data.id, data.beforeId, data.afterId)
-    if (data.type === 'lemma:mirror-remove') mirrorRemove(data.id)
-    if (data.type === 'lemma:mirror-duplicate') mirrorDuplicate(data.sourceId, data.idMap)
+    if (data.type === 'thallo:mirror-move') mirrorMove(data.id, data.beforeId, data.afterId)
+    if (data.type === 'thallo:mirror-remove') mirrorRemove(data.id)
+    if (data.type === 'thallo:mirror-duplicate') mirrorDuplicate(data.sourceId, data.idMap)
   })
 })()

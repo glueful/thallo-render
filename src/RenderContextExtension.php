@@ -60,7 +60,7 @@ final class RenderContextExtension extends AbstractExtension
 
     /**
      * Preview-only block annotation (visual-canvas spec §2): when on, blocks()
-     * wraps each rendered instance in a layout-inert `.lemma-preview-block`
+     * wraps each rendered instance in a layout-inert `.thallo-preview-block`
      * carrier so the canvas bridge can map DOM to block ids. Reset-family: the
      * controller ASSIGNS it before every render; never on for live renders.
      */
@@ -364,9 +364,9 @@ final class RenderContextExtension extends AbstractExtension
         if (!is_string($frame['id'])) {
             return $escaped;
         }
-        return '<span class="lemma-edit-region" data-lemma-edit-block="'
+        return '<span class="thallo-edit-region" data-thallo-edit-block="'
             . htmlspecialchars($frame['id'], ENT_QUOTES)
-            . '" data-lemma-edit-field="'
+            . '" data-thallo-edit-field="'
             . htmlspecialchars($field, ENT_QUOTES)
             . '">' . $escaped . '</span>';
     }
@@ -386,9 +386,9 @@ final class RenderContextExtension extends AbstractExtension
         if (!is_string($frame['id']) || $frame['editable_field'] === null) {
             return $safe;
         }
-        return '<div class="lemma-edit-region" data-lemma-edit-block="'
+        return '<div class="thallo-edit-region" data-thallo-edit-block="'
             . htmlspecialchars($frame['id'], ENT_QUOTES)
-            . '" data-lemma-edit-field="'
+            . '" data-thallo-edit-field="'
             . htmlspecialchars($frame['editable_field'], ENT_QUOTES)
             . '">' . $safe . '</div>';
     }
@@ -472,7 +472,7 @@ final class RenderContextExtension extends AbstractExtension
                 // rendered instances with a string id only — missing-template
                 // comments/placeholders carry nothing selectable.
                 $html[] = $this->annotateBlocks && is_string($item['id'] ?? null)
-                    ? '<div class="lemma-preview-block" data-lemma-block="'
+                    ? '<div class="thallo-preview-block" data-thallo-block="'
                         . htmlspecialchars((string) $item['id'], ENT_QUOTES) . '">' . $rendered . '</div>'
                     : $rendered;
             }

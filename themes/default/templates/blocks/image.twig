@@ -1,5 +1,5 @@
 {% set img = data.image ? media(data.image) : null %}
-<figure class="lemma-block lemma-block-image lemma-block-image--{{ data.width|default('normal') }}">
+<figure class="thallo-block thallo-block-image thallo-block-image--{{ data.width|default('normal') }}">
   {% if img %}<img src="{{ img }}" alt="{{ data.alt|default('') }}">{% endif %}
   {% if data.caption %}<figcaption>{{ data.caption|editable_text('caption') }}</figcaption>{% endif %}
 </figure>

@@ -2,7 +2,7 @@
 {# Defense in depth: the schema pattern pins [a-z][a-z0-9_-]*; '.'/'/' checks
    also block traversal for any legacy value written around the API. #}
 {% if name and '/' not in name and '.' not in name %}
-<div class="lemma-block lemma-block-shortcode" data-shortcode="{{ name }}">
+<div class="thallo-block thallo-block-shortcode" data-shortcode="{{ name }}">
   {%- include 'shortcodes/' ~ name ~ '.twig' ignore missing with {'params': data.params|default({}), 'site': site|default({})} only -%}
 </div>
 {% endif %}

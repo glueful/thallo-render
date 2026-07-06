@@ -3,4 +3,4 @@
    start year -> "© 2020–2026 Name"). #}
 {% set year = "now"|date("Y") %}
 {% set holder = params.name|default(site.name|default('')) %}
-<p class="lemma-shortcode-copyright">© {% if params.since|default('') and params.since != year %}{{ params.since }}–{% endif %}{{ year }}{% if holder %} {{ holder }}{% endif %}</p>
+<p class="thallo-shortcode-copyright">© {% if params.since|default('') and params.since != year %}{{ params.since }}–{% endif %}{{ year }}{% if holder %} {{ holder }}{% endif %}</p>

@@ -1,5 +1,5 @@
 {# Standalone fallback (an faq_item outside an faq renders independently). #}
-<details class="lemma-block lemma-block-faq_item">
-  <summary class="lemma-block-faq_item__question">{{ data.question|editable_text('question') }}</summary>
-  <div class="lemma-block-faq_item__answer">{{ data.answer|default('')|safe_html }}</div>
+<details class="thallo-block thallo-block-faq_item">
+  <summary class="thallo-block-faq_item__question">{{ data.question|editable_text('question') }}</summary>
+  <div class="thallo-block-faq_item__answer">{{ data.answer|default('')|safe_html }}</div>
 </details>

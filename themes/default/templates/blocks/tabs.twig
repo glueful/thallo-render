@@ -1,15 +1,15 @@
-<div class="lemma-block lemma-block-tabs">
+<div class="thallo-block thallo-block-tabs">
   {% for item in data.items|default([]) %}
-  <input class="lemma-block-tabs__radio" type="radio" name="tabs-{{ block.id }}" id="tabs-{{ block.id }}-{{ loop.index }}"{% if loop.first %} checked{% endif %}>
+  <input class="thallo-block-tabs__radio" type="radio" name="tabs-{{ block.id }}" id="tabs-{{ block.id }}-{{ loop.index }}"{% if loop.first %} checked{% endif %}>
   {% endfor %}
-  <div class="lemma-block-tabs__list" role="tablist">
+  <div class="thallo-block-tabs__list" role="tablist">
     {% for item in data.items|default([]) %}
-    <label class="lemma-block-tabs__label" for="tabs-{{ block.id }}-{{ loop.index }}">{{ item.data.label|default('') }}</label>
+    <label class="thallo-block-tabs__label" for="tabs-{{ block.id }}-{{ loop.index }}">{{ item.data.label|default('') }}</label>
     {% endfor %}
   </div>
-  <div class="lemma-block-tabs__panels">
+  <div class="thallo-block-tabs__panels">
     {% for item in data.items|default([]) %}
-    <div class="lemma-block-tabs__panel">{{ blocks([item]) }}</div>
+    <div class="thallo-block-tabs__panel">{{ blocks([item]) }}</div>
     {% endfor %}
   </div>
 </div>

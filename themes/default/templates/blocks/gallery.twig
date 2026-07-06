@@ -1,6 +1,6 @@
-<div class="lemma-block lemma-block-gallery lemma-block-gallery--{{ data.columns|default('3') }}">
+<div class="thallo-block thallo-block-gallery thallo-block-gallery--{{ data.columns|default('3') }}">
   {% for uuid in data.images|default([]) %}
     {% set img = media(uuid) %}
-    {% if img %}<img class="lemma-block-gallery__item" src="{{ img }}" alt="">{% endif %}
+    {% if img %}<img class="thallo-block-gallery__item" src="{{ img }}" alt="">{% endif %}
   {% endfor %}
 </div>

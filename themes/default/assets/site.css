@@ -1,4 +1,4 @@
-/* lemma-render default theme — modern-SaaS reference. Copy this theme into
+/* thallo-render default theme — modern-SaaS reference. Copy this theme into
    your app's themes/ directory as a starting point. Shell selectors are
    NAMESPACED (.site-header/.site-nav/.site-footer): block templates render
    semantic header/nav/footer elements of their own and must never inherit
@@ -85,11 +85,11 @@ img { max-width: 100%; display: block; }
 }
 
 /* Region-backed chrome (global-regions spec): modifier classes from region settings. */
-.lemma-region-header--sticky { position: sticky; top: 0; z-index: 40; background: var(--bg); }
-.lemma-region-header--full .site-header__inner,
-.lemma-region-footer--full .site-footer__inner { max-width: none; }
-.lemma-region .site-header__inner,
-.lemma-region .site-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.thallo-region-header--sticky { position: sticky; top: 0; z-index: 40; background: var(--bg); }
+.thallo-region-header--full .site-header__inner,
+.thallo-region-footer--full .site-footer__inner { max-width: none; }
+.thallo-region .site-header__inner,
+.thallo-region .site-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .site-nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
 .site-nav a {
   color: var(--muted);

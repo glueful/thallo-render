@@ -1,13 +1,13 @@
 {% set img = data.image ? media(data.image) : null %}
 {% set orientation = data.orientation|default('vertical') %}
-<header class="lemma-block lemma-block-hero lemma-block-hero--{{ orientation }}{% if data.reverse|default(false) %} lemma-block-hero--reverse{% endif %}">
-  <div class="lemma-block-hero__inner">
-    <div class="lemma-block-hero__wrapper">
-      {% if data.headline %}<p class="lemma-block-hero__headline">{{ data.headline|editable_text('headline') }}</p>{% endif %}
-      <h1 class="lemma-block-hero__title">{{ data.title|editable_text('title') }}</h1>
-      {% if data.description %}<p class="lemma-block-hero__description">{{ data.description|editable_text('description') }}</p>{% endif %}
-      {% if data.links|default([]) is not empty %}<div class="lemma-block-hero__links">{{ blocks(data.links) }}</div>{% endif %}
+<header class="thallo-block thallo-block-hero thallo-block-hero--{{ orientation }}{% if data.reverse|default(false) %} thallo-block-hero--reverse{% endif %}">
+  <div class="thallo-block-hero__inner">
+    <div class="thallo-block-hero__wrapper">
+      {% if data.headline %}<p class="thallo-block-hero__headline">{{ data.headline|editable_text('headline') }}</p>{% endif %}
+      <h1 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h1>
+      {% if data.description %}<p class="thallo-block-hero__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+      {% if data.links|default([]) is not empty %}<div class="thallo-block-hero__links">{{ blocks(data.links) }}</div>{% endif %}
     </div>
-    {% if img %}<div class="lemma-block-hero__media"><img src="{{ img }}" alt=""></div>{% endif %}
+    {% if img %}<div class="thallo-block-hero__media"><img src="{{ img }}" alt=""></div>{% endif %}
   </div>
 </header>

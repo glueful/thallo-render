@@ -9,13 +9,13 @@
   'use strict';
 
   function init() {
-    if (document.querySelector('.lemma-preview-block')) return; // canvas stage: no-op
-    document.querySelectorAll('.lemma-block-carousel').forEach(enhance);
+    if (document.querySelector('.thallo-preview-block')) return; // canvas stage: no-op
+    document.querySelectorAll('.thallo-block-carousel').forEach(enhance);
   }
 
   function enhance(root) {
-    var viewport = root.querySelector('.lemma-block-carousel__viewport');
-    var track = root.querySelector('.lemma-block-carousel__track');
+    var viewport = root.querySelector('.thallo-block-carousel__viewport');
+    var track = root.querySelector('.thallo-block-carousel__track');
     if (!viewport || !track) return;
     var slides = Array.prototype.filter.call(track.children, function (el) {
       return el.nodeType === 1;
@@ -47,8 +47,8 @@
     }
 
     if (root.dataset.arrows === '1') {
-      var prev = button('lemma-block-carousel__prev', 'Previous slide', '‹');
-      var next = button('lemma-block-carousel__next', 'Next slide', '›');
+      var prev = button('thallo-block-carousel__prev', 'Previous slide', '‹');
+      var next = button('thallo-block-carousel__next', 'Next slide', '›');
       prev.addEventListener('click', function () { stopAutoplay(); goTo(currentIndex() - 1); });
       next.addEventListener('click', function () { stopAutoplay(); goTo(currentIndex() + 1); });
       root.appendChild(prev);
@@ -58,9 +58,9 @@
     var dots = [];
     if (root.dataset.dots === '1') {
       var wrap = document.createElement('div');
-      wrap.className = 'lemma-block-carousel__dots';
+      wrap.className = 'thallo-block-carousel__dots';
       slides.forEach(function (_, i) {
-        var dot = button('lemma-block-carousel__dot', 'Go to slide ' + (i + 1), '');
+        var dot = button('thallo-block-carousel__dot', 'Go to slide ' + (i + 1), '');
         dot.addEventListener('click', function () { stopAutoplay(); goTo(i); });
         dots.push(dot);
         wrap.appendChild(dot);
