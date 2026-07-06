@@ -45,7 +45,7 @@ final class TemplatesAdminController
 
     #[ApiOperation(
         summary: 'List selectable themes (validator-accepted) and the active one',
-        tags: ['Lemma Templates'],
+        tags: ['Thallo Templates'],
     )]
     #[ApiResponse(200, description: 'Selectable themes + the currently active theme.')]
     public function themes(): Response
@@ -58,7 +58,7 @@ final class TemplatesAdminController
 
     #[ApiOperation(
         summary: 'Clone a theme into a new app theme directory (themes/{name})',
-        tags: ['Lemma Templates'],
+        tags: ['Thallo Templates'],
     )]
     #[ApiResponse(200, description: 'Created; response carries the new theme and the refreshed theme list.')]
     #[ApiResponse(422, description: 'Invalid name/source, name taken, or the themes directory is not writable.')]
@@ -84,7 +84,7 @@ final class TemplatesAdminController
     /**
      * @queryParam theme:string="Theme name; defaults to the active theme."
      */
-    #[ApiOperation(summary: 'List resolvable templates (filesystem + DB) for a theme', tags: ['Lemma Templates'])]
+    #[ApiOperation(summary: 'List resolvable templates (filesystem + DB) for a theme', tags: ['Thallo Templates'])]
     #[ApiResponse(200, description: 'Merged listing with per-path origin (db|theme|default).')]
     public function index(Request $request): Response
     {
@@ -125,7 +125,7 @@ final class TemplatesAdminController
     /**
      * @queryParam theme:string="Theme name; defaults to the active theme."
      */
-    #[ApiOperation(summary: 'Current template source (DB override or filesystem)', tags: ['Lemma Templates'])]
+    #[ApiOperation(summary: 'Current template source (DB override or filesystem)', tags: ['Thallo Templates'])]
     #[ApiResponse(200, description: 'Source + origin; filesystem sources are the copy-from-disk start.')]
     #[ApiResponse(404, description: 'Unknown theme, invalid path, or nothing at this path.')]
     public function show(Request $request, string $path): Response
@@ -186,7 +186,7 @@ final class TemplatesAdminController
      */
     #[ApiOperation(
         summary: 'Save a template override (create or update; DB-only paths allowed)',
-        tags: ['Lemma Templates'],
+        tags: ['Thallo Templates'],
     )]
     #[\Glueful\Routing\Attributes\ApiRequestBody(
         schema: TemplateSaveBody::class,
@@ -244,7 +244,7 @@ final class TemplatesAdminController
      */
     #[ApiOperation(
         summary: 'Delete the override (deactivate — history preserved), fall back to filesystem',
-        tags: ['Lemma Templates'],
+        tags: ['Thallo Templates'],
     )]
     #[ApiResponse(200, description: 'Override deactivated.')]
     #[ApiResponse(404, description: 'No active override at this path.')]
@@ -264,7 +264,7 @@ final class TemplatesAdminController
     /**
      * @queryParam theme:string="Theme name; defaults to the active theme."
      */
-    #[ApiOperation(summary: 'Version history (newest first; survives delete)', tags: ['Lemma Templates'])]
+    #[ApiOperation(summary: 'Version history (newest first; survives delete)', tags: ['Thallo Templates'])]
     #[ApiResponse(200, description: 'Versions: {uuid, created_by, created_at, current}.')]
     #[ApiResponse(404, description: 'This path has never been saved.')]
     public function versions(Request $request, string $path): Response
@@ -286,7 +286,7 @@ final class TemplatesAdminController
     /**
      * @queryParam theme:string="Theme name; defaults to the active theme."
      */
-    #[ApiOperation(summary: 'One version\'s source', tags: ['Lemma Templates'])]
+    #[ApiOperation(summary: 'One version\'s source', tags: ['Thallo Templates'])]
     #[ApiResponse(200, description: 'The immutable stored source.')]
     #[ApiResponse(404, description: 'Unknown version for this path.')]
     public function showVersion(Request $request, string $path, string $uuid): Response
@@ -307,7 +307,7 @@ final class TemplatesAdminController
      */
     #[ApiOperation(
         summary: 'Restore a version (append-as-new-current; reactivates a deleted override)',
-        tags: ['Lemma Templates'],
+        tags: ['Thallo Templates'],
     )]
     #[ApiResponse(200, description: 'Restored; response carries the NEW version uuid.')]
     #[ApiResponse(404, description: 'Unknown version for this path.')]

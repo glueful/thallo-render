@@ -42,7 +42,7 @@ final class ActiveThemeSource
                 return $this->memo = $override;
             }
             $this->logger?->warning(
-                "[Lemma] Stored theme '{$override}' is no longer valid; falling back to '{$this->envTheme}'.",
+                "[Thallo] Stored theme '{$override}' is no longer valid; falling back to '{$this->envTheme}'.",
             );
         }
         return $this->memo = $this->envTheme;
