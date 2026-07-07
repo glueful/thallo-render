@@ -378,6 +378,8 @@ final class RenderServiceProvider extends ServiceProvider
             ),
             // asset() theme buster (theme-setting spec §3).
             $container->get(ActiveThemeSource::class),
+            // color-mode spec §3.4: gates the resolver, marker, and toggle block.
+            colorModeEnabled: (bool) config($context, 'theme.color_mode.enabled', true),
         );
     }
 

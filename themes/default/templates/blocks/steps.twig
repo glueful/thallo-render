@@ -1,6 +1,0 @@
-<section class="thallo-block thallo-block-steps thallo-block-steps--{{ data.orientation|default('horizontal') }}">
-  <div class="thallo-block-steps__inner">
-    {% if data.title %}<h2 class="thallo-block-steps__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
-    <div class="thallo-block-steps__items">{{ blocks(data.items) }}</div>
-  </div>
-</section>

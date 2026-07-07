@@ -1,3 +1,16 @@
-<div class="thallo-block thallo-block-grid thallo-block-grid--cols-{{ data.columns|default('3') }} thallo-block-grid--{{ data.flow|default('grid') }} thallo-block-grid--gap-{{ data.gap|default('medium') }}">
+{# grid — a wrapping grid (equal rows) or masonry (CSS columns) laying out child
+   blocks. Authored in the theme's BEM/computed-class convention (see
+   navigation.twig / separator.twig): class strings built in {% set %} maps up top,
+   each guarded with ?? so an unknown stored enum degrades to the default modifier
+   instead of emitting a class no CSS matches.
+   Fields (all optional): columns (1|2|3|4), flow (grid|masonry),
+   gap (small|medium|large), items (child blocks). #}
+{% set rootClass = [
+  'thallo-block thallo-block-grid',
+  'thallo-block-grid--cols-' ~ ({'1': '1', '2': '2', '3': '3', '4': '4'}[data.columns|default('3')] ?? '3'),
+  'thallo-block-grid--' ~ ({grid: 'grid', masonry: 'masonry'}[data.flow|default('grid')] ?? 'grid'),
+  'thallo-block-grid--gap-' ~ ({small: 'small', medium: 'medium', large: 'large'}[data.gap|default('medium')] ?? 'medium'),
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
   <div class="thallo-block-grid__items">{{ blocks(data.items) }}</div>
 </div>

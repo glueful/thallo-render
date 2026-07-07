@@ -1,0 +1,184 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   navigation block — menu-sourced nav with a variant/color/highlight style
+   model (concepts lifted from Nuxt UI's navigationMenu, re-expressed in this
+   theme's tokens and a static, CSS-only submenu mechanism).
+
+   Two layers:
+   1. FLOOR (no JS): submenus reveal on :hover / :focus-within (hover mode) or
+      via <details>[open] (click mode). Works in the preview canvas and for
+      no-JS clients / SEO.
+   2. ENHANCEMENT (blocks.js nav module, live pages only): adds .is-open with
+      hover-intent + keyboard/outside-click close. When present the script sets
+      .thallo-block-navigation--js on the root, which suppresses the raw :hover
+      reveal so the delayed .is-open state governs instead.
+
+   Accent is funnelled through --nav-accent so `color` swaps one variable:
+   primary → brand --accent, neutral → monochrome --ink.
+   ───────────────────────────────────────────────────────────────────────── */
+.thallo-block-navigation { --nav-accent: var(--accent); --nav-accent-ink: var(--accent-ink); }
+.thallo-block-navigation--color-neutral { --nav-accent: var(--ink); --nav-accent-ink: var(--bg); }
+
+/* ── Bar + list ──────────────────────────────────────────────────────────── */
+.thallo-block-navigation__nav { display: block; }
+.thallo-block-navigation__list {
+  display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;
+  list-style: none; margin: 0; padding: 0;
+}
+.thallo-block-navigation--vertical .thallo-block-navigation__list {
+  flex-direction: column; gap: var(--space-1); align-items: stretch;
+}
+.thallo-block-navigation--align-start .thallo-block-navigation__list { justify-content: flex-start; }
+.thallo-block-navigation--align-center .thallo-block-navigation__list { justify-content: center; }
+.thallo-block-navigation--align-end .thallo-block-navigation__list { justify-content: flex-end; }
+.thallo-block-navigation--size-sm { font-size: 0.85rem; }
+.thallo-block-navigation--size-md { font-size: 0.95rem; }
+.thallo-block-navigation--size-lg { font-size: 1.1rem; }
+
+/* ── Top-level link (a / span / summary all share __link) ────────────────── */
+.thallo-block-navigation__item { min-width: 0; }
+.thallo-block-navigation__link {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 0.4em;
+  padding: 0.4em 0.7em; border-radius: var(--radius);
+  color: var(--muted); text-decoration: none; cursor: pointer;
+  font: inherit; background: none; border: 0; white-space: nowrap;
+  transition: color .15s ease, background-color .15s ease;
+}
+.thallo-block-navigation__link:hover,
+.thallo-block-navigation__link:focus-visible { color: var(--ink); }
+.thallo-block-navigation__icon { display: inline-flex; }
+.thallo-block-navigation__icon svg { width: 1.1em; height: 1.1em; }
+.thallo-block-navigation__chevron { display: inline-flex; transition: transform .2s ease; }
+.thallo-block-navigation__chevron svg { width: 0.9em; height: 0.9em; }
+.thallo-block-navigation__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── variant: pill (filled hover/active chip) ────────────────────────────── */
+.thallo-block-navigation--pill .thallo-block-navigation__link:hover { background: var(--surface); }
+.thallo-block-navigation--pill .thallo-block-navigation__item--active > .thallo-block-navigation__link {
+  background: var(--nav-accent); color: var(--nav-accent-ink);
+}
+/* ── variant: link (plain text, accent on active) ────────────────────────── */
+.thallo-block-navigation--link .thallo-block-navigation__item--active > .thallo-block-navigation__link {
+  color: var(--nav-accent);
+}
+
+/* ── highlight indicator (::after) ───────────────────────────────────────────
+   Present on every link (under the highlight-* variants only), hidden by default
+   and revealed under the ACTIVE item AND on hover/focus — so the indicator is
+   visible on interaction even where no item is "active" (e.g. the admin chrome
+   preview, which has no current_path). Geometry is set per orientation; opacity
+   is the on/off switch, giving a soft fade. */
+.thallo-block-navigation--highlight-underline .thallo-block-navigation__link::after,
+.thallo-block-navigation--highlight-bar .thallo-block-navigation__link::after {
+  content: ""; position: absolute; background: var(--nav-accent);
+  border-radius: 999px; opacity: 0; transition: opacity .2s ease;
+}
+/* horizontal → bottom line (bar is thicker) */
+.thallo-block-navigation--horizontal.thallo-block-navigation--highlight-underline .thallo-block-navigation__link::after {
+  inset-inline: 0.7em; bottom: -2px; height: 2px;
+}
+.thallo-block-navigation--horizontal.thallo-block-navigation--highlight-bar .thallo-block-navigation__link::after {
+  inset-inline: 0.5em; bottom: -3px; height: 3px;
+}
+/* vertical → start-side bar */
+.thallo-block-navigation--vertical.thallo-block-navigation--highlight-underline .thallo-block-navigation__link::after,
+.thallo-block-navigation--vertical.thallo-block-navigation--highlight-bar .thallo-block-navigation__link::after {
+  top: 0.3em; bottom: 0.3em; inset-inline-start: -3px; width: 3px;
+}
+/* reveal under the active item, and on hover/focus of any top-level item */
+.thallo-block-navigation--highlight-underline .thallo-block-navigation__item--active > .thallo-block-navigation__link::after,
+.thallo-block-navigation--highlight-underline .thallo-block-navigation__item:hover > .thallo-block-navigation__link::after,
+.thallo-block-navigation--highlight-underline .thallo-block-navigation__item:focus-within > .thallo-block-navigation__link::after,
+.thallo-block-navigation--highlight-bar .thallo-block-navigation__item--active > .thallo-block-navigation__link::after,
+.thallo-block-navigation--highlight-bar .thallo-block-navigation__item:hover > .thallo-block-navigation__link::after,
+.thallo-block-navigation--highlight-bar .thallo-block-navigation__item:focus-within > .thallo-block-navigation__link::after {
+  opacity: 1;
+}
+
+/* ── Submenu panel ───────────────────────────────────────────────────────── */
+.thallo-block-navigation__item--parent { position: relative; }
+.thallo-block-navigation__submenu {
+  list-style: none; margin: 0; padding: var(--space-2);
+  min-width: 12rem; display: none; z-index: 30;
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.thallo-block-navigation--horizontal .thallo-block-navigation__item--parent > .thallo-block-navigation__submenu,
+.thallo-block-navigation--horizontal .thallo-block-navigation__details > .thallo-block-navigation__submenu {
+  position: absolute; top: 100%; inset-inline-start: 0; margin-top: var(--space-1);
+}
+
+/* Floor reveals ---------------------------------------------------------- */
+.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__submenu,
+.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__submenu { display: block; }
+.thallo-block-navigation__details > summary { list-style: none; }
+.thallo-block-navigation__details > summary::-webkit-details-marker { display: none; }
+.thallo-block-navigation__details[open] > .thallo-block-navigation__submenu { display: block; }
+
+/* Enhanced state: script drives .is-open (both modes) ------------------- */
+.thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__submenu { display: block; }
+/* With JS active, suppress the raw hover reveal so hover-intent (delay) wins. */
+.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__submenu,
+.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__submenu { display: none; }
+.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__submenu { display: block; }
+
+/* chevron rotates when the panel is open (floor + enhanced) */
+.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__link .thallo-block-navigation__chevron,
+.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__link .thallo-block-navigation__chevron,
+.thallo-block-navigation__details[open] > summary .thallo-block-navigation__chevron,
+.thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__link .thallo-block-navigation__chevron { transform: rotate(180deg); }
+
+/* Vertical submenu = inline disclosure (no floating panel) */
+.thallo-block-navigation--vertical .thallo-block-navigation__submenu {
+  position: static; box-shadow: none; border: 0; min-width: 0;
+  padding-block: var(--space-1); padding-inline-start: var(--space-4);
+}
+
+/* ── Sub-links ───────────────────────────────────────────────────────────── */
+.thallo-block-navigation__subitem { list-style: none; }
+.thallo-block-navigation__sublink {
+  display: flex; align-items: flex-start; gap: 0.4em;
+  padding: 0.4em 0.6em; border-radius: var(--radius);
+  color: var(--muted); text-decoration: none;
+  transition: color .15s ease, background-color .15s ease;
+}
+.thallo-block-navigation__sublink:hover,
+.thallo-block-navigation__sublink:focus-visible { color: var(--ink); background: var(--surface); }
+.thallo-block-navigation__subitem--active > .thallo-block-navigation__sublink { color: var(--nav-accent); }
+/* icon aligns to the first text line (label) when a description stacks below */
+.thallo-block-navigation__sublink .thallo-block-navigation__icon { margin-top: 0.1em; }
+.thallo-block-navigation__subtext { display: flex; flex-direction: column; gap: 0.1em; min-width: 0; }
+.thallo-block-navigation__sublabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* per-item description (nav-v2 megamenu): a muted supporting line under the label */
+.thallo-block-navigation__subdesc {
+  font-size: 0.85em; font-weight: 400; color: var(--muted); line-height: 1.35;
+}
+
+/* ── Megamenu columns ────────────────────────────────────────────────────── */
+.thallo-block-navigation__submenu--columns {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3); padding: var(--space-3); min-width: 28rem;
+}
+.thallo-block-navigation--vertical .thallo-block-navigation__submenu--columns {
+  min-width: 0; grid-template-columns: 1fr; gap: var(--space-2);
+}
+.thallo-block-navigation__col-title {
+  display: block; font-weight: 600; color: var(--ink); text-decoration: none;
+  padding: 0.3em 0.6em; margin-bottom: var(--space-1);
+}
+a.thallo-block-navigation__col-title:hover { color: var(--nav-accent); }
+.thallo-block-navigation__col-desc {
+  display: block; font-size: 0.85em; color: var(--muted); line-height: 1.35;
+  padding-inline: 0.6em; margin: -0.15em 0 var(--space-1);
+}
+.thallo-block-navigation__col-list { list-style: none; margin: 0; padding: 0; }
+
+/* ── In a chrome region the nav takes the free space between logo + actions ── */
+.thallo-region .thallo-block-navigation { flex: 1; min-width: 0; }
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-navigation__chevron,
+  .thallo-block-navigation__link,
+  .thallo-block-navigation__sublink { transition: none; }
+}

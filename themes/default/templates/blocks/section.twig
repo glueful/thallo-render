@@ -1,6 +1,32 @@
-<section class="thallo-block thallo-block-section thallo-block-section--{{ data.background|default('none') }}">
+{# section — a titled content band wrapping a child block list (maps to refs.md `pageSection`).
+   Authored in the theme's BEM/computed-class convention (see navigation.twig / separator.twig):
+   class strings built in {% set %} maps up top, each guarded with ?? so an unknown stored enum
+   degrades to the default modifier instead of emitting a class no CSS matches.
+   Fields (all optional): headline, title, description,
+     background (none|muted|subtle|inverted), orientation (vertical|horizontal),
+     reverse (boolean), links (child button blocks), content (child blocks). #}
+{% set background = data.background|default('none') %}
+{% set orientation = data.orientation|default('vertical') %}
+{% set reverse = data.reverse|default(false) %}
+{% set hasHeader = (data.headline|default('')) is not empty
+  or (data.title|default('')) is not empty
+  or (data.description|default('')) is not empty %}
+{% set rootClass = [
+  'thallo-block thallo-block-section',
+  'thallo-block-section--' ~ ({none: 'none', muted: 'muted', subtle: 'subtle', inverted: 'inverted'}[background] ?? 'none'),
+  'thallo-block-section--' ~ ({vertical: 'vertical', horizontal: 'horizontal'}[orientation] ?? 'vertical'),
+  reverse ? 'thallo-block-section--reverse' : '',
+]|join(' ')|trim %}
+<section class="{{ rootClass }}">
   <div class="thallo-block-section__inner">
-    {% if data.title %}<h2 class="thallo-block-section__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
-    {{ blocks(data.content) }}
+    {% if hasHeader %}
+    <div class="thallo-block-section__header">
+      {% if data.headline|default('') %}<p class="thallo-block-section__headline">{{ data.headline|editable_text('headline') }}</p>{% endif %}
+      {% if data.title|default('') %}<h2 class="thallo-block-section__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
+      {% if data.description|default('') %}<p class="thallo-block-section__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+    </div>
+    {% endif %}
+    {% if data.content|default([]) is not empty %}<div class="thallo-block-section__content">{{ blocks(data.content) }}</div>{% endif %}
+    {% if data.links|default([]) is not empty %}<div class="thallo-block-section__links">{{ blocks(data.links) }}</div>{% endif %}
   </div>
 </section>

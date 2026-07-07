@@ -1,0 +1,22 @@
+{# links — maps to refs.md `pageLinks`. A vertical list of navigation links with
+   an optional title. Authored in the theme's BEM/computed-class convention (see
+   navigation.twig / separator.twig): no Tailwind utilities — style lives in CSS
+   keyed off the __element classes, and the active/muted link recipe is lifted
+   from navigationMenu (active → --accent, others muted → --ink on hover).
+   Fields: title (optional, editable_text), items — a plain array (NOT child
+   blocks) of { label, url, icon (optional), active (optional bool) }. #}
+<nav class="thallo-block thallo-block-links">
+  {% if data.title|default('') is not empty %}
+    <p class="thallo-block-links__title">{{ data.title|editable_text('title') }}</p>
+  {% endif %}
+  <ul class="thallo-block-links__list">
+    {% for item in data.items|default([]) %}
+      <li class="thallo-block-links__item">
+        <a class="thallo-block-links__link{% if item.active|default(false) %} thallo-block-links__link--active{% endif %}" href="{{ item.url|default('')|safe_url }}">
+          {% if item.icon|default('') is not empty %}<span class="thallo-block-links__icon" aria-hidden="true">{{ icon(item.icon) ?? item.icon }}</span>{% endif %}
+          <span class="thallo-block-links__label">{{ item.label }}</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</nav>

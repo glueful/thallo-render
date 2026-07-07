@@ -1,0 +1,16 @@
+{# collapsible — maps to refs.md `collapsible`. A CSS-only disclosure via native
+   <details> (no JS): correctness comes from the element; the open/close feel is a
+   CSS grid-rows transition on the panel. Authored in the theme's BEM convention
+   (see navigation.twig / separator.twig). Fields (all optional):
+   label (editable_text), open (bool → emits the `open` attr), content (child blocks). #}
+<details class="thallo-block thallo-block-collapsible"{% if data.open|default(false) %} open{% endif %}>
+  <summary class="thallo-block-collapsible__summary">
+    <span class="thallo-block-collapsible__label">{{ data.label|default('')|editable_text('label') }}</span>
+    <span class="thallo-block-collapsible__chevron" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+  </summary>
+  <div class="thallo-block-collapsible__panel">
+    <div class="thallo-block-collapsible__panel-inner">{{ blocks(data.content) }}</div>
+  </div>
+</details>

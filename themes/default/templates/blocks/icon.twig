@@ -1,5 +1,16 @@
+{# icon — a standalone glyph, optionally linked. Authored in the theme's BEM/
+   computed-class convention (see navigation.twig, separator.twig): class strings
+   built in {% set %} maps up top, each guarded with ?? so an unknown stored enum
+   degrades to the default modifier. The SVG comes from icon(); an unknown name
+   falls back to the escaped raw text. Fields (all optional): icon, url, label,
+   size (small|medium|large), align (start|center|end). #}
 {% set url = data.url|default('')|safe_url %}
 {% set glyph %}{{ icon(data.icon|default('')) ?? data.icon|default('') }}{% endset %}
-<div class="thallo-block thallo-block-icon thallo-block-icon--{{ data.size|default('medium') }} thallo-block-icon--{{ data.align|default('start') }}">
+{% set rootClass = [
+  'thallo-block thallo-block-icon',
+  'thallo-block-icon--' ~ ({small: 'small', medium: 'medium', large: 'large'}[data.size|default('medium')] ?? 'medium'),
+  'thallo-block-icon--' ~ ({start: 'start', center: 'center', end: 'end'}[data.align|default('start')] ?? 'start'),
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
   {% if url %}<a class="thallo-block-icon__link" href="{{ url }}" aria-label="{{ data.label|default(data.icon)|default('') }}">{{ glyph }}</a>{% else %}{{ glyph }}{% endif %}
 </div>

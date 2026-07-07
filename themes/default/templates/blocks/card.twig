@@ -1,0 +1,22 @@
+{# card — maps to refs.md `pageCard`. A content card; drop several into a `grid` or
+   `columns` to build feature grids / testimonial walls. Authored in the theme's
+   BEM/computed-class convention (see navigation.twig / separator.twig): class strings
+   built in {% set %} maps up top, each guarded with ?? so an unknown stored enum
+   degrades to the default modifier instead of emitting a class no CSS matches.
+   Fields (all optional): icon, title, description, body (child blocks),
+   variant (outline|solid|soft|subtle|ghost|naked), orientation (vertical|horizontal), reverse. #}
+{% set variant = data.variant|default('outline') %}
+{% set orientation = data.orientation|default('vertical') %}
+{% set reverse = data.reverse|default(false) %}
+{% set rootClass = [
+  'thallo-block thallo-block-card',
+  'thallo-block-card--variant-' ~ ({outline: 'outline', solid: 'solid', soft: 'soft', subtle: 'subtle', ghost: 'ghost', naked: 'naked'}[variant] ?? 'outline'),
+  orientation == 'horizontal' ? 'thallo-block-card--horizontal' : '',
+  reverse ? 'thallo-block-card--reverse' : '',
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
+  {% if data.icon %}<span class="thallo-block-card__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
+  {% if data.title %}<h3 class="thallo-block-card__title">{{ data.title|editable_text('title') }}</h3>{% endif %}
+  {% if data.description %}<p class="thallo-block-card__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+  {% if data.body|default([]) is not empty %}<div class="thallo-block-card__body">{{ blocks(data.body) }}</div>{% endif %}
+</div>

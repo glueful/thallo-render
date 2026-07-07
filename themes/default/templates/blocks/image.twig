@@ -1,5 +1,15 @@
+{# image — a figure with optional caption. Authored in the theme's BEM/computed-class
+   convention (see navigation.twig / separator.twig): the root class string is built in
+   a {% set %} map up top, guarded with ?? so an unknown stored width degrades to the
+   default modifier instead of emitting a class no CSS matches. media() resolves the
+   blob and the <img> is skipped when it nulls (private/unresolvable blob).
+   Fields: image, alt, caption, width (normal|wide|full). #}
 {% set img = data.image ? media(data.image) : null %}
-<figure class="thallo-block thallo-block-image thallo-block-image--{{ data.width|default('normal') }}">
+{% set rootClass = [
+  'thallo-block thallo-block-image',
+  'thallo-block-image--' ~ ({normal: 'normal', wide: 'wide', full: 'full'}[data.width|default('normal')] ?? 'normal'),
+]|join(' ')|trim %}
+<figure class="{{ rootClass }}">
   {% if img %}<img src="{{ img }}" alt="{{ data.alt|default('') }}">{% endif %}
   {% if data.caption %}<figcaption>{{ data.caption|editable_text('caption') }}</figcaption>{% endif %}
 </figure>

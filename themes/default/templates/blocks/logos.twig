@@ -1,0 +1,41 @@
+{# logos — maps to refs.md `pageLogos` (replaces old logo_cloud). Authored in the
+   theme's BEM/computed-class convention (see navigation.twig / separator.twig):
+   root classes built in a {% set %} up top; elements carry __title/__track/__item/__image.
+   Fields (all optional): title, images (list of blob uuids resolved via media()),
+   grayscale (bool → desaturate + dim), scroll (bool → CSS marquee row; false →
+   centered wrapping flex row). #}
+{% set scroll = data.scroll|default(false) %}
+{% set images = data.images|default([]) %}
+{% set rootClass = [
+  'thallo-block thallo-block-logos',
+  scroll ? 'thallo-block-logos--scroll' : '',
+  data.grayscale|default(false) ? 'thallo-block-logos--grayscale' : '',
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
+  {% if data.title %}
+    <h2 class="thallo-block-logos__title">{{ data.title|editable_text('title') }}</h2>
+  {% endif %}
+  {% if images is not empty %}
+    <div class="thallo-block-logos__track">
+      {% for uuid in images %}
+        {% set src = media(uuid) %}
+        {% if src %}{# skip nulls: private / unresolvable blobs #}
+          <div class="thallo-block-logos__item">
+            <img class="thallo-block-logos__image" src="{{ src }}" alt="">
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% if scroll %}
+        {# duplicate the run so the pure-CSS marquee loops seamlessly (−50% shift) #}
+        {% for uuid in images %}
+          {% set src = media(uuid) %}
+          {% if src %}
+            <div class="thallo-block-logos__item" aria-hidden="true">
+              <img class="thallo-block-logos__image" src="{{ src }}" alt="">
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

@@ -106,6 +106,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?CustomCssUrl $customCssUrl = null,
         /** Pack-internal (theme-setting spec §3): null → no asset cache-buster. */
         private readonly ?ActiveThemeSource $themeSource = null,
+        /** color-mode spec §3.4: false → no resolver, no marker, toggle renders nothing. */
+        private readonly bool $colorModeEnabled = true,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -142,6 +144,9 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('region_settings', $this->regionSettings(...)),
             new TwigFunction('site_favicon', $this->siteFavicon(...)),
             new TwigFunction('custom_css', $this->customCss(...)),
+            new TwigFunction('color_mode_enabled', $this->colorModeEnabled(...)),
+            // is_safe html: trusted, static, theme-owned resolver (mirrors icon()).
+            new TwigFunction('color_mode_script', $this->colorModeScript(...), ['is_safe' => ['html']]),
         ];
     }
 
@@ -152,6 +157,19 @@ final class RenderContextExtension extends AbstractExtension
     public function customCss(): ?string
     {
         return $this->customCssUrl?->url();
+    }
+
+    /** Color-mode enablement (color-mode spec §3.4): gates the resolver, the marker, and the toggle block. */
+    public function colorModeEnabled(): bool
+    {
+        return $this->colorModeEnabled;
+    }
+
+    /** The verbatim no-flash resolver (color-mode spec §3.1), or empty markup when disabled. */
+    public function colorModeScript(): \Twig\Markup
+    {
+        $html = $this->colorModeEnabled ? \Thallo\Render\ColorMode::scriptTag() : '';
+        return new \Twig\Markup($html, 'UTF-8');
     }
 
     /**

@@ -1,0 +1,10 @@
+{# accordion_item — a single Q&A disclosure. The `accordion` parent renders its
+   items inline (reading item.data.question/answer directly), so this template only
+   matters when an accordion_item is dropped on its own; it degrades to a native
+   <details>. BEM convention (see accordion.twig): __summary __question __answer. #}
+<details class="thallo-block thallo-block-accordion_item">
+  <summary class="thallo-block-accordion_item__summary">
+    <span class="thallo-block-accordion_item__question">{{ data.question|editable_text('question') }}</span>
+  </summary>
+  <div class="thallo-block-accordion_item__answer">{{ data.answer|default('')|safe_html }}</div>
+</details>

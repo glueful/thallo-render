@@ -1,3 +1,7 @@
+{# social_link — a single social icon link. Fields: icon (brand glyph), url, label.
+   safe_url scheme-allowlists before the href, so unsafe URLs emit no link at all.
+   Authored in the theme's BEM convention (see navigation.twig / separator.twig);
+   styled by .thallo-block-social_link__link in assets/blocks.css. #}
 {% set url = data.url|default('')|safe_url %}
 {% set name = data.label|default(data.icon|default('')|replace({'brand:': ''})) %}
 <div class="thallo-block thallo-block-social_link">

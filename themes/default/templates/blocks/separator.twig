@@ -1,0 +1,24 @@
+{# separator — a horizontal rule, optionally with a centered label and/or icon
+   (replaces the legacy `divider`). Authored in the theme's BEM/computed-class
+   convention (see navigation.twig): class strings built in {% set %} maps up top,
+   each guarded with ?? so an unknown stored enum degrades to the default modifier.
+   Fields (all optional): label, type (solid|dashed|dotted), size (xs|sm|md|lg|xl), icon. #}
+{% set type = data.type|default('solid') %}
+{% set size = data.size|default('xs') %}
+{% set hasContent = (data.label|default('')) is not empty or (data.icon|default('')) is not empty %}
+{% set rootClass = [
+  'thallo-block thallo-block-separator',
+  'thallo-block-separator--type-' ~ ({solid: 'solid', dashed: 'dashed', dotted: 'dotted'}[type] ?? 'solid'),
+  'thallo-block-separator--size-' ~ ({xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl'}[size] ?? 'xs'),
+  hasContent ? 'thallo-block-separator--labeled' : '',
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
+  <span class="thallo-block-separator__line"></span>
+  {% if hasContent %}
+    <span class="thallo-block-separator__content">
+      {% if data.icon %}<span class="thallo-block-separator__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
+      {% if data.label %}<span class="thallo-block-separator__label">{{ data.label|editable_text('label') }}</span>{% endif %}
+    </span>
+    <span class="thallo-block-separator__line"></span>
+  {% endif %}
+</div>

@@ -1,0 +1,11 @@
+{# stepper_item — a single step. The `stepper` parent renders its items inline
+   (numbering via loop.index), so this template only matters when a stepper_item is
+   dropped on its own. BEM convention (see stepper.twig): __marker __body
+   __step-title __description; the standalone marker carries no number. #}
+<div class="thallo-block thallo-block-stepper_item">
+  <span class="thallo-block-stepper_item__marker" aria-hidden="true"></span>
+  <div class="thallo-block-stepper_item__body">
+    {% if data.title %}<h3 class="thallo-block-stepper_item__step-title">{{ data.title|editable_text('title') }}</h3>{% endif %}
+    {% if data.description %}<p class="thallo-block-stepper_item__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+  </div>
+</div>

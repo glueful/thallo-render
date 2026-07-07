@@ -2,7 +2,10 @@
    your app's themes/ directory as a starting point. Shell selectors are
    NAMESPACED (.site-header/.site-nav/.site-footer): block templates render
    semantic header/nav/footer elements of their own and must never inherit
-   shell styling. Dark mode only re-maps the variables. */
+   shell styling. Dark mode only re-maps the variables, and is keyed on
+   html[data-theme="dark"] — the no-flash resolver's single source of truth
+   (color-mode spec §3.3), NOT the OS media query, so an explicit light/dark
+   choice always wins over the operating-system preference. */
 :root {
   --bg: #ffffff;
   --surface: #f6f7f9;
@@ -25,18 +28,16 @@
   --space-6: 4rem;
   --space-7: 6rem;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b1120;
-    --surface: #111a2e;
-    --surface-2: #16213a;
-    --ink: #e2e8f0;
-    --muted: #94a3b8;
-    --line: #1e293b;
-    --accent: #3b82f6;
-    --accent-ink: #ffffff;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.5);
-  }
+html[data-theme="dark"] {
+  --bg: #0b1120;
+  --surface: #111a2e;
+  --surface-2: #16213a;
+  --ink: #e2e8f0;
+  --muted: #94a3b8;
+  --line: #1e293b;
+  --accent: #3b82f6;
+  --accent-ink: #ffffff;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.5);
 }
 
 * { box-sizing: border-box; }
@@ -79,10 +80,8 @@ img { max-width: 100%; display: block; }
    template-emitted --has-dark modifier — without a dark upload the single
    light logo stays visible in dark mode, unchanged. */
 .site-logo--dark { display: none; }
-@media (prefers-color-scheme: dark) {
-  .site-name--has-dark .site-logo--light { display: none; }
-  .site-name--has-dark .site-logo--dark { display: block; }
-}
+html[data-theme="dark"] .site-name--has-dark .site-logo--light { display: none; }
+html[data-theme="dark"] .site-name--has-dark .site-logo--dark { display: block; }
 
 /* Region-backed chrome (global-regions spec): modifier classes from region settings. */
 .thallo-region-header--sticky { position: sticky; top: 0; z-index: 40; background: var(--bg); }

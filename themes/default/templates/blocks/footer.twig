@@ -1,0 +1,19 @@
+{# footer — a <footer> bar (Nuxt UI Footer, refs.md `footer`). An optional top band
+   (drop a footer_columns / columns here), then a container row with three slots:
+   left = copyright, center = links, right = social. On narrow screens the row
+   stacks and centers; on wide it spreads left/center/right. Authored in the theme's
+   BEM/computed-class convention (see navigation.twig / separator.twig).
+   Fields (all blocks): top, copyright (holds a shortcode/rich_text/logo), links,
+   social. #}
+{% set hasTop = data.top|default([]) is not empty %}
+{% set hasLeft = data.copyright|default([]) is not empty %}
+{% set hasCenter = data.links|default([]) is not empty %}
+{% set hasRight = data.social|default([]) is not empty %}
+<footer class="thallo-block thallo-block-footer">
+  {% if hasTop %}<div class="thallo-block-footer__top">{{ blocks(data.top) }}</div>{% endif %}
+  <div class="thallo-block-footer__bar">
+    {% if hasLeft %}<div class="thallo-block-footer__left">{{ blocks(data.copyright) }}</div>{% endif %}
+    {% if hasCenter %}<div class="thallo-block-footer__center">{{ blocks(data.links) }}</div>{% endif %}
+    {% if hasRight %}<div class="thallo-block-footer__right">{{ blocks(data.social) }}</div>{% endif %}
+  </div>
+</footer>

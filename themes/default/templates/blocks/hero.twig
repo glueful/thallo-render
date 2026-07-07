@@ -1,6 +1,19 @@
+{# hero — big heading, supporting copy, CTA buttons and media.
+   Authored in the theme's BEM/computed-class convention (see navigation.twig,
+   separator.twig): root class strings built in {% set %} maps up top, each
+   enum guarded with ?? so an unknown stored value degrades to the default
+   modifier instead of emitting a class no CSS matches.
+   Fields: headline, title, description, links (nested button blocks), image
+   (asset → media()), orientation (vertical|horizontal), reverse. #}
 {% set img = data.image ? media(data.image) : null %}
 {% set orientation = data.orientation|default('vertical') %}
-<header class="thallo-block thallo-block-hero thallo-block-hero--{{ orientation }}{% if data.reverse|default(false) %} thallo-block-hero--reverse{% endif %}">
+{% set reverse = data.reverse|default(false) %}
+{% set rootClass = [
+  'thallo-block thallo-block-hero',
+  'thallo-block-hero--' ~ ({vertical: 'vertical', horizontal: 'horizontal'}[orientation] ?? 'vertical'),
+  reverse ? 'thallo-block-hero--reverse' : '',
+]|join(' ')|trim %}
+<header class="{{ rootClass }}">
   <div class="thallo-block-hero__inner">
     <div class="thallo-block-hero__wrapper">
       {% if data.headline %}<p class="thallo-block-hero__headline">{{ data.headline|editable_text('headline') }}</p>{% endif %}

@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ site.locale }}">
+<html lang="{{ site.locale }}"{% if color_mode_enabled() %} data-color-mode-enabled="true"{% endif %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# color-mode spec §3.1: no-flash resolver, verbatim from ColorMode::RESOLVER_JS,
+     BEFORE any CSS so data-theme is set pre-paint. Emitted only when enabled. #}
+  {{ color_mode_script() }}
   <title>{% block title %}{{ site.name }}{% endblock %}</title>
   {# Site-identity spec §3: the link renders only when the blob is anonymously
      servable (site_favicon() applies the media() predicate) — a missing icon
@@ -11,6 +14,8 @@
   {% if favicon %}<link rel="icon" href="{{ favicon }}">{% endif %}
   <link rel="stylesheet" href="{{ asset('site.css') }}">
   <link rel="stylesheet" href="{{ asset('blocks.css') }}">
+  <link rel="stylesheet" href="{{ asset('navigation.css') }}">
+  <link rel="stylesheet" href="{{ asset('stepper.css') }}">
   {# Site custom CSS (custom-css spec §4): DB-backed, loaded LAST so operator
      rules win the cascade; null (absent/empty) emits nothing. #}
   {% set customCss = custom_css() %}
@@ -72,7 +77,15 @@
   {% set headerHtml = headerHidden ? null : region_blocks('header') %}
   {% if headerHtml %}
     {% set hs = region_settings('header') %}
-    <header class="site-header thallo-region thallo-region-header thallo-region-header--{{ hs.width|default('contained') }}{% if hs.sticky|default(false) %} thallo-region-header--sticky{% endif %}">
+    {# Presentation → classes, computed up top (logos.twig authoring shape) so the
+       markup stays clean. Same class names the CSS + tests already expect — only
+       the shape changes: width picks one modifier, sticky adds one when set. #}
+    {% set headerClass = [
+      'site-header thallo-region thallo-region-header',
+      {contained: 'thallo-region-header--contained', full: 'thallo-region-header--full'}[hs.width|default('contained')] ?? 'thallo-region-header--contained',
+      hs.sticky|default(false) ? 'thallo-region-header--sticky' : ''
+    ]|join(' ')|trim %}
+    <header class="{{ headerClass }}">
       <div class="site-header__inner">{{ headerHtml }}</div>
     </header>
   {% elseif not headerHidden %}
@@ -104,7 +117,8 @@
   {# The COMPOSED presentation context (spec §5a): page _presentation override
      -> theme.json per-type -> theme.json default -> built-ins. Templates never
      read _presentation directly. #}
-  <main class="layout--{{ presentation.layout ?? 'centered' }}">
+  {% set layoutClass = {centered: 'layout--centered', full: 'layout--full'}[presentation.layout ?? 'centered'] ?? 'layout--centered' %}
+  <main class="{{ layoutClass }}">
     {% block content %}{% endblock %}
   </main>
   {% set footerHidden = (presentation.footer|default('default')) == 'hidden' %}

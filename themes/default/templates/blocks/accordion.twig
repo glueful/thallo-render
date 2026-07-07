@@ -1,0 +1,30 @@
+{# accordion — maps to refs.md `accordion` (replaces legacy faq/faq_item).
+   Authored in the theme's BEM/computed-class convention (see navigation.twig):
+   the root class string is built in a {% set %} up top; the single boolean state
+   (multiple) becomes a --multiple modifier. CSS-only, no JS.
+   Fields: title (optional heading), items ({ data: { question, answer } };
+   answer is rich HTML), multiple (bool — when false only one item opens at a time,
+   enforced natively via <details name>). #}
+{% set multiple = data.multiple|default(false) %}
+{% set rootClass = [
+  'thallo-block thallo-block-accordion',
+  multiple ? 'thallo-block-accordion--multiple' : '',
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
+  {% if data.title %}<h2 class="thallo-block-accordion__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
+  {# Items rendered inline: native <details name> needs the PARENT accordion's
+     group id for exclusive-open — a child template can't know it. #}
+  {% for item in data.items|default([]) %}
+  <details class="thallo-block-accordion__item"{% if not multiple %} name="accordion-{{ block.id }}"{% endif %}>
+    <summary class="thallo-block-accordion__summary">
+      <span class="thallo-block-accordion__question">{{ item.data.question|default('') }}</span>
+      <span class="thallo-block-accordion__chevron" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+    </summary>
+    <div class="thallo-block-accordion__panel">
+      <div class="thallo-block-accordion__answer">{{ item.data.answer|default('')|safe_html }}</div>
+    </div>
+  </details>
+  {% endfor %}
+</div>

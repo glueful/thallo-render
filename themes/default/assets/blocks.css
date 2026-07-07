@@ -18,10 +18,9 @@
    already-contained header/footer inner — no page-band margins, no double
    containment from blocks that carry their own max-width wrappers. */
 .thallo-region .thallo-block { margin-block: 0; max-width: none; padding-inline: 0; margin-inline: 0; }
-/* The navigation block GROWS in chrome: the region inner is a space-between
-   flex row, so an auto-width nav pins to the end regardless of its own align.
-   flex-grow gives the list room — align start/center/end then actually acts. */
-.thallo-region .thallo-block-navigation { flex: 1; min-width: 0; }
+/* The navigation block's own styles live in navigation.css (dedicated asset).
+   Its in-region flex-grow rule (align start/center/end needs room to act) moved
+   there too, so the whole block is self-contained in one file. */
 /* Columns lose their page-content CARD skin in chrome: a header/footer column
    is a layout slot, not a hoverable card. */
 .thallo-region .thallo-block-columns__col {
@@ -109,19 +108,76 @@
 .thallo-block-cta__links .thallo-block-button__link { padding: 0.7rem 1.6rem; font-size: 1rem; }
 
 /* section — full-bleed band with contained content */
-.thallo-block-section { padding-block: var(--space-6); }
+.thallo-block-section { padding-block: var(--space-7); }
 .thallo-block-section__inner {
   max-width: var(--container);
   margin-inline: auto;
   padding-inline: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
-.thallo-block-section--none { padding-block: 0; }
+
+/* background — schema enum: none | muted | subtle | inverted */
+.thallo-block-section--none { background: transparent; }
+.thallo-block-section--muted { background: var(--surface-2); }
 .thallo-block-section--subtle { background: var(--surface); }
-.thallo-block-section--emphasis {
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+.thallo-block-section--inverted { background: var(--ink); color: var(--accent-ink); }
+.thallo-block-section--inverted .thallo-block-section__title { color: var(--accent-ink); }
+.thallo-block-section--inverted .thallo-block-section__description {
+  color: color-mix(in srgb, var(--accent-ink) 72%, transparent);
 }
-.thallo-block-section--emphasis .thallo-block-section__title { color: var(--accent); }
-.thallo-block-section__title { margin: 0 0 var(--space-4); }
+
+/* header */
+.thallo-block-section__header { margin: 0; }
+.thallo-block-section__headline {
+  margin: 0 0 var(--space-2);
+  font-weight: 600;
+  color: var(--accent);
+}
+.thallo-block-section__title {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--ink);
+}
+.thallo-block-section__description {
+  margin: var(--space-4) 0 0;
+  max-width: var(--content);
+  font-size: 1.125rem;
+  color: var(--muted);
+}
+
+/* child content + links */
+.thallo-block-section__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+}
+
+/* vertical (default): centered band */
+.thallo-block-section--vertical .thallo-block-section__headline,
+.thallo-block-section--vertical .thallo-block-section__title { text-align: center; }
+.thallo-block-section--vertical .thallo-block-section__description {
+  margin-inline: auto;
+  text-align: center;
+}
+.thallo-block-section--vertical .thallo-block-section__links { justify-content: center; }
+
+/* reverse: content leads, header follows (order-only, orientation-agnostic) */
+.thallo-block-section--reverse .thallo-block-section__content { order: -1; }
+
+/* horizontal: header beside content on wide viewports */
+@media (min-width: 64rem) {
+  .thallo-block-section--horizontal .thallo-block-section__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    column-gap: var(--space-6);
+  }
+}
 
 /* columns — cards with hover lift */
 .thallo-block-columns {
@@ -165,52 +221,11 @@
 .thallo-block-columns__col .thallo-block:first-child { margin-top: 0; }
 .thallo-block-columns__col .thallo-block:last-child { margin-bottom: 0; }
 
-/* divider */
-.thallo-block-divider--line {
-  max-width: var(--content);
-  margin-inline: auto;
-  border: 0;
-  border-top: 1px solid var(--line);
-}
-.thallo-block-divider--space { height: var(--space-4); margin: 0; }
-
 /* spacer */
 .thallo-block-spacer { margin: 0; }
 .thallo-block-spacer--small { height: var(--space-3); }
 .thallo-block-spacer--medium { height: var(--space-5); }
 .thallo-block-spacer--large { height: var(--space-6); }
-
-/* quote — centered pull quote */
-.thallo-block-quote {
-  position: relative;
-  max-width: var(--content);
-  margin-inline: auto;
-  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
-}
-.thallo-block-quote::before {
-  content: "\201C";
-  position: absolute;
-  left: 0;
-  top: -0.35em;
-  font-size: 4.5rem;
-  line-height: 1;
-  color: var(--accent);
-  opacity: 0.35;
-}
-.thallo-block-quote p {
-  margin: 0;
-  font-size: clamp(1.25rem, 1.1rem + 0.8vw, 1.6rem);
-  line-height: 1.45;
-  letter-spacing: -0.01em;
-}
-.thallo-block-quote cite {
-  display: block;
-  margin-top: var(--space-3);
-  font-style: normal;
-  font-size: 0.95rem;
-  color: var(--muted);
-}
-.thallo-block-quote cite::before { content: "— "; }
 
 /* cta — contained band (PageCTA anatomy: 5 variants, orientation, reverse) */
 .thallo-block-cta { padding-inline: var(--space-4); }
@@ -276,29 +291,6 @@
   margin-top: var(--space-2);
   text-align: center;
 }
-
-/* gallery — cover-fit grid with hover zoom */
-.thallo-block-gallery {
-  display: grid;
-  gap: var(--space-3);
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-}
-.thallo-block-gallery--2 { grid-template-columns: repeat(2, 1fr); }
-.thallo-block-gallery--3 { grid-template-columns: repeat(3, 1fr); }
-.thallo-block-gallery--4 { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 40rem) {
-  .thallo-block-gallery--3, .thallo-block-gallery--4 { grid-template-columns: repeat(2, 1fr); }
-}
-.thallo-block-gallery__item {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: var(--radius);
-  transition: transform 0.2s ease;
-}
-.thallo-block-gallery__item:hover { transform: scale(1.02); }
 
 /* rich_text — comfortable reading measure */
 .thallo-block-rich_text {
@@ -391,97 +383,13 @@
   margin-block: 0 var(--space-4);
 }
 
-/* features — titled grid of feature items (PageSection features recipe) */
-.thallo-block-features { padding-block: var(--space-6); }
-.thallo-block-features__inner {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-}
-.thallo-block-features__header { text-align: center; max-width: var(--content); margin-inline: auto; }
-.thallo-block-features__title { margin: 0; font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.25rem); letter-spacing: -0.02em; }
-.thallo-block-features__intro { margin: var(--space-3) 0 0; color: var(--muted); }
-.thallo-block-features__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-5);
-  margin-top: var(--space-6);
-}
-@media (min-width: 40rem) { .thallo-block-features__grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 64rem) {
-  .thallo-block-features--cols-3 .thallo-block-features__grid { grid-template-columns: repeat(3, 1fr); }
-  .thallo-block-features--cols-4 .thallo-block-features__grid { grid-template-columns: repeat(4, 1fr); }
-}
+/* feature — a compact icon + title + description leaf (drop several into a grid) */
 .thallo-block-feature { display: flex; align-items: flex-start; gap: var(--space-3); margin-block: 0; }
 .thallo-block-feature__icon { font-size: 1.4rem; line-height: 1.3; display: inline-block; }
 .thallo-block-feature__title { margin: 0; font-size: 1.05rem; }
 .thallo-block-feature__title a { color: inherit; text-decoration: none; }
 .thallo-block-feature__title a:hover { color: var(--accent); }
 .thallo-block-feature__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; }
-
-/* testimonials — attributed cards (PageCard subtle recipe) */
-.thallo-block-testimonials { padding-block: var(--space-6); }
-.thallo-block-testimonials__inner {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-}
-.thallo-block-testimonials__title { margin: 0 0 var(--space-5); text-align: center; font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.25rem); }
-.thallo-block-testimonials__items { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
-@media (min-width: 52rem) {
-  .thallo-block-testimonials--grid .thallo-block-testimonials__items { grid-template-columns: repeat(3, 1fr); }
-}
-.thallo-block-testimonials--single .thallo-block-testimonials__items { max-width: var(--content); margin-inline: auto; }
-.thallo-block-testimonials--single .thallo-block-testimonial { text-align: center; }
-.thallo-block-testimonial {
-  margin-block: 0;
-  padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  display: flex;
-  flex-direction: column;
-}
-.thallo-block-testimonial__quote { margin: 0; font-size: 1rem; line-height: 1.55; }
-.thallo-block-testimonial__quote::before { content: "\201C"; }
-.thallo-block-testimonial__quote::after { content: "\201D"; }
-.thallo-block-testimonial__footer { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
-.thallo-block-testimonials--single .thallo-block-testimonial__footer { justify-content: center; }
-.thallo-block-testimonial__avatar { width: 2.5rem; height: 2.5rem; border-radius: 999px; object-fit: cover; }
-.thallo-block-testimonial__meta { display: flex; flex-direction: column; text-align: start; }
-.thallo-block-testimonial__author { font-weight: 600; font-size: 0.95rem; }
-.thallo-block-testimonial__role { color: var(--muted); font-size: 0.85rem; }
-
-/* faq — native details accordion (Accordion recipe) */
-.thallo-block-faq { max-width: var(--content); margin-inline: auto; padding-inline: var(--space-4); }
-.thallo-block-faq__title { margin: 0 0 var(--space-4); font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.25rem); }
-.thallo-block-faq__item, .thallo-block-faq_item { border-bottom: 1px solid var(--line); }
-.thallo-block-faq__item:last-child, .thallo-block-faq_item:last-child { border-bottom: 0; }
-.thallo-block-faq__question, .thallo-block-faq_item__question {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-block: var(--space-3);
-  font-weight: 500;
-  cursor: pointer;
-  list-style: none;
-}
-.thallo-block-faq__question::-webkit-details-marker,
-.thallo-block-faq_item__question::-webkit-details-marker { display: none; }
-.thallo-block-faq__question::after, .thallo-block-faq_item__question::after {
-  content: "";
-  width: 0.6rem;
-  height: 0.6rem;
-  border-right: 2px solid var(--muted);
-  border-bottom: 2px solid var(--muted);
-  transform: rotate(45deg);
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-details[open] > .thallo-block-faq__question::after,
-details[open] > .thallo-block-faq_item__question::after { transform: rotate(225deg); }
-.thallo-block-faq__answer, .thallo-block-faq_item__answer { padding-bottom: var(--space-3); color: var(--muted); }
 
 /* tabs — CSS-only radio tabs (Tabs pill recipe; supports up to 8 tabs) */
 .thallo-block-tabs { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
@@ -529,56 +437,66 @@ details[open] > .thallo-block-faq_item__question::after { transform: rotate(225d
 }
 .thallo-block-tab { margin-block: 0; }
 
-/* steps — numbered sequence (Stepper recipe, static) */
-.thallo-block-steps { padding-block: var(--space-6); }
-.thallo-block-steps__inner { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
-.thallo-block-steps__title { margin: 0 0 var(--space-5); text-align: center; font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.25rem); }
-.thallo-block-steps__items { counter-reset: thallo-step; display: grid; gap: var(--space-5); grid-template-columns: 1fr; }
-@media (min-width: 52rem) {
-  .thallo-block-steps--horizontal .thallo-block-steps__items { grid-auto-flow: column; grid-auto-columns: 1fr; }
-}
-.thallo-block-step { display: flex; gap: var(--space-3); align-items: flex-start; margin-block: 0; }
-.thallo-block-step__badge { counter-increment: thallo-step; flex-shrink: 0; }
-.thallo-block-step__badge::before {
-  content: counter(thallo-step);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 600;
-}
-.thallo-block-step__title { margin: 0; font-size: 1.05rem; }
-.thallo-block-step__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; }
-
 /* button — standalone action (Button variant/size recipes) */
 .thallo-block-button { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
 .thallo-block-button--center { text-align: center; }
 .thallo-block-button--right { text-align: end; }
+/* color (primary default | neutral) sets a local accent; every variant consumes
+   it, so a neutral button is the same recipe re-pointed at --ink. */
 .thallo-block-button__link {
-  display: inline-block;
+  --btn-accent: var(--accent);
+  --btn-accent-ink: var(--accent-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
   border-radius: 999px;
+  border: 1.5px solid transparent;
   font-weight: 600;
+  line-height: 1.2;
   text-decoration: none;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 .thallo-block-button__link:hover { transform: translateY(-1px); }
+.thallo-block-button__link--neutral { --btn-accent: var(--ink); --btn-accent-ink: var(--bg); }
+/* sizes */
+.thallo-block-button__link--xs { padding: 0.3rem 0.8rem; font-size: 0.8rem; gap: 0.35em; }
 .thallo-block-button__link--sm { padding: 0.45rem 1.1rem; font-size: 0.9rem; }
 .thallo-block-button__link--md { padding: 0.6rem 1.4rem; font-size: 0.95rem; }
 .thallo-block-button__link--lg { padding: 0.7rem 1.6rem; font-size: 1rem; }
-.thallo-block-button__link--solid { background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
+.thallo-block-button__link--xl { padding: 0.85rem 1.9rem; font-size: 1.05rem; }
+/* variants (all read --btn-accent) */
+.thallo-block-button__link--solid { background: var(--btn-accent); color: var(--btn-accent-ink); box-shadow: var(--shadow); }
 .thallo-block-button__link--outline {
   background: transparent;
-  color: var(--accent);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--btn-accent);
+  border-color: color-mix(in srgb, var(--btn-accent) 55%, transparent);
 }
-.thallo-block-button__link--soft { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); }
-.thallo-block-button__link--ghost { background: transparent; color: var(--accent); }
+.thallo-block-button__link--soft { background: color-mix(in srgb, var(--btn-accent) 12%, var(--bg)); color: var(--btn-accent); }
+.thallo-block-button__link--subtle {
+  background: color-mix(in srgb, var(--btn-accent) 12%, var(--bg));
+  color: var(--btn-accent);
+  border-color: color-mix(in srgb, var(--btn-accent) 25%, transparent);
+}
+.thallo-block-button__link--ghost { background: transparent; color: var(--btn-accent); }
 .thallo-block-button__link--ghost:hover,
-.thallo-block-button__link--soft:hover { background: color-mix(in srgb, var(--accent) 18%, var(--bg)); }
+.thallo-block-button__link--soft:hover,
+.thallo-block-button__link--subtle:hover { background: color-mix(in srgb, var(--btn-accent) 18%, var(--bg)); }
+/* link variant reads like an inline text link, not a pill */
+.thallo-block-button__link--link {
+  background: transparent;
+  color: var(--btn-accent);
+  padding-inline: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.thallo-block-button__link--link:hover { transform: none; text-decoration-thickness: 2px; }
+/* block = full width, centered label */
+.thallo-block-button__link--block { display: flex; width: 100%; justify-content: center; }
+/* leading / trailing icons */
+.thallo-block-button__icon { display: inline-flex; flex-shrink: 0; }
+.thallo-block-button__icon svg { width: 1.15em; height: 1.15em; }
 
 /* carousel — scroll-snap base; arrows/dots/autoplay are blocks.js enhancement */
 .thallo-block-carousel { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); position: relative; }
@@ -628,10 +546,8 @@ details[open] > .thallo-block-faq_item__question::after { transform: rotate(225d
 /* Dark-logo variant (site-identity spec): mirrors the site.css rule pair;
    applies only inside the template-emitted --has-dark modifier. */
 .thallo-block-logo__image--dark { display: none; }
-@media (prefers-color-scheme: dark) {
-  .thallo-block-logo--has-dark .thallo-block-logo__image--light { display: none; }
-  .thallo-block-logo--has-dark .thallo-block-logo__image--dark { display: block; }
-}
+html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--light { display: none; }
+html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--dark { display: block; }
 
 /* icon — a single decorative Lucide glyph, optionally linked; sizes scale
    font-size (the .thallo-icon svg is 1em) and color rides currentColor */
@@ -644,110 +560,35 @@ details[open] > .thallo-block-faq_item__question::after { transform: rotate(225d
 .thallo-block-icon--end { text-align: end; }
 .thallo-block-icon__link { color: inherit; display: inline-flex; }
 
+/* color_mode — a segmented light/system/dark switch. The active option
+   (aria-checked="true") is set by the blocks.js runtime from the stored
+   preference; the pill re-skins automatically under html[data-theme]. */
+.thallo-block-color_mode {
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.thallo-block-color_mode__option {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; padding: 0;
+  border: 0; background: transparent; color: var(--muted);
+  border-radius: 999px; cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+.thallo-block-color_mode__option svg { width: 1.1rem; height: 1.1rem; }
+.thallo-block-color_mode__option:hover { color: var(--ink); }
+.thallo-block-color_mode__option[aria-checked="true"] {
+  background: var(--bg); color: var(--ink); box-shadow: var(--shadow);
+}
+
 /* copyright shortcode — muted small print */
 .thallo-shortcode-copyright { margin: 0; font-size: 0.85rem; color: var(--muted); }
-
-/* navigation — links from a menu (structured source); v2: tree + styling.
-   Defaults (--hover-color, --active-underline, --size-md) reproduce the v1
-   look; submenus are CSS-only (hover: :hover/:focus-within, click: details). */
-.thallo-block-navigation__nav { display: block; }
-.thallo-block-navigation__list {
-  display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center;
-  list-style: none; margin: 0; padding: 0;
-}
-.thallo-block-navigation--vertical .thallo-block-navigation__list { flex-direction: column; gap: var(--space-1); align-items: stretch; }
-.thallo-block-navigation--align-start .thallo-block-navigation__list { justify-content: flex-start; }
-.thallo-block-navigation--align-center .thallo-block-navigation__list { justify-content: center; }
-.thallo-block-navigation--align-end .thallo-block-navigation__list { justify-content: flex-end; }
-.thallo-block-navigation--size-sm { font-size: 0.85rem; }
-.thallo-block-navigation--size-md { font-size: 0.95rem; }
-.thallo-block-navigation--size-lg { font-size: 1.1rem; }
-.thallo-block-navigation__list a,
-.thallo-block-navigation__list summary,
-.thallo-block-navigation__list span[tabindex] {
-  color: var(--muted); text-decoration: none; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 0.35em;
-  padding: 0.25em 0.5em; border-radius: var(--radius);
-}
-/* hover styles */
-.thallo-block-navigation--hover-color .thallo-block-navigation__list a:hover,
-.thallo-block-navigation--hover-color .thallo-block-navigation__list summary:hover { color: var(--ink); }
-.thallo-block-navigation--hover-underline .thallo-block-navigation__list a:hover,
-.thallo-block-navigation--hover-underline .thallo-block-navigation__list summary:hover {
-  color: var(--ink); text-decoration: underline; text-underline-offset: 0.35em;
-}
-.thallo-block-navigation--hover-pill .thallo-block-navigation__list a:hover,
-.thallo-block-navigation--hover-pill .thallo-block-navigation__list summary:hover {
-  color: var(--accent-ink); background: var(--accent);
-}
-/* active styles */
-.thallo-block-navigation--active-underline .thallo-block-navigation__item--active > a,
-.thallo-block-navigation--active-underline li.thallo-block-navigation__item--active > a {
-  color: var(--ink); text-decoration: underline; text-underline-offset: 0.35em;
-}
-.thallo-block-navigation--active-pill .thallo-block-navigation__item--active > a,
-.thallo-block-navigation--active-pill li.thallo-block-navigation__item--active > a {
-  color: var(--accent-ink); background: var(--accent);
-}
-/* submenus */
-.thallo-block-navigation__item--parent { position: relative; }
-.thallo-block-navigation__submenu {
-  list-style: none; margin: 0; padding: var(--space-2);
-  min-width: 12rem; display: none;
-  background: var(--bg); border: 1px solid var(--line);
-  border-radius: var(--radius); box-shadow: var(--shadow);
-}
-.thallo-block-navigation--horizontal .thallo-block-navigation__item--parent > .thallo-block-navigation__submenu,
-.thallo-block-navigation--horizontal .thallo-block-navigation__details > .thallo-block-navigation__submenu {
-  position: absolute; top: 100%; left: 0; z-index: 30;
-}
-.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__submenu,
-.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__submenu { display: block; }
-.thallo-block-navigation__details > summary { list-style: none; }
-.thallo-block-navigation__details > summary::-webkit-details-marker { display: none; }
-.thallo-block-navigation__details[open] > .thallo-block-navigation__submenu { display: block; }
-.thallo-block-navigation--vertical .thallo-block-navigation__submenu {
-  position: static; display: none; box-shadow: none; border: 0; padding-left: var(--space-4);
-}
-.thallo-block-navigation--vertical.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__submenu,
-.thallo-block-navigation--vertical.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__submenu,
-.thallo-block-navigation--vertical .thallo-block-navigation__details[open] > .thallo-block-navigation__submenu { display: block; }
-.thallo-block-navigation__submenu a { display: flex; padding: 0.35em 0.5em; }
 
 /* social_links — a row of brand glyphs */
 .thallo-block-social_links { display: flex; gap: var(--space-3); align-items: center; }
 .thallo-block-social_links .thallo-block-social_link { margin-block: 0; }
 .thallo-block-social_link__link { color: var(--muted); font-size: 1.25rem; display: inline-flex; }
 .thallo-block-social_link__link:hover { color: var(--ink); }
-
-/* logo_cloud — trusted-by strip; --scroll = pure-CSS marquee */
-.thallo-block-logo_cloud { padding-block: var(--space-6); }
-.thallo-block-logo_cloud__inner { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
-.thallo-block-logo_cloud__title { margin: 0 0 var(--space-4); text-align: center; font-size: 1.05rem; color: var(--muted); font-weight: 600; }
-.thallo-block-logo_cloud__strip { display: flex; overflow: hidden; gap: var(--space-6); }
-.thallo-block-logo_cloud__track {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  gap: var(--space-6);
-  flex: 1 0 auto;
-  min-width: 0;
-}
-.thallo-block-logo_cloud__logo { height: 2.25rem; width: auto; object-fit: contain; }
-.thallo-block-logo_cloud--grayscale .thallo-block-logo_cloud__logo { filter: grayscale(1); opacity: 0.7; }
-.thallo-block-logo_cloud--grayscale .thallo-block-logo_cloud__logo:hover { filter: none; opacity: 1; }
-.thallo-block-logo_cloud--scroll .thallo-block-logo_cloud__track {
-  flex: 0 0 auto;
-  min-width: 100%;
-  animation: thallo-marquee 28s linear infinite;
-}
-@keyframes thallo-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(-100% - var(--space-6))); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .thallo-block-logo_cloud--scroll .thallo-block-logo_cloud__track { animation: none; }
-}
 
 /* video / audio */
 .thallo-block-video { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
@@ -782,10 +623,6 @@ details[open] > .thallo-block-faq_item__question::after { transform: rotate(225d
 .layout--centered .thallo-block-hero,
 .layout--centered .thallo-block-section,
 .layout--centered .thallo-block-container,
-.layout--centered .thallo-block-features,
-.layout--centered .thallo-block-testimonials,
-.layout--centered .thallo-block-steps,
-.layout--centered .thallo-block-logo_cloud,
 .layout--centered .thallo-block-cta {
   max-width: var(--container);
   margin-inline: auto;
@@ -797,3 +634,326 @@ details[open] > .thallo-block-faq_item__question::after { transform: rotate(225d
   padding-inline: var(--space-4);
 }
 .layout--centered .thallo-block-image--full img { border-radius: var(--radius); }
+
+/* ── Full-width page layout (opt-in via main.layout--full) ───────────────────
+   Symmetric to .layout--centered: instead of boxing bands, full mode releases
+   EVERY width clamp — band inner wrappers, self-clamped blocks, AND the reading
+   measure — so content spans the whole viewport, held off the edges only by
+   each block's own padding-inline. Additive/scoped: dormant unless <main>
+   carries .layout--full. */
+.layout--full .thallo-block-hero__inner,
+.layout--full .thallo-block-section__inner,
+.layout--full .thallo-block-cta__inner,
+.layout--full .thallo-block-container__inner,
+.layout--full .thallo-block-image,
+.layout--full .thallo-block-tabs,
+.layout--full .thallo-block-button,
+.layout--full .thallo-block-carousel,
+.layout--full .thallo-block-logo,
+.layout--full .thallo-block-icon,
+.layout--full .thallo-block-video,
+.layout--full .thallo-block-audio,
+.layout--full .thallo-block-html,
+.layout--full .thallo-block-shortcode,
+.layout--full .thallo-block-rich_text,
+.layout--full .entry-content {
+  max-width: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Primitive blocks (theme rewrite) — authored in our BEM/token convention,
+   design sourced from tw-class.css / docs/refs.md. Interactive disclosure blocks
+   (accordion, collapsible) are native <details>; stepper lives in stepper.css.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* separator — a horizontal rule with an optional centered label/icon (replaces
+   the legacy divider). Line style ← --type, thickness ← --size. */
+.thallo-block-separator {
+  display: flex; align-items: center; width: 100%; margin-block: var(--space-4);
+}
+.thallo-block-separator__line { flex: 1 1 auto; border-top: 1px solid var(--line); }
+.thallo-block-separator--type-dashed .thallo-block-separator__line { border-top-style: dashed; }
+.thallo-block-separator--type-dotted .thallo-block-separator__line { border-top-style: dotted; }
+.thallo-block-separator--size-sm .thallo-block-separator__line { border-top-width: 2px; }
+.thallo-block-separator--size-md .thallo-block-separator__line { border-top-width: 3px; }
+.thallo-block-separator--size-lg .thallo-block-separator__line { border-top-width: 4px; }
+.thallo-block-separator--size-xl .thallo-block-separator__line { border-top-width: 5px; }
+.thallo-block-separator__content {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  margin-inline: var(--space-3); white-space: nowrap;
+  font-size: 0.9rem; font-weight: 500; color: var(--ink);
+}
+.thallo-block-separator__icon { display: inline-flex; }
+.thallo-block-separator__icon svg { width: 1.1em; height: 1.1em; }
+
+/* accordion — a stack of native <details> disclosures (replaces legacy faq).
+   CSS-only: exclusive-open (non-multiple) is handled by the template's
+   <details name>; here we only style. Chevron rotates under [open]. */
+.thallo-block-accordion { width: 100%; }
+.thallo-block-accordion__title {
+  font-size: 1.25rem; font-weight: 600; color: var(--ink);
+  margin: 0 0 var(--space-3);
+}
+.thallo-block-accordion__item { border-bottom: 1px solid var(--line); }
+.thallo-block-accordion__item:last-child { border-bottom: 0; }
+.thallo-block-accordion__summary {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding-block: var(--space-2); min-width: 0;
+  font-weight: 500; color: var(--ink); cursor: pointer;
+  border-radius: var(--radius); list-style: none;
+}
+.thallo-block-accordion__summary::-webkit-details-marker { display: none; }
+.thallo-block-accordion__summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.thallo-block-accordion__question {
+  flex: 1 1 auto; min-width: 0; text-align: start; overflow-wrap: anywhere;
+}
+.thallo-block-accordion__chevron {
+  flex-shrink: 0; display: inline-flex; margin-inline-start: auto;
+  color: var(--muted); transition: transform .2s ease;
+}
+.thallo-block-accordion__chevron svg { width: 1.25rem; height: 1.25rem; }
+.thallo-block-accordion__item[open] .thallo-block-accordion__chevron {
+  transform: rotate(180deg);
+}
+.thallo-block-accordion__panel { padding-bottom: var(--space-3); }
+.thallo-block-accordion__answer { color: var(--muted); }
+.thallo-block-accordion__answer > :first-child { margin-top: 0; }
+.thallo-block-accordion__answer > :last-child { margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-accordion__chevron { transition: none; }
+}
+
+/* accordion_item — a single Q&A disclosure rendered standalone (the accordion
+   parent renders its items inline, so this is the drop-on-its-own fallback). */
+.thallo-block-accordion_item { border-bottom: 1px solid var(--line); }
+.thallo-block-accordion_item__summary {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding-block: var(--space-2);
+  font-weight: 500; color: var(--ink); cursor: pointer; list-style: none;
+}
+.thallo-block-accordion_item__summary::-webkit-details-marker { display: none; }
+.thallo-block-accordion_item__question { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.thallo-block-accordion_item__answer { padding-bottom: var(--space-3); color: var(--muted); }
+.thallo-block-accordion_item__answer > :first-child { margin-top: 0; }
+.thallo-block-accordion_item__answer > :last-child { margin-bottom: 0; }
+
+/* card — maps to refs.md pageCard. A content card; drop several into a grid or
+   columns for feature grids / testimonial walls. Surface <- --variant, layout <-
+   --horizontal, source order <- --reverse. */
+.thallo-block-card {
+  display: flex; flex-direction: column; align-items: flex-start;
+  flex: 1; gap: var(--space-1);
+  padding: var(--space-4); border-radius: var(--radius-lg);
+  background: var(--bg); color: var(--ink);
+}
+.thallo-block-card__icon {
+  display: inline-flex; align-items: center;
+  margin-bottom: var(--space-2); color: var(--accent);
+}
+.thallo-block-card__icon svg { width: 1.25rem; height: 1.25rem; flex: none; }
+.thallo-block-card__title {
+  margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.4; color: var(--ink);
+  text-wrap: pretty;
+}
+.thallo-block-card__description {
+  margin: 0; font-size: 0.9375rem; line-height: 1.5; color: var(--muted);
+  text-wrap: pretty;
+}
+.thallo-block-card__title + .thallo-block-card__description { margin-top: var(--space-1); }
+.thallo-block-card__body { flex: 1; width: 100%; margin-top: var(--space-3); }
+.thallo-block-card--variant-solid { background: var(--ink); color: var(--bg); }
+.thallo-block-card--variant-solid .thallo-block-card__title { color: var(--bg); }
+.thallo-block-card--variant-solid .thallo-block-card__icon,
+.thallo-block-card--variant-solid .thallo-block-card__description {
+  color: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+.thallo-block-card--variant-soft { background: var(--surface); }
+.thallo-block-card--variant-subtle { background: var(--surface); border: 1px solid var(--line); }
+.thallo-block-card--variant-outline { background: var(--bg); border: 1px solid var(--line); }
+.thallo-block-card--variant-ghost { background: transparent; }
+.thallo-block-card--variant-naked { background: transparent; padding: 0; }
+@media (min-width: 64rem) {
+  .thallo-block-card--horizontal {
+    display: grid; grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-5); align-items: center;
+  }
+  .thallo-block-card--horizontal .thallo-block-card__body { margin-top: 0; }
+}
+.thallo-block-card--reverse { flex-direction: column-reverse; }
+.thallo-block-card--reverse .thallo-block-card__body { margin-top: 0; margin-bottom: var(--space-3); }
+@media (min-width: 64rem) {
+  .thallo-block-card--horizontal.thallo-block-card--reverse .thallo-block-card__body {
+    order: -1; margin-bottom: 0;
+  }
+}
+
+/* collapsible — native <details> disclosure, CSS-only (no JS). A grid-rows
+   0fr->1fr transition on __panel animates the reveal without measuring JS. */
+.thallo-block-collapsible {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.thallo-block-collapsible__summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  font-weight: 500; color: var(--ink);
+  cursor: pointer; list-style: none; user-select: none;
+}
+.thallo-block-collapsible__summary::-webkit-details-marker { display: none; }
+.thallo-block-collapsible__summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius);
+}
+.thallo-block-collapsible__label { min-width: 0; }
+.thallo-block-collapsible__chevron {
+  display: inline-flex; flex-shrink: 0; color: var(--muted);
+  transition: transform .2s ease;
+}
+.thallo-block-collapsible__chevron svg { width: 1.25rem; height: 1.25rem; }
+.thallo-block-collapsible[open] .thallo-block-collapsible__chevron { transform: rotate(180deg); }
+.thallo-block-collapsible__panel {
+  display: grid; grid-template-rows: 0fr;
+  transition: grid-template-rows .2s ease-out;
+}
+.thallo-block-collapsible[open] .thallo-block-collapsible__panel { grid-template-rows: 1fr; }
+.thallo-block-collapsible__panel-inner {
+  overflow: hidden;
+  padding: 0 var(--space-3) var(--space-3);
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-collapsible__chevron,
+  .thallo-block-collapsible__panel { transition: none; }
+}
+
+/* links — a vertical list of navigation links (maps to refs.md pageLinks). Items
+   are a plain array, not child blocks. Active link takes --accent; the rest read
+   muted and warm to --ink on hover. */
+.thallo-block-links { display: flex; flex-direction: column; gap: var(--space-2); }
+.thallo-block-links__title {
+  margin: 0; font-size: 0.8rem; font-weight: 600; color: var(--ink);
+}
+.thallo-block-links__list {
+  display: flex; flex-direction: column; gap: var(--space-1);
+  list-style: none; margin: 0; padding: 0;
+}
+.thallo-block-links__item { min-width: 0; }
+.thallo-block-links__link {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  padding: 0.3em 0.5em; border-radius: var(--radius);
+  color: var(--muted); text-decoration: none; font-weight: 500;
+  transition: color .15s ease;
+}
+.thallo-block-links__link:hover,
+.thallo-block-links__link:focus-visible { color: var(--ink); }
+.thallo-block-links__link--active { color: var(--accent); }
+.thallo-block-links__icon { display: inline-flex; flex-shrink: 0; }
+.thallo-block-links__icon svg { width: 1.1em; height: 1.1em; }
+.thallo-block-links__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-links__link { transition: none; }
+}
+
+/* footer_columns — a responsive grid of titled link-lists (refs.md footerColumns).
+   Columns auto-fit into as many tracks as fit, then share the row evenly. */
+.thallo-block-footer_columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-5);
+}
+.thallo-block-footer_columns__col-title {
+  margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--ink);
+}
+.thallo-block-footer_columns__list {
+  list-style: none; margin: var(--space-4) 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+.thallo-block-footer_columns__item { min-width: 0; }
+.thallo-block-footer_columns__link {
+  display: block; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 0.9rem; color: var(--muted); text-decoration: none;
+  transition: color .15s ease;
+}
+.thallo-block-footer_columns__link:hover,
+.thallo-block-footer_columns__link:focus-visible { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-footer_columns__link { transition: none; }
+}
+
+/* footer — a <footer> bar (refs.md `footer`). Optional top band over a
+   left/center/right row: stacked + centered on small screens, spread on wide.
+   Tokens only; dark mode re-maps them. */
+.thallo-block-footer__top {
+  padding-block: var(--space-6);
+  border-bottom: 1px solid var(--line);
+}
+.thallo-block-footer__bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-5);
+}
+.thallo-block-footer__left { color: var(--muted); font-size: 0.9rem; }
+.thallo-block-footer__center {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: var(--space-3) var(--space-4);
+}
+.thallo-block-footer__right { display: flex; align-items: center; gap: var(--space-3); }
+@media (min-width: 64rem) {
+  .thallo-block-footer__bar { flex-direction: row; justify-content: space-between; }
+  .thallo-block-footer__left { flex: 1 1 0; }
+  .thallo-block-footer__right { flex: 1 1 0; justify-content: flex-end; }
+}
+
+/* logos — a "trusted by" logo strip (refs.md pageLogos, replaces logo_cloud).
+   Default = centered wrapping row; --scroll = seamless pure-CSS marquee (the
+   template renders the run twice and this shifts the track -50%). --grayscale
+   desaturates + dims until hover. */
+.thallo-block-logos { position: relative; overflow: hidden; }
+.thallo-block-logos__title {
+  margin: 0 0 var(--space-4); text-align: center;
+  font-size: 1.125rem; font-weight: 600; color: var(--ink);
+}
+.thallo-block-logos__track {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: var(--space-4) var(--space-6); margin-top: var(--space-5);
+}
+.thallo-block-logos__item { flex: 0 0 auto; }
+.thallo-block-logos__image {
+  height: 2.5rem; width: auto; object-fit: contain;
+  transition: filter .2s ease, opacity .2s ease;
+}
+.thallo-block-logos--grayscale .thallo-block-logos__image { filter: grayscale(1); opacity: 0.7; }
+.thallo-block-logos--grayscale .thallo-block-logos__image:hover { filter: grayscale(0); opacity: 1; }
+.thallo-block-logos--scroll .thallo-block-logos__track {
+  flex-wrap: nowrap; justify-content: flex-start; width: max-content;
+  gap: var(--space-6);
+  animation: thallo-logos-marquee 30s linear infinite;
+}
+@keyframes thallo-logos-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-logos--scroll .thallo-block-logos__track {
+    animation: none !important;
+    flex-wrap: wrap; justify-content: center; width: auto;
+  }
+  .thallo-block-logos__image { transition: none; }
+}
+
+/* stepper_item — a single step rendered standalone (the stepper parent renders
+   its items inline with a numbered marker; this is the drop-on-its-own fallback,
+   marker unnumbered). Full stepper styling lives in stepper.css. */
+.thallo-block-stepper_item { display: flex; gap: var(--space-3); align-items: flex-start; }
+.thallo-block-stepper_item__marker {
+  flex-shrink: 0; width: 1.75rem; height: 1.75rem; border-radius: 999px;
+  background: var(--accent); color: var(--accent-ink);
+}
+.thallo-block-stepper_item__step-title { margin: 0; font-size: 1.05rem; color: var(--ink); }
+.thallo-block-stepper_item__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; }

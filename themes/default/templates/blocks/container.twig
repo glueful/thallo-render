@@ -1,10 +1,60 @@
+{# container — a layout wrapper with background/overlay controls. Authored in the
+   theme's BEM/computed-class convention (see navigation.twig / separator.twig):
+   ENUMERATED tokens (width/padding/min_height/bg_size/bg_repeat/bg_position) → guarded
+   `--modifier` maps; FREEFORM values (background_color, background_image, overlay_color,
+   overlay_opacity) → inline `--container-*` CSS vars ONLY — the paint declarations that
+   consume them live in blocks.css, so the style attribute stays the single, minimal
+   injection surface. Fields: width, padding, min_height, bg_size, bg_repeat,
+   bg_position, background_color, background_image, overlay_color, overlay_opacity,
+   content (child blocks). #}
 {% set img = data.background_image ? media(data.background_image) : null %}
+
+{% set widthMod = {
+  contained: 'thallo-block-container--contained',
+  full:      '',
+  narrow:    'thallo-block-container--narrow',
+}[data.width|default('contained')] ?? 'thallo-block-container--contained' %}
+{% set padMod = {
+  none:   'thallo-block-container--pad-none',
+  small:  'thallo-block-container--pad-small',
+  medium: 'thallo-block-container--pad-medium',
+  large:  'thallo-block-container--pad-large',
+}[data.padding|default('medium')] ?? 'thallo-block-container--pad-medium' %}
+{% set heightMod = {
+  auto:   '',
+  screen: 'thallo-block-container--h-full',
+  half:   'thallo-block-container--h-half',
+}[data.min_height|default('auto')] ?? '' %}
+{% set bgSizeMod = {
+  cover:   'thallo-block-container--bgsize-cover',
+  contain: 'thallo-block-container--bgsize-contain',
+  auto:    'thallo-block-container--bgsize-auto',
+}[data.bg_size|default('cover')] ?? 'thallo-block-container--bgsize-cover' %}
+{% set bgRepeatMod = {
+  'no-repeat': 'thallo-block-container--bgrepeat-no-repeat',
+  'repeat':    'thallo-block-container--bgrepeat-repeat',
+}[data.bg_repeat|default('no-repeat')] ?? 'thallo-block-container--bgrepeat-no-repeat' %}
+{% set bgPosMod = {
+  center: 'thallo-block-container--bgpos-center',
+  top:    'thallo-block-container--bgpos-top',
+  bottom: 'thallo-block-container--bgpos-bottom',
+  left:   'thallo-block-container--bgpos-left',
+  right:  'thallo-block-container--bgpos-right',
+}[data.bg_position|default('center')] ?? 'thallo-block-container--bgpos-center' %}
+
+{% set rootClass = [
+  'thallo-block thallo-block-container',
+  widthMod, padMod, heightMod, bgSizeMod, bgRepeatMod, bgPosMod,
+]|join(' ')|trim %}
+
+{# freeform → CSS vars only (base .thallo-block-container / __overlay rules paint them) #}
 {% set vars = [] %}
 {% if data.background_color %}{% set vars = vars|merge(['--container-bg: ' ~ data.background_color]) %}{% endif %}
 {% if img %}{% set vars = vars|merge(['--container-bg-image: url(' ~ img ~ ')']) %}{% endif %}
 {% if data.overlay_color %}{% set vars = vars|merge(['--container-overlay: ' ~ data.overlay_color]) %}{% endif %}
 {% if data.overlay_opacity is defined and data.overlay_opacity is not null %}{% set vars = vars|merge(['--container-overlay-opacity: ' ~ (data.overlay_opacity / 100)]) %}{% endif %}
-<div class="thallo-block thallo-block-container thallo-block-container--{{ data.width|default('contained') }} thallo-block-container--pad-{{ data.padding|default('medium') }} thallo-block-container--h-{{ data.min_height|default('auto') }} thallo-block-container--bgsize-{{ data.bg_size|default('cover') }} thallo-block-container--bgrepeat-{{ data.bg_repeat|default('no-repeat') }} thallo-block-container--bgpos-{{ data.bg_position|default('center') }}"{% if vars is not empty %} style="{{ vars|join('; ') }}"{% endif %}>
+
+<div class="{{ rootClass }}"{% if vars is not empty %} style="{{ vars|join('; ') }}"{% endif %}>
   {% if data.overlay_color %}<div class="thallo-block-container__overlay"></div>{% endif %}
   <div class="thallo-block-container__inner">{{ blocks(data.content) }}</div>
 </div>

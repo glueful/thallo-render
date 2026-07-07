@@ -1,0 +1,41 @@
+{# stepper — a numbered, NON-interactive display sequence (replaces the legacy
+   steps/step). Authored in the theme's BEM/computed-class convention (see
+   navigation.twig / separator.twig): class strings built in {% set %} maps up
+   top, each guarded with ?? so an unknown stored enum degrades to the default
+   modifier. Styling lives in the dedicated stepper.css; no JS (display-only).
+
+   Fields (all optional except items):
+     title       string
+     orientation vertical | horizontal        (default vertical)
+     color       primary | secondary | success | info | warning | error | neutral
+                                              (default primary — see stepper.css
+                                               for the accent fallback note)
+     size        xs | sm | md | lg | xl        (default md)
+     items       child blocks (stepper_item) → { data: { title, description } }
+   Each item's number is rendered from loop.index. #}
+{% set orientation = data.orientation|default('vertical') %}
+{% set color = data.color|default('primary') %}
+{% set size = data.size|default('md') %}
+{% set rootClass = [
+  'thallo-block thallo-block-stepper',
+  'thallo-block-stepper--orientation-' ~ ({vertical: 'vertical', horizontal: 'horizontal'}[orientation] ?? 'vertical'),
+  'thallo-block-stepper--color-' ~ ({primary: 'primary', secondary: 'secondary', success: 'success', info: 'info', warning: 'warning', error: 'error', neutral: 'neutral'}[color] ?? 'primary'),
+  'thallo-block-stepper--size-' ~ ({xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl'}[size] ?? 'md'),
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
+  {% if data.title %}<h2 class="thallo-block-stepper__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
+  {% if data.items|default([]) is not empty %}
+    <ol class="thallo-block-stepper__list">
+      {% for item in data.items %}
+      <li class="thallo-block-stepper__item">
+        <span class="thallo-block-stepper__marker">{{ loop.index }}</span>
+        {% if not loop.last %}<span class="thallo-block-stepper__connector" aria-hidden="true"></span>{% endif %}
+        <div class="thallo-block-stepper__body">
+          {% if item.data.title %}<p class="thallo-block-stepper__step-title">{{ item.data.title }}</p>{% endif %}
+          {% if item.data.description %}<p class="thallo-block-stepper__description">{{ item.data.description }}</p>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
+</div>

@@ -1,53 +1,99 @@
+{% import _self as nav %}
+{#
+  One reusable submenu link (leaf): leading icon (when present) + label, with a
+  path-matched active class. current_path is host-relative; item urls are
+  ABSOLUTE resolver output — derive the path side once (scheme+host split off).
+#}
+{% macro sublink(node, current_path) %}
+{%- set p = '/' ~ (node.url|default('')|split('://')|last|split('/', 2)|last) -%}
+<li class="thallo-block-navigation__subitem{% if current_path is defined and p == current_path %} thallo-block-navigation__subitem--active{% endif %}">
+  <a class="thallo-block-navigation__sublink" href="{{ node.url }}">{% if node.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(node.icon) }}</span>{% endif %}<span class="thallo-block-navigation__subtext"><span class="thallo-block-navigation__sublabel">{{ node.label }}</span>{% if node.description|default('') %}<span class="thallo-block-navigation__subdesc">{{ node.description }}</span>{% endif %}</span></a>
+</li>
+{% endmacro %}
+{#
+  The submenu panel, shared by hover and click reveals. layout=dropdown flattens
+  one level (child + grandchildren) into a single list; layout=columns lays each
+  child out as a megamenu column of its own children. repeatParent prepends the
+  parent's own url as the first link — click mode only (the summary swallows it).
+#}
+{% macro panel(item, layout, current_path, repeatParent) %}
+{%- import _self as nav -%}
+{% if layout == 'columns' %}
+<div class="thallo-block-navigation__submenu thallo-block-navigation__submenu--columns" data-nav-panel>
+  {% for child in item.children|default([]) %}
+    <div class="thallo-block-navigation__col">
+      {% if child.url|default('') %}
+        <a class="thallo-block-navigation__col-title" href="{{ child.url }}">{{ child.label }}</a>
+      {% else %}
+        <span class="thallo-block-navigation__col-title">{{ child.label }}</span>
+      {% endif %}
+      {% if child.description|default('') %}<span class="thallo-block-navigation__col-desc">{{ child.description }}</span>{% endif %}
+      {% if child.children|default([]) is not empty %}
+        <ul class="thallo-block-navigation__col-list">
+          {% for g in child.children %}{{ nav.sublink(g, current_path) }}{% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<ul class="thallo-block-navigation__submenu" data-nav-panel>
+  {% if repeatParent and item.url|default('') %}{{ nav.sublink(item, current_path) }}{% endif %}
+  {% for child in item.children|default([]) %}
+    {{ nav.sublink(child, current_path) }}
+    {% for g in child.children|default([]) %}{{ nav.sublink(g, current_path) }}{% endfor %}
+  {% endfor %}
+</ul>
+{% endif %}
+{% endmacro %}
 {% set items = menu(data.menu|default('')) %}
 {% set reveal = data.submenu_trigger|default('hover') %}
 {% set subicon = data.submenu_icon|default('chevron-down') %}
-<div class="thallo-block thallo-block-navigation thallo-block-navigation--{{ data.orientation|default('horizontal') }} thallo-block-navigation--align-{{ data.align|default('start') }} thallo-block-navigation--size-{{ data.size|default('md') }} thallo-block-navigation--active-{{ data.active_style|default('underline') }} thallo-block-navigation--hover-{{ data.hover_style|default('color') }} thallo-block-navigation--reveal-{{ reveal }}">
+{% set sublayout = data.submenu_layout|default('dropdown') %}
+{# Presentation → root classes, computed up top (logos.twig authoring shape).
+   Each map is guarded with a fallback so an unknown stored value degrades to the
+   default modifier instead of emitting a class no CSS matches. #}
+{% set rootClass = [
+  'thallo-block thallo-block-navigation',
+  'thallo-block-navigation--' ~ ({horizontal: 'horizontal', vertical: 'vertical'}[data.orientation|default('horizontal')] ?? 'horizontal'),
+  'thallo-block-navigation--align-' ~ ({start: 'start', center: 'center', end: 'end'}[data.align|default('start')] ?? 'start'),
+  'thallo-block-navigation--size-' ~ ({sm: 'sm', md: 'md', lg: 'lg'}[data.size|default('md')] ?? 'md'),
+  'thallo-block-navigation--' ~ ({pill: 'pill', link: 'link'}[data.variant|default('pill')] ?? 'pill'),
+  'thallo-block-navigation--color-' ~ ({primary: 'primary', neutral: 'neutral'}[data.color|default('primary')] ?? 'primary'),
+  'thallo-block-navigation--highlight-' ~ ({none: 'none', underline: 'underline', bar: 'bar'}[data.highlight|default('none')] ?? 'none'),
+  'thallo-block-navigation--submenu-' ~ ({dropdown: 'dropdown', columns: 'columns'}[sublayout] ?? 'dropdown'),
+  'thallo-block-navigation--reveal-' ~ ({hover: 'hover', click: 'click'}[reveal] ?? 'hover'),
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
   {% if items %}
     <nav class="thallo-block-navigation__nav">
       <ul class="thallo-block-navigation__list">
         {% for item in items %}
-          {# One submenu level (nav-v2 spec §4): grandchildren FLATTEN into the dropdown. #}
-          {% set kids = [] %}
-          {% for c in item.children|default([]) %}
-            {% set kids = kids|merge([c]) %}
-            {% for g in c.children|default([]) %}{% set kids = kids|merge([g]) %}{% endfor %}
-          {% endfor %}
-          {# Item urls are ABSOLUTE (resolver output); current_path is host-relative.
-             Derive the path side once — scheme+host split off, root-safe. #}
+          {% set hasKids = item.children|default([]) is not empty %}
           {% set itemPath = '/' ~ (item.url|default('')|split('://')|last|split('/', 2)|last) %}
           {% set active = current_path is defined and itemPath == current_path %}
-          {% if kids is empty %}
+          {% if not hasKids %}
             <li class="thallo-block-navigation__item{% if active %} thallo-block-navigation__item--active{% endif %}">
-              <a href="{{ item.url }}">{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}</a>
+              <a class="thallo-block-navigation__link" href="{{ item.url }}">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span></a>
             </li>
           {% elseif reveal == 'click' %}
-            {# details-name exclusivity is progressive enhancement (spec P2):
-               unsupported browsers may keep several open — acceptable v1. #}
+            {# details-name exclusivity is progressive enhancement (nav-v2 spec P2):
+               unsupported browsers may keep several open — acceptable v1. JS layer
+               adds outside-click / Escape close + arrow-key focus on top. #}
             <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
               <details class="thallo-block-navigation__details" name="nav-{{ block.id }}">
-                <summary>{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}{% if subicon != 'none' %}{{ icon(subicon) }}{% endif %}</summary>
-                <ul class="thallo-block-navigation__submenu">
-                  {% if item.url|default('') %}<li><a href="{{ item.url }}">{{ item.label }}</a></li>{% endif %}
-                  {% for kid in kids %}
-                    {% set kidPath = '/' ~ (kid.url|default('')|split('://')|last|split('/', 2)|last) %}
-                    <li{% if current_path is defined and kidPath == current_path %} class="thallo-block-navigation__item--active"{% endif %}>
-                      <a href="{{ kid.url }}">{% if kid.icon|default('') %}{{ icon(kid.icon) }}{% endif %}{{ kid.label }}</a>
-                    </li>
-                  {% endfor %}
-                </ul>
+                <summary class="thallo-block-navigation__link" data-nav-toggle aria-haspopup="true">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</summary>
+                {{ nav.panel(item, sublayout, current_path, true) }}
               </details>
             </li>
           {% else %}
             <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
-              {% if item.url|default('') %}<a href="{{ item.url }}">{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}{% if subicon != 'none' %}{{ icon(subicon) }}{% endif %}</a>{% else %}<span tabindex="0">{% if item.icon|default('') %}{{ icon(item.icon) }}{% endif %}{{ item.label }}{% if subicon != 'none' %}{{ icon(subicon) }}{% endif %}</span>{% endif %}
-              <ul class="thallo-block-navigation__submenu">
-                {% for kid in kids %}
-                  {% set kidPath = '/' ~ (kid.url|default('')|split('://')|last|split('/', 2)|last) %}
-                    <li{% if current_path is defined and kidPath == current_path %} class="thallo-block-navigation__item--active"{% endif %}>
-                    <a href="{{ kid.url }}">{% if kid.icon|default('') %}{{ icon(kid.icon) }}{% endif %}{{ kid.label }}</a>
-                  </li>
-                {% endfor %}
-              </ul>
+              {% if item.url|default('') %}
+                <a class="thallo-block-navigation__link" href="{{ item.url }}" data-nav-toggle aria-haspopup="true" aria-expanded="false">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</a>
+              {% else %}
+                <span class="thallo-block-navigation__link" tabindex="0" data-nav-toggle aria-haspopup="true" aria-expanded="false">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</span>
+              {% endif %}
+              {{ nav.panel(item, sublayout, current_path, false) }}
             </li>
           {% endif %}
         {% endfor %}

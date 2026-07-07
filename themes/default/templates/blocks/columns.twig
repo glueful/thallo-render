@@ -1,8 +1,14 @@
-{% set layout = data.layout|default('2') %}
+{# columns — maps to refs.md `page` / `pageColumns`. A multi-column layout of child
+   block lists. Authored in the theme's BEM/computed-class convention (see
+   navigation.twig / separator.twig): class strings built in {% set %} maps up top,
+   each guarded so an unknown stored value degrades instead of emitting a class no
+   CSS matches. The design lives in blocks.css (.thallo-block-columns*) — no Tailwind.
+   Fields: layout (2|3), widths (per-layout preset), align (top|center|bottom),
+   col_1, col_2, col_3 (each a child block list). #}
+{% set layout = ({'2': '2', '3': '3'}[data.layout|default('2')] ?? '2') %}
 {# Exact-token allowlist (columns-sizing spec §2): the ONE derivation site.
    A preset absent from the current layout's row — mismatch, unknown, absent —
-   emits no token; base CSS is equal columns. align tokens only for
-   non-defaults; stretch/absent keeps today's markup byte-identical. #}
+   emits no token, so the base .thallo-block-columns--{2,3} equal-columns rule wins. #}
 {% set widthTokens = {
   '2': {'50-50': 'thallo-block-columns--w-50-50', '33-67': 'thallo-block-columns--w-33-67',
         '67-33': 'thallo-block-columns--w-67-33', '25-75': 'thallo-block-columns--w-25-75',
@@ -14,7 +20,13 @@
 {% set widthRow = widthTokens[layout]|default({}) %}
 {% set widthToken = widthRow[data.widths|default('')]|default('') %}
 {% set alignToken = alignTokens[data.align|default('')]|default('') %}
-<div class="thallo-block thallo-block-columns thallo-block-columns--{{ layout }}{% if widthToken %} {{ widthToken }}{% endif %}{% if alignToken %} {{ alignToken }}{% endif %}">
+{% set rootClass = [
+  'thallo-block thallo-block-columns',
+  'thallo-block-columns--' ~ layout,
+  widthToken,
+  alignToken,
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
   <div class="thallo-block-columns__col">{{ blocks(data.col_1) }}</div>
   <div class="thallo-block-columns__col">{{ blocks(data.col_2) }}</div>
   {% if layout == '3' %}<div class="thallo-block-columns__col">{{ blocks(data.col_3) }}</div>{% endif %}
