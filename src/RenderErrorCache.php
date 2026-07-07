@@ -24,9 +24,17 @@ final class RenderErrorCache
     public function __construct(
         private readonly CacheStore $cache,
         private readonly string $theme,
+        /** Validated accent-neutral fingerprint (theme-color-config spec §7). */
+        private readonly string $appearance,
         private readonly bool $enabled,
         private readonly int $ttl,
     ) {
+    }
+
+    /** Fixed error-body key, appearance-scoped so a color switch can't serve stale chrome. */
+    private function key(int $status): string
+    {
+        return "render:{$this->theme}:{$this->appearance}:{$status}";
     }
 
     /** @param callable(): Response $render renders 404.twig — invoked only on a cold key */
@@ -48,7 +56,7 @@ final class RenderErrorCache
             return $render();
         }
 
-        $key = "render:{$this->theme}:{$status}";
+        $key = $this->key($status);
         $stored = $this->cache->get($key);
         if (is_array($stored)) {
             return new Response((string) $stored['body'], $status, [

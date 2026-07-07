@@ -382,3 +382,66 @@ The digest is published as `Thallo\Render\ColorMode::RESOLVER_SHA256`
 (`base64(sha256(RESOLVER_JS))`); a test fails the build if the script bytes ever
 drift from it, so this value stays correct. Glueful ships no CSP by default
 (`CSP_HEADER` is unset) — this only matters if you opt into one.
+
+## 9. Theme colors (accent + neutral)
+
+An operator can re-skin the theme by choosing a brand **accent** and a
+**neutral** tone from **Settings → General → Theme colors**. It re-maps the
+design **tokens only** — it never swaps a template — and applies in both light
+and dark mode.
+
+### 9.1 What's configurable
+
+- **Accent** — one Tailwind hue family: `red, orange, amber, yellow, lime,
+  green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink,
+  rose`.
+- **Neutral** — one Tailwind neutral family: `slate, gray, zinc, neutral, stone`.
+- **Defaults `blue` / `slate`** reproduce the shipped look exactly.
+
+Both are closed enums; a save `422`s on anything else. Stored in `GeneralSettings`
+as `theme_accent` / `theme_neutral`.
+
+### 9.2 How it re-skins (tokens only)
+
+Each family maps to concrete token values (light + dark) via a curated table
+(`Thallo\Render\Theme\ThemeColors`). A `theme_colors_style()` function emits a
+`:root { … }` + `html[data-theme="dark"] { … }` override in `<head>`, **after
+`site.css`/`blocks.css` and before `custom.css`** so custom CSS stays the final
+escape hatch. Because every block paints from `var(--…)`, the whole theme flips
+with no per-block rules — and the dark accent now comes from the chosen family
+(replacing the old hard-coded blue).
+
+**The default emits nothing.** `blue`/`slate` lives canonically in `site.css`, so
+a default site's HTML stays override-free; only a non-default pair emits a style.
+
+### 9.3 Preview before apply
+
+The card's **Preview on site** mints a preview session carrying the *pending*
+(unsaved) pair and opens the live-rendered site. The chosen colors are **signed
+into the preview token** and applied for that session only — they are never
+written to settings until you **Save**. Exiting/expiring the preview reverts to
+the saved pair with no residue.
+
+### 9.4 Caching
+
+The render page cache (and the fixed 404/410 bodies) key on the resolved pair —
+`render:{theme}:{accent}-{neutral}:{path}` — and a save dispatches
+`ThemeAppearanceChanged`, which purges `thallo:render:page`. A color change is
+reflected immediately, and a bad stored value falls back to `blue`/`slate` (and
+logs) rather than emitting broken CSS.
+
+### 9.5 Content-Security-Policy
+
+The generated `<style>` **varies by settings**, so — unlike the color-mode
+resolver — a static hash can't cover it, and a cache-safe page can't carry a
+per-request nonce. If you run a strict CSP, allow inline styles:
+
+```
+style-src 'unsafe-inline'
+```
+
+This is acceptable because the style is generated from **two closed enums**, not
+free CSS (a far narrower trust surface than `custom.css`), and Glueful ships no
+CSP by default. If strict-CSP perfection is later required, the same storage +
+token model can serve the CSS from a linked `/theme-colors.css` route instead —
+a delivery-only change.

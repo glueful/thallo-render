@@ -16,6 +16,11 @@
   <link rel="stylesheet" href="{{ asset('blocks.css') }}">
   <link rel="stylesheet" href="{{ asset('navigation.css') }}">
   <link rel="stylesheet" href="{{ asset('stepper.css') }}">
+  {# Theme color config (theme-color-config spec §5): a :root + dark token
+     override generated from the operator's accent/neutral choice. Emits nothing
+     for the default (blue/slate). AFTER the theme CSS, BEFORE custom.css so
+     custom CSS stays the final escape hatch. #}
+  {{ theme_colors_style() }}
   {# Site custom CSS (custom-css spec §4): DB-backed, loaded LAST so operator
      rules win the cascade; null (absent/empty) emits nothing. #}
   {% set customCss = custom_css() %}

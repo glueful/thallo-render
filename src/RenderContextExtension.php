@@ -16,6 +16,7 @@ use Thallo\Contracts\Navigation\MenuReader;
 use Thallo\Render\ActiveThemeSource;
 use Thallo\Render\Templates\CustomCssUrl;
 use Thallo\Render\Templates\IconSet;
+use Thallo\Render\Theme\ThemeColors;
 use Psr\Log\LoggerInterface;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
@@ -67,6 +68,14 @@ final class RenderContextExtension extends AbstractExtension
     private bool $annotateBlocks = false;
 
     /**
+     * Preview-only appearance override (theme-color-config spec §6): request-local,
+     * reset before every render by the controller. Null = use the saved/default
+     * source; a verified preview session's signed pair sets it for that render only.
+     */
+    private ?string $appearanceAccentOverride = null;
+    private ?string $appearanceNeutralOverride = null;
+
+    /**
      * Per-block frame stack (edit-in-place spec §2): pushed around each block
      * template render so safe_html knows WHICH block instance it is emitting
      * for — and whether that block is prose (editable_field non-null). A stack,
@@ -108,6 +117,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?ActiveThemeSource $themeSource = null,
         /** color-mode spec §3.4: false → no resolver, no marker, toggle renders nothing. */
         private readonly bool $colorModeEnabled = true,
+        /** theme-color-config spec §4: null → default blue/slate (no override emitted). */
+        private readonly ?ThemeAppearanceSource $appearance = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -147,6 +158,8 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('color_mode_enabled', $this->colorModeEnabled(...)),
             // is_safe html: trusted, static, theme-owned resolver (mirrors icon()).
             new TwigFunction('color_mode_script', $this->colorModeScript(...), ['is_safe' => ['html']]),
+            // is_safe html: generated purely from the closed accent/neutral enums.
+            new TwigFunction('theme_colors_style', $this->themeColorsStyle(...), ['is_safe' => ['html']]),
         ];
     }
 
@@ -170,6 +183,36 @@ final class RenderContextExtension extends AbstractExtension
     {
         $html = $this->colorModeEnabled ? \Thallo\Render\ColorMode::scriptTag() : '';
         return new \Twig\Markup($html, 'UTF-8');
+    }
+
+    /** Preview-only appearance override (reset before every render by the controller). */
+    public function setThemeAppearanceOverride(?string $accent, ?string $neutral): void
+    {
+        $this->appearanceAccentOverride = $accent;
+        $this->appearanceNeutralOverride = $neutral;
+    }
+
+    /**
+     * Theme-color-config spec §5: emit the token override for the effective pair —
+     * a preview override (request-local) beats the saved/default source. Emits
+     * NOTHING for the default pair (site.css already carries blue/slate). Generated
+     * purely from the closed enums, so it is html-safe.
+     */
+    public function themeColorsStyle(): \Twig\Markup
+    {
+        $accent = $this->appearanceAccentOverride
+            ?? $this->appearance?->accent()
+            ?? ThemeColors::DEFAULT_ACCENT;
+        $neutral = $this->appearanceNeutralOverride
+            ?? $this->appearance?->neutral()
+            ?? ThemeColors::DEFAULT_NEUTRAL;
+
+        // Normalize (a preview override could be junk) — invalid → default.
+        $accent = ThemeColors::normalizeAccent($accent) ?? ThemeColors::DEFAULT_ACCENT;
+        $neutral = ThemeColors::normalizeNeutral($neutral) ?? ThemeColors::DEFAULT_NEUTRAL;
+
+        $css = ThemeColors::css($accent, $neutral);
+        return new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8');
     }
 
     /**

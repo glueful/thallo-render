@@ -32,6 +32,8 @@ final class RenderPageCache implements RouteMiddleware
     public function __construct(
         private readonly CacheStore $cache,
         private readonly string $theme,
+        /** Validated accent-neutral fingerprint (theme-color-config spec §7). */
+        private readonly string $appearance,
         private readonly bool $enabled,
         private readonly int $ttl,
     ) {
@@ -101,7 +103,7 @@ final class RenderPageCache implements RouteMiddleware
      */
     private function key(string $path): string
     {
-        return "render:{$this->theme}:" . rawurlencode(self::normalizePath($path));
+        return "render:{$this->theme}:{$this->appearance}:" . rawurlencode(self::normalizePath($path));
     }
 
     /**

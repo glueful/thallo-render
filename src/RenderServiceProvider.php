@@ -23,6 +23,7 @@ use Thallo\Contracts\Content\RichHtmlSanitizer;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
 use Thallo\Contracts\Settings\SiteFaviconProvider;
 use Thallo\Contracts\Settings\SiteLogoProvider;
+use Thallo\Contracts\Settings\ThemeAppearanceChanged;
 use Thallo\Contracts\Settings\ThemeChanged;
 use Thallo\Contracts\Settings\ThemeSettingProvider;
 use Thallo\Contracts\Delivery\EntryTargetResolver;
@@ -42,6 +43,7 @@ use Thallo\Render\Http\Middleware\RenderPageCache;
 use Thallo\Render\Listeners\PurgeRenderCacheOnMenuUpdate;
 use Thallo\Render\Listeners\PurgeRenderCacheOnRegionUpdate;
 use Thallo\Render\Listeners\PurgeRenderCacheOnTemplateUpdate;
+use Thallo\Render\Listeners\PurgeRenderCacheOnAppearanceChange;
 use Thallo\Render\Listeners\PurgeRenderCacheOnThemeChange;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
@@ -63,9 +65,17 @@ final class RenderServiceProvider extends ServiceProvider
                 'shared' => true,
                 'factory' => [self::class, 'makeActiveThemeSource'],
             ],
+            ThemeAppearanceSource::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeThemeAppearanceSource'],
+            ],
             PurgeRenderCacheOnThemeChange::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makePurgeRenderCacheOnThemeChange'],
+            ],
+            PurgeRenderCacheOnAppearanceChange::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makePurgeRenderCacheOnAppearanceChange'],
             ],
             RenderContextExtension::class => [
                 'shared' => true,
@@ -239,9 +249,11 @@ final class RenderServiceProvider extends ServiceProvider
     public static function makeRenderErrorCache(ContainerInterface $container): RenderErrorCache
     {
         $context = $container->get(ApplicationContext::class);
+        $appearance = $container->get(ThemeAppearanceSource::class);
         return new RenderErrorCache(
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
+            $appearance->accent() . '-' . $appearance->neutral(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
         );
@@ -250,11 +262,13 @@ final class RenderServiceProvider extends ServiceProvider
     public static function makeRenderPageCache(ContainerInterface $container): RenderPageCache
     {
         $context = $container->get(ApplicationContext::class);
+        $appearance = $container->get(ThemeAppearanceSource::class);
         return new RenderPageCache(
             // The SAME binding InvalidateCacheTagsListener invalidates (spec §3 pin) —
             // this identity is what makes zero-new-purge-code true.
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
+            $appearance->accent() . '-' . $appearance->neutral(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
         );
@@ -305,6 +319,16 @@ final class RenderServiceProvider extends ServiceProvider
         );
     }
 
+    public static function makeThemeAppearanceSource(ContainerInterface $container): ThemeAppearanceSource
+    {
+        return new ThemeAppearanceSource(
+            $container->has(\Thallo\Contracts\Settings\ThemeAppearanceProvider::class)
+                ? $container->get(\Thallo\Contracts\Settings\ThemeAppearanceProvider::class)
+                : null,
+            $container->get(\Psr\Log\LoggerInterface::class),
+        );
+    }
+
     public static function makeActiveThemeSource(ContainerInterface $container): ActiveThemeSource
     {
         $context = $container->get(ApplicationContext::class);
@@ -323,6 +347,12 @@ final class RenderServiceProvider extends ServiceProvider
         ContainerInterface $container,
     ): PurgeRenderCacheOnThemeChange {
         return new PurgeRenderCacheOnThemeChange($container);
+    }
+
+    public static function makePurgeRenderCacheOnAppearanceChange(
+        ContainerInterface $container,
+    ): PurgeRenderCacheOnAppearanceChange {
+        return new PurgeRenderCacheOnAppearanceChange($container);
     }
 
     public static function makeRenderContextExtension(ContainerInterface $container): RenderContextExtension
@@ -380,6 +410,8 @@ final class RenderServiceProvider extends ServiceProvider
             $container->get(ActiveThemeSource::class),
             // color-mode spec §3.4: gates the resolver, marker, and toggle block.
             colorModeEnabled: (bool) config($context, 'theme.color_mode.enabled', true),
+            // theme-color-config spec §4: the saved/default accent-neutral source.
+            appearance: $container->get(ThemeAppearanceSource::class),
         );
     }
 
@@ -471,6 +503,12 @@ final class RenderServiceProvider extends ServiceProvider
             $events->addListener(
                 ThemeChanged::class,
                 [app($context, PurgeRenderCacheOnThemeChange::class), 'onThemeChanged'],
+            );
+            // Theme color config (theme-color-config spec §7): accent/neutral save
+            // dispatches ThemeAppearanceChanged; purges every page + error body.
+            $events->addListener(
+                ThemeAppearanceChanged::class,
+                [app($context, PurgeRenderCacheOnAppearanceChange::class), 'onAppearanceChanged'],
             );
         }
 

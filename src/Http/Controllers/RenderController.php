@@ -73,6 +73,14 @@ final class RenderController
      */
     private bool $annotateBlocks = false;
 
+    /**
+     * The active preview session (theme-color-config spec §6): every entry point
+     * ASSIGNS it (from the resolved session, or null for live renders) so render()'s
+     * reset block can apply/clear the request-local appearance override without the
+     * shared singleton leaking a previous request's preview skin.
+     */
+    private ?PreviewSession $appearanceSession = null;
+
     /** Normalized request path for the render context (nav-v2 spec §3). */
     private string $currentPath = '/';
 
@@ -81,6 +89,7 @@ final class RenderController
         $this->currentPath = RenderPageCache::normalizePath($request->getPathInfo());
         $session = $this->session($request);
         $this->annotateBlocks = $session !== null;
+        $this->appearanceSession = $session;
         // Source-aware provider (homepage-setting spec §0): the DB site setting
         // wins while resolvable; otherwise the provider already fell back to
         // env — whatever arrives here keeps deploy-config semantics (an
@@ -132,6 +141,7 @@ final class RenderController
 
         $session = $this->session($request);
         $this->annotateBlocks = $session !== null;
+        $this->appearanceSession = $session;
         $extra = $this->sessionExtra($session);
         [$env, $assetBase] = $this->themedEnv($session);
         $result = $this->resolver->resolvePath('/' . ltrim($path, '/'), $session);
@@ -257,6 +267,7 @@ final class RenderController
         // Verified up front: the session drives BOTH the cookie and the per-preview
         // theme (spec §5) — a themed token renders through a request-local environment.
         $session = $this->sessionVerifier?->verify($token);
+        $this->appearanceSession = $session;
         [$env, $assetBase] = $this->themedEnv($session);
         $result = $this->resolver->resolvePreview($token);
 
@@ -746,6 +757,13 @@ final class RenderController
         $this->extension->setAssetBase($assetBase);
         $this->extension->resetBlockDepth();
         $this->extension->resetBlockFrames();
+        // theme-color-config spec §6: a verified preview session's signed appearance
+        // overrides the saved/default pair for THIS render only; null clears it so a
+        // normal render falls back to the source. Reset-before-render discipline.
+        $this->extension->setThemeAppearanceOverride(
+            $this->appearanceSession?->accent,
+            $this->appearanceSession?->neutral,
+        );
         // Controller-scoped intent, applied per render: every entry point ASSIGNS
         // $annotateBlocks (true only for preview renders), so the shared singleton
         // can never leak annotation into a live response.
