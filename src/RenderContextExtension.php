@@ -119,6 +119,13 @@ final class RenderContextExtension extends AbstractExtension
         private readonly bool $colorModeEnabled = true,
         /** theme-color-config spec §4: null → default blue/slate (no override emitted). */
         private readonly ?ThemeAppearanceSource $appearance = null,
+        /**
+         * Active theme's assets dir (theme-setting spec §3 P1): null → no content
+         * fingerprint. Lets asset() append a per-file `&v=<mtime>` so a theme-asset
+         * EDIT busts the 24h browser cache immediately — the `?t=` theme buster only
+         * fires on a theme SWITCH, not an in-place edit.
+         */
+        private readonly ?string $themeAssetsDir = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -710,6 +717,16 @@ final class RenderContextExtension extends AbstractExtension
         // the ?t= makes a theme switch re-fetch every asset immediately.
         if ($this->assetBase === null && $this->themeSource !== null) {
             $url .= '?t=' . rawurlencode($this->themeSource->name());
+            // Content fingerprint (theme-setting spec §3 P1): the `?t=` above only busts
+            // on a theme SWITCH; append the file's mtime so an EDIT to a theme asset
+            // re-fetches immediately instead of waiting out the 24h max-age. A missing
+            // file gets no `&v=` (its 404 was never cacheable-stale to begin with).
+            if ($this->themeAssetsDir !== null) {
+                $mtime = @filemtime($this->themeAssetsDir . '/' . $rel);
+                if ($mtime !== false) {
+                    $url .= '&v=' . $mtime;
+                }
+            }
         }
         return $url;
     }

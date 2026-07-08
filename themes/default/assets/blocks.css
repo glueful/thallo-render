@@ -21,17 +21,6 @@
 /* The navigation block's own styles live in navigation.css (dedicated asset).
    Its in-region flex-grow rule (align start/center/end needs room to act) moved
    there too, so the whole block is self-contained in one file. */
-/* Columns lose their page-content CARD skin in chrome: a header/footer column
-   is a layout slot, not a hoverable card. */
-.thallo-region .thallo-block-columns__col {
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  padding: 0;
-  transition: none;
-}
-.thallo-region .thallo-block-columns__col:hover { transform: none; }
 
 /* hero — full-bleed gradient band (PageHero anatomy: wrapper + media,
    vertical = centered stack, horizontal = two columns, --reverse swaps) */
@@ -207,16 +196,9 @@
   .thallo-block-columns--2, .thallo-block-columns--3,
   [class*="thallo-block-columns--w-"] { grid-template-columns: 1fr; }
 }
-.thallo-block-columns__col {
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: var(--space-4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.thallo-block-columns__col:hover { transform: translateY(-2px); }
-/* Nested blocks inside a card breathe less than page-level blocks. */
+/* A column is a pure layout slot — no card chrome (background/border/radius/shadow/
+   hover). Spacing between columns is the grid gap; the grid's padding-inline insets
+   the band; vertical rhythm inside a column is the nested blocks' own margins. */
 .thallo-block-columns__col .thallo-block { margin-block: var(--space-3); }
 .thallo-block-columns__col .thallo-block:first-child { margin-top: 0; }
 .thallo-block-columns__col .thallo-block:last-child { margin-bottom: 0; }

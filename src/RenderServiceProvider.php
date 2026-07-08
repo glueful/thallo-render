@@ -412,6 +412,10 @@ final class RenderServiceProvider extends ServiceProvider
             colorModeEnabled: (bool) config($context, 'theme.color_mode.enabled', true),
             // theme-color-config spec §4: the saved/default accent-neutral source.
             appearance: $container->get(ThemeAppearanceSource::class),
+            // asset() content fingerprint (theme-setting spec §3 P1): the active theme's
+            // assets dir — the SAME dir themeAsset() serves from — so ?v=<mtime> matches
+            // the file the browser actually fetches.
+            themeAssetsDir: $container->get(ThemeLocator::class)->activePaths()['assets'],
         );
     }
 
