@@ -1,0 +1,7 @@
+{# pricing_tier — standalone fallback. The pricing_table parent renders tiers inline;
+   this only matters if a tier is dropped on its own. Degrades to a small header card. #}
+<div class="thallo-block thallo-block-pricing_tier{{ data.highlight|default(false) ? ' is-highlighted' : '' }}">
+  {% if data.badge %}<span class="thallo-block-pricing_table__tier-badge">{{ data.badge }}</span>{% endif %}
+  {% if data.title %}<span class="thallo-block-pricing_table__tier-title">{{ data.title|editable_text('title') }}</span>{% endif %}
+  {% if data.price %}<span class="thallo-block-pricing_table__tier-price">{{ data.price }}</span>{% endif %}
+</div>

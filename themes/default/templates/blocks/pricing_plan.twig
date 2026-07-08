@@ -1,0 +1,53 @@
+{# pricing_plan — a single plan card (refs.md pricingPlan). BEM/computed-class
+   convention (see cta.twig): guarded --modifier maps up top. Flat CTA fields
+   (button_label/url/variant) — no nested button block (depth budget). Features:
+   one per line, each with the uniform feature_icon (default 'check'); an unknown
+   icon renders nothing (never the raw name). #}
+{% set variant = ({outline:'outline',solid:'solid',soft:'soft',subtle:'subtle'}[data.variant|default('outline')] ?? 'outline') %}
+{% set orientation = ({vertical:'vertical',horizontal:'horizontal'}[data.orientation|default('vertical')] ?? 'vertical') %}
+{% set rootClass = [
+  'thallo-block thallo-block-pricing_plan',
+  'thallo-block-pricing_plan--variant-' ~ variant,
+  'thallo-block-pricing_plan--orientation-' ~ orientation,
+  data.highlight|default(false) ? 'thallo-block-pricing_plan--highlight' : '',
+]|join(' ')|trim %}
+{% set featureIcon = data.feature_icon|default('check') %}
+<div class="{{ rootClass }}">
+  {% if data.badge %}<span class="thallo-block-pricing_plan__badge">{{ data.badge }}</span>{% endif %}
+  <div class="thallo-block-pricing_plan__body">
+    {% if data.title %}<h3 class="thallo-block-pricing_plan__title">{{ data.title|editable_text('title') }}</h3>{% endif %}
+    {% if data.description %}<p class="thallo-block-pricing_plan__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+    <div class="thallo-block-pricing_plan__price-wrapper">
+      {% if data.discount %}<span class="thallo-block-pricing_plan__discount">{{ data.discount }}</span>{% endif %}
+      {% if data.price %}<span class="thallo-block-pricing_plan__price">{{ data.price }}</span>{% endif %}
+      {% if data.billing_period or data.billing_cycle %}
+      <span class="thallo-block-pricing_plan__billing">
+        {% if data.billing_period %}<span class="thallo-block-pricing_plan__billing-period">{{ data.billing_period }}</span>{% endif %}
+        {% if data.billing_cycle %}<span class="thallo-block-pricing_plan__billing-cycle">{{ data.billing_cycle }}</span>{% endif %}
+      </span>
+      {% endif %}
+    </div>
+    {% set featureLines = (data.features|default(''))|split('\n') %}
+    {% set hasFeatures = false %}
+    {% for line in featureLines %}{% if line|trim is not empty %}{% set hasFeatures = true %}{% endif %}{% endfor %}
+    {% if hasFeatures %}
+    <ul class="thallo-block-pricing_plan__features">
+      {% for line in featureLines %}{% if line|trim is not empty %}
+      <li class="thallo-block-pricing_plan__feature">
+        <span class="thallo-block-pricing_plan__feature-icon" aria-hidden="true">{{ icon(featureIcon) }}</span>
+        <span>{{ line|trim }}</span>
+      </li>
+      {% endif %}{% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  <div class="thallo-block-pricing_plan__footer">
+    {% if data.tagline %}<p class="thallo-block-pricing_plan__tagline">{{ data.tagline }}</p>{% endif %}
+    {% set ctaUrl = data.button_url|default('')|safe_url %}
+    {% if data.button_label|default('') is not empty %}
+      {% set ctaTag = ctaUrl ? 'a' : 'span' %}
+      <{{ ctaTag }} class="thallo-block-pricing_plan__cta thallo-block-pricing_plan__cta--{{ ({solid:'solid',outline:'outline'}[data.button_variant|default('solid')] ?? 'solid') }}"{% if ctaUrl %} href="{{ ctaUrl }}"{% endif %}>{{ data.button_label|editable_text('button_label') }}</{{ ctaTag }}>
+    {% endif %}
+    {% if data.terms %}<p class="thallo-block-pricing_plan__terms">{{ data.terms }}</p>{% endif %}
+  </div>
+</div>

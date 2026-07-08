@@ -1,0 +1,5 @@
+{# pricing_feature — standalone fallback. The pricing_table parent renders feature
+   rows inline; this only matters if a feature is dropped on its own. #}
+<div class="thallo-block thallo-block-pricing_feature">
+  <span class="thallo-block-pricing_feature__title">{{ data.title|default('')|editable_text('title') }}</span>
+</div>

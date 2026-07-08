@@ -1026,3 +1026,165 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .thallo-shadow-lg { box-shadow: var(--shadow-lg); }
 .thallo-shadow-xl { box-shadow: var(--shadow-xl); }
 .thallo-shadow-2xl { box-shadow: var(--shadow-2xl); }
+
+/* ── Pricing blocks (refs.md pricingPlan/pricingPlans/pricingTable) ──────────
+   Self-contained rounded cards (deliberate radius exception to the squared
+   band blocks). Semantic Nuxt tokens mapped to theme tokens (site.css). */
+.thallo-block-pricing_plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+}
+.thallo-block-pricing_plan--variant-solid {
+  background: var(--ink);
+  color: var(--accent-ink);
+  border-color: transparent;
+}
+.thallo-block-pricing_plan--variant-soft { background: var(--surface); border-color: transparent; }
+.thallo-block-pricing_plan--variant-subtle { background: var(--surface); border-color: var(--line); }
+.thallo-block-pricing_plan--highlight {
+  border: 2px solid var(--accent);
+}
+.thallo-block-pricing_plan__badge {
+  align-self: flex-start;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.thallo-block-pricing_plan__body { display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+.thallo-block-pricing_plan__title { margin: 0; font-size: 1.5rem; font-weight: 600; color: inherit; }
+.thallo-block-pricing_plan__description { margin: 0; color: var(--muted); }
+.thallo-block-pricing_plan__price-wrapper { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.thallo-block-pricing_plan__price { font-size: 2.25rem; font-weight: 700; color: inherit; }
+.thallo-block-pricing_plan__discount { color: var(--muted); text-decoration: line-through; font-size: 1.25rem; }
+.thallo-block-pricing_plan__billing { display: flex; flex-direction: column; }
+.thallo-block-pricing_plan__billing-period {
+  font-size: 0.8rem; font-weight: 500;
+  color: color-mix(in srgb, var(--ink) 65%, var(--muted));
+}
+.thallo-block-pricing_plan__billing-cycle { font-size: 0.8rem; color: var(--muted); }
+.thallo-block-pricing_plan__features {
+  list-style: none; margin: var(--space-2) 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.thallo-block-pricing_plan__feature { display: flex; align-items: center; gap: 0.5rem; }
+.thallo-block-pricing_plan__feature-icon {
+  display: inline-flex; width: 1.25rem; height: 1.25rem; color: var(--accent); flex-shrink: 0;
+}
+.thallo-block-pricing_plan__feature-icon svg { width: 100%; height: 100%; }
+.thallo-block-pricing_plan__footer { display: flex; flex-direction: column; gap: var(--space-2); align-items: stretch; }
+.thallo-block-pricing_plan__tagline { margin: 0; font-weight: 600; text-align: center; }
+.thallo-block-pricing_plan__cta {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0.6rem 1.2rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.thallo-block-pricing_plan__cta--solid { background: var(--accent); color: var(--accent-ink); }
+.thallo-block-pricing_plan__cta--outline {
+  background: transparent; color: var(--accent); border-color: var(--accent);
+}
+.thallo-block-pricing_plan__terms { margin: 0; font-size: 0.75rem; color: var(--muted); text-align: center; }
+/* solid variant dims secondary text */
+.thallo-block-pricing_plan--variant-solid .thallo-block-pricing_plan__description,
+.thallo-block-pricing_plan--variant-solid .thallo-block-pricing_plan__discount,
+.thallo-block-pricing_plan--variant-solid .thallo-block-pricing_plan__billing-period,
+.thallo-block-pricing_plan--variant-solid .thallo-block-pricing_plan__billing-cycle {
+  color: color-mix(in srgb, var(--accent-ink) 65%, transparent);
+}
+/* horizontal card: body and footer side by side */
+@media (min-width: 64em) {
+  .thallo-block-pricing_plan--orientation-horizontal { flex-direction: row; align-items: center; }
+  .thallo-block-pricing_plan--orientation-horizontal .thallo-block-pricing_plan__body { flex: 2; }
+  .thallo-block-pricing_plan--orientation-horizontal .thallo-block-pricing_plan__footer { flex: 1; }
+}
+.thallo-block-pricing_plans__items { display: flex; flex-direction: column; gap: var(--space-4); }
+.thallo-block-pricing_plans__items > .thallo-block { margin-block: 0; }
+@media (min-width: 48em) {
+  .thallo-block-pricing_plans--orientation-horizontal .thallo-block-pricing_plans__items {
+    display: grid;
+    grid-template-columns: repeat(var(--count, 1), minmax(0, 1fr));
+    align-items: start;
+  }
+  /* compact off widens the gap; scale + not-compact widens it more (room for the
+     enlarged featured card). */
+  .thallo-block-pricing_plans--orientation-horizontal:not(.thallo-block-pricing_plans--compact)
+    .thallo-block-pricing_plans__items { gap: var(--space-4); }
+  .thallo-block-pricing_plans--scale.thallo-block-pricing_plans--orientation-horizontal:not(.thallo-block-pricing_plans--compact)
+    .thallo-block-pricing_plans__items { gap: var(--space-5); }
+  /* featured plan enlarges only when the group opts into scale. */
+  .thallo-block-pricing_plans--scale .thallo-block-pricing_plan--highlight { transform: scale(1.05); z-index: 1; }
+}
+.thallo-block-pricing_table { border-radius: var(--radius-lg); }
+.thallo-block-pricing_table__table { width: 100%; border-collapse: collapse; display: none; }
+.thallo-block-pricing_table__list { display: flex; flex-direction: column; gap: var(--space-4); }
+@media (min-width: 48em) {
+  .thallo-block-pricing_table__table { display: table; }
+  .thallo-block-pricing_table__list { display: none; }
+}
+.thallo-block-pricing_table__tier {
+  padding: var(--space-3); text-align: left; vertical-align: top; border-bottom: 1px solid var(--line);
+}
+.thallo-block-pricing_table__tier-badge {
+  display: inline-block; padding: 0.1rem 0.5rem; border-radius: var(--radius);
+  background: var(--accent); color: var(--accent-ink); font-size: 0.75rem; font-weight: 600;
+}
+.thallo-block-pricing_table__tier-title { display: block; font-size: 1.125rem; font-weight: 600; color: var(--ink); }
+.thallo-block-pricing_table__tier-description { display: block; font-size: 0.85rem; color: var(--muted); }
+.thallo-block-pricing_table__tier-price { display: block; font-size: 1.75rem; font-weight: 700; color: var(--ink); }
+.thallo-block-pricing_table__section > th {
+  text-align: left; padding: var(--space-3) var(--space-3) 0.5rem; font-weight: 600; color: var(--ink);
+}
+.thallo-block-pricing_table__row-header {
+  text-align: left; padding: 0.75rem var(--space-3); font-weight: 400; color: var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+.thallo-block-pricing_table__cell {
+  padding: 0.75rem var(--space-3); text-align: center; color: var(--muted); border-bottom: 1px solid var(--line);
+}
+.thallo-block-pricing_table__check { display: inline-flex; width: 1.25rem; height: 1.25rem; color: var(--accent); }
+.thallo-block-pricing_table__check svg { width: 100%; height: 100%; }
+.thallo-block-pricing_table__dash { color: var(--muted); }
+.thallo-block-pricing_table__cta {
+  display: inline-flex; align-items: center; justify-content: center; margin-top: 0.5rem;
+  padding: 0.4rem 0.9rem; border: 1px solid transparent; border-radius: var(--radius);
+  font-size: 0.85rem; font-weight: 600; text-decoration: none;
+}
+.thallo-block-pricing_table__cta--solid { background: var(--accent); color: var(--accent-ink); }
+.thallo-block-pricing_table__cta--outline {
+  background: transparent; color: var(--accent); border-color: var(--accent);
+}
+/* featured column shading (only when the table opts into highlight) */
+.thallo-block-pricing_table--highlight .thallo-block-pricing_table__tier.is-highlighted,
+.thallo-block-pricing_table--highlight .thallo-block-pricing_table__cell.is-highlighted { background: var(--surface); }
+.thallo-block-pricing_table--highlight .thallo-block-pricing_table__tier.is-highlighted {
+  border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg);
+}
+/* mobile item cards */
+.thallo-block-pricing_table__item {
+  border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-4);
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.thallo-block-pricing_table__item.is-highlighted { border: 2px solid var(--accent); }
+.thallo-block-pricing_table__item-head {
+  display: flex; flex-direction: column; gap: 0.25rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--line);
+}
+.thallo-block-pricing_table__item-feature { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+/* standalone fallbacks */
+.thallo-block-pricing_tier {
+  display: flex; flex-direction: column; gap: 0.25rem; padding: var(--space-4);
+  border: 1px solid var(--line); border-radius: var(--radius-lg);
+}
+.thallo-block-pricing_tier.is-highlighted { border: 2px solid var(--accent); }
+.thallo-block-pricing_feature__title { color: var(--ink); }

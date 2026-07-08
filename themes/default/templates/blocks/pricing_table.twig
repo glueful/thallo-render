@@ -1,0 +1,80 @@
+{# pricing_table — feature comparison across tiers (refs.md pricingTable). Renders
+   its pricing_tier/pricing_feature children INLINE (table semantics can't come from
+   standalone child templates — cf. accordion). Desktop <table> + mobile stacked
+   list, both server-rendered. Tiers capped at 4 (positional value_1..value_4);
+   section rows (is_section) are label-only and never read value_N. #}
+{% import _self as t %}
+{% set tiers = data.tiers|default([])|slice(0, 4) %}
+{% set tierCount = tiers|length %}
+{% set rootClass = [
+  'thallo-block thallo-block-pricing_table',
+  data.highlight|default(false) ? 'thallo-block-pricing_table--highlight' : '',
+]|join(' ')|trim %}
+<div class="{{ rootClass }}">
+  <table class="thallo-block-pricing_table__table">
+    <thead>
+      <tr>
+        <th class="thallo-block-pricing_table__corner"></th>
+        {% for tier in tiers %}
+        <th class="thallo-block-pricing_table__tier{{ tier.data.highlight|default(false) ? ' is-highlighted' : '' }}">
+          {% if tier.data.badge %}<span class="thallo-block-pricing_table__tier-badge">{{ tier.data.badge }}</span>{% endif %}
+          {% if tier.data.title %}<span class="thallo-block-pricing_table__tier-title">{{ tier.data.title }}</span>{% endif %}
+          {% if tier.data.description %}<span class="thallo-block-pricing_table__tier-description">{{ tier.data.description }}</span>{% endif %}
+          {% if tier.data.price %}<span class="thallo-block-pricing_table__tier-price">{{ tier.data.price }}</span>{% endif %}
+          {{ t.tierCta(tier.data) }}
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for feature in data.features|default([]) %}
+        {% if feature.data.is_section|default(false) %}
+        <tr class="thallo-block-pricing_table__section"><th colspan="{{ tierCount + 1 }}">{{ feature.data.title|default('') }}</th></tr>
+        {% else %}
+        <tr class="thallo-block-pricing_table__row">
+          <th class="thallo-block-pricing_table__row-header">{{ feature.data.title|default('') }}</th>
+          {% for tier in tiers %}
+          <td class="thallo-block-pricing_table__cell{{ tier.data.highlight|default(false) ? ' is-highlighted' : '' }}">{{ t.cell(feature.data['value_' ~ loop.index]|default('')) }}</td>
+          {% endfor %}
+        </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="thallo-block-pricing_table__list">
+    {% for tier in tiers %}
+    <div class="thallo-block-pricing_table__item{{ tier.data.highlight|default(false) ? ' is-highlighted' : '' }}">
+      <div class="thallo-block-pricing_table__item-head">
+        {% if tier.data.title %}<span class="thallo-block-pricing_table__tier-title">{{ tier.data.title }}</span>{% endif %}
+        {% if tier.data.price %}<span class="thallo-block-pricing_table__tier-price">{{ tier.data.price }}</span>{% endif %}
+        {{ t.tierCta(tier.data) }}
+      </div>
+      {% for feature in data.features|default([]) %}
+        {% if not feature.data.is_section|default(false) %}
+        <div class="thallo-block-pricing_table__item-feature">
+          <span>{{ feature.data.title|default('') }}</span>
+          <span>{{ t.cell(feature.data['value_' ~ loop.parent.loop.index]|default('')) }}</span>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% macro cell(v) %}
+{%- set low = (v|default(''))|trim|lower -%}
+{%- if low == '✓' or low == 'yes' -%}
+<span class="thallo-block-pricing_table__check" aria-hidden="true">{{ icon('check') }}</span>
+{%- elseif low == '' or low == '-' or low == 'no' -%}
+<span class="thallo-block-pricing_table__dash" aria-hidden="true">–</span>
+{%- else -%}
+{{ v|trim }}
+{%- endif -%}
+{% endmacro %}
+{% macro tierCta(d) %}
+{%- set ctaUrl = d.button_url|default('')|safe_url -%}
+{%- if d.button_label|default('') is not empty -%}
+{%- set ctaTag = ctaUrl ? 'a' : 'span' -%}
+<{{ ctaTag }} class="thallo-block-pricing_table__cta thallo-block-pricing_table__cta--{{ ({solid:'solid',outline:'outline'}[d.button_variant|default('solid')] ?? 'solid') }}"{% if ctaUrl %} href="{{ ctaUrl }}"{% endif %}>{{ d.button_label }}</{{ ctaTag }}>
+{%- endif -%}
+{% endmacro %}
