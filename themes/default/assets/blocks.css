@@ -957,3 +957,9 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 }
 .thallo-block-stepper_item__step-title { margin: 0; font-size: 1.05rem; color: var(--ink); }
 .thallo-block-stepper_item__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; }
+
+/* style — a token-scoping wrapper (style-block spec §4.5). It paints nothing itself;
+   it only re-defines design-token custom properties for its subtree, which descendant
+   blocks already consume. The scoped values arrive via the block's inline <style>. */
+.thallo-block-style { display: block; }
+.thallo-block-style__inner { display: block; }

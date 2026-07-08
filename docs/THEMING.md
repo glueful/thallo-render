@@ -445,3 +445,43 @@ free CSS (a far narrower trust surface than `custom.css`), and Glueful ships no
 CSP by default. If strict-CSP perfection is later required, the same storage +
 token model can serve the CSS from a linked `/theme-colors.css` route instead —
 a delivery-only change.
+
+## 10. Style block (scoped accent/neutral + class hook)
+
+The **Style** block (`slug: style`, category Layout) re-skins a group of blocks
+without swapping templates — the local sibling of the global theme color config (§9).
+
+### 10.1 What it configures
+- **Accent** and **Neutral** — the same closed Tailwind families as §9. Each is
+  optional; the first option, **Inherit**, leaves that dimension unchanged.
+- **Class hook** (`class_hook`) — an optional custom-CSS hook (see §10.4).
+- **Content** — the child blocks the skin applies to.
+
+### 10.2 How it re-skins (tokens only, follows color mode)
+The block redefines design-token custom properties (`--accent`/`--accent-ink` for
+accent; `--bg`/`--surface`/`--surface-2`/`--ink`/`--muted`/`--line` for neutral) on
+its subtree via a generated scope class `thallo-skin-{accent}-{neutral}` (an unset
+dimension is `none`, e.g. `thallo-skin-rose-none`). It **follows the global light/dark
+mode** (§ color-mode): the emitted `<style>` carries both a light rule and an
+`html[data-theme="dark"] …` rule, so the reader's chosen mode still wins. Only the
+set dimension's variables are emitted; picking **Inherit** (or leaving a dimension
+blank) emits nothing for it. An unknown/stale value is treated as inherit — a scoped
+block has a safe do-nothing state, so it never falls back to the global blue/slate.
+
+### 10.3 Delivery
+Each Style block emits its own small `<style>` next to its wrapper (not hoisted to
+`<head>`), so the block fragment stays self-contained for the visual canvas. Identical
+accent/neutral pairs share one deterministic scope class. As with §9, the inline
+`<style>` relies on the CSP `style-src 'unsafe-inline'` allowance (accepted for v1).
+
+### 10.4 Custom class hook
+The **Class hook** field lets you target the wrapper from `custom.css`. Enter a bare
+hook name (e.g. `promo`); it renders as the namespaced class `thallo-style-promo` on
+the wrapper. Multiple space-separated hooks are allowed. Input is sanitized at render
+time — only safe class tokens survive — so it can never inject markup.
+
+### 10.5 Preview & caching (inherited, no new machinery)
+Style values are ordinary published block content, so they preview through the normal
+content preview and their rendered HTML is invalidated by the existing content/publish
+cache purge (the render entry is tagged with the page's entry surrogate). There is no
+separate preview token, appearance fingerprint, or purge listener for this block.

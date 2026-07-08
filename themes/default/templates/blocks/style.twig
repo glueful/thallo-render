@@ -1,0 +1,12 @@
+{# style — re-skins its subtree's design tokens (accent/neutral) and wraps a child
+   block list, plus an optional custom-CSS class hook (style-block spec §4.4). Follows
+   the global color mode: the scoped <style> carries both light and dark var sets,
+   switched by data-theme. All fields optional except content; 'inherit'/absent/unknown
+   accent|neutral = don't apply that override.
+   NOTE (canvas): the <style> is rendered LAST, AFTER __inner, so the canvas bridge's
+   host (w.firstElementChild) is always the content wrapper — never the <style> (P1). #}
+{% set scope = theme_style_scope(data.accent|default(''), data.neutral|default('')) %}
+<div class="thallo-block thallo-block-style{{ scope.class }}{{ data.class_hook|default('')|style_hook }}">
+  <div class="thallo-block-style__inner">{{ blocks(data.content|default([])) }}</div>
+  {{ scope.style }}
+</div>

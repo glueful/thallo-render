@@ -160,6 +160,8 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('color_mode_script', $this->colorModeScript(...), ['is_safe' => ['html']]),
             // is_safe html: generated purely from the closed accent/neutral enums.
             new TwigFunction('theme_colors_style', $this->themeColorsStyle(...), ['is_safe' => ['html']]),
+            // No is_safe: returns an array whose members carry their own safety (P2a).
+            new TwigFunction('theme_style_scope', $this->themeStyleScope(...)),
         ];
     }
 
@@ -213,6 +215,56 @@ final class RenderContextExtension extends AbstractExtension
 
         $css = ThemeColors::css($accent, $neutral);
         return new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8');
+    }
+
+    /**
+     * Style-block spec §4.2: the effective scoped skin for a `style` block instance.
+     * Returns a class fragment (leading space, '' when no re-skin) and the inline
+     * <style> Markup ('' when no re-skin). Follows the global color mode. BOTH members
+     * are Twig\Markup: the class is enum-derived (closed families → safe by
+     * construction), so it is emitted as-is rather than relying on autoescape being a
+     * no-op (review P2a). The <style> carries its own safety.
+     *
+     * @return array{class: \Twig\Markup, style: \Twig\Markup}
+     */
+    public function themeStyleScope(?string $accent, ?string $neutral): array
+    {
+        $class = ThemeColors::skinClass($accent, $neutral);
+        $css = $class === '' ? '' : ThemeColors::scopedCss($accent, $neutral, $class);
+        return [
+            'class' => new \Twig\Markup($class === '' ? '' : ' ' . $class, 'UTF-8'),
+            'style' => new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8'),
+        ];
+    }
+
+    /** Style-block spec §4.3: namespaced, sanitized custom-CSS class hook. */
+    public function styleHook(mixed $value): string
+    {
+        return self::sanitizeStyleHook(is_string($value) ? $value : '');
+    }
+
+    /**
+     * Pure sanitizer for the class hook (pin 7). Keeps only tokens matching
+     * ^[A-Za-z_-][A-Za-z0-9_-]*$, strips any existing thallo-style- prefix
+     * (idempotent), then namespaces each under thallo-style-. Returns a
+     * leading-space-joined string, or '' when nothing survives.
+     */
+    public static function sanitizeStyleHook(string $raw): string
+    {
+        $out = [];
+        foreach (preg_split('/\s+/', trim($raw)) ?: [] as $token) {
+            if ($token === '') {
+                continue;
+            }
+            if (str_starts_with($token, 'thallo-style-')) {
+                $token = substr($token, strlen('thallo-style-'));
+            }
+            if (preg_match('/^[A-Za-z_-][A-Za-z0-9_-]*$/', $token) !== 1) {
+                continue;
+            }
+            $out[] = 'thallo-style-' . $token;
+        }
+        return $out === [] ? '' : ' ' . implode(' ', $out);
     }
 
     /**
@@ -361,6 +413,9 @@ final class RenderContextExtension extends AbstractExtension
             // filter ESCAPES the value itself in BOTH modes (never autoescape).
             new TwigFilter('editable_text', $this->editableText(...), ['is_safe' => ['html']]),
             new TwigFilter('safe_url', $this->safeUrl(...)),
+            // No is_safe: sanitized output is autoescape-safe (a deliberate second
+            // layer over the sanitizer, since the input is operator-derived).
+            new TwigFilter('style_hook', $this->styleHook(...)),
         ];
     }
 

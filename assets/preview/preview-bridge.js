@@ -97,6 +97,16 @@
     CANVAS: 1, VIDEO: 1, AUDIO: 1, svg: 1, SVG: 1
   }
 
+  // Metadata elements that render nothing: a block may own a <style> (the Style
+  // block's scoped skin) — it must never be treated as the visual host. Resolve a
+  // wrapper's host by skipping these when scanning its element children.
+  var NON_VISUAL_HOSTS = { STYLE: 1, SCRIPT: 1, LINK: 1, TEMPLATE: 1 }
+  function firstVisualChild(el) {
+    var c = el.firstElementChild
+    while (c && NON_VISUAL_HOSTS[c.tagName]) c = c.nextElementSibling
+    return c
+  }
+
   function detachToolbar() {
     if (toolbar && toolbar.parentNode) toolbar.parentNode.removeChild(toolbar)
     if (anchorEl) {
@@ -114,7 +124,7 @@
     detachToolbar()
     w.classList.add('thallo-canvas-selected')
     selectedId = w.getAttribute('data-thallo-block')
-    var host = w.firstElementChild
+    var host = firstVisualChild(w)
     if (host && NO_CHILD_HOSTS[host.tagName]) {
       // hr/img/… render no children: anchor a shim sibling instead.
       var shim = document.createElement('span')
@@ -651,7 +661,7 @@
     for (var i = 0; i < kids.length; i++) {
       var el = kids[i]
       if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
-      var h = el.firstElementChild
+      var h = firstVisualChild(el)
       if (h && h.animate) before.push({ host: h, top: h.getBoundingClientRect().top })
     }
     mutate()
@@ -674,7 +684,7 @@
    * pin); appearance in preview.css. Torn down in endDrag.
    */
   function buildDragGhost(w) {
-    var host = w.firstElementChild
+    var host = firstVisualChild(w)
     if (!host) return null
     var ghostEl = document.createElement('div')
     ghostEl.className = 'thallo-canvas-drag-ghost'
@@ -737,7 +747,7 @@
       if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
       // Same-parent guard (review caution): mirror-move's rule on the live path.
       if (el.parentNode !== w.parentNode) continue
-      var host = el.firstElementChild
+      var host = firstVisualChild(el)
       if (!host) continue
       var r = host.getBoundingClientRect()
       if (e.clientY < r.top + r.height / 2) {

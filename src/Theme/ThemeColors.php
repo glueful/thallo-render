@@ -96,12 +96,7 @@ final class ThemeColors
      */
     public static function tokens(string $accent, string $neutral, string $mode): array
     {
-        [$light, $dark] = self::ACCENT[$accent];
-        $neutralTokens = $mode === 'dark' ? self::NEUTRAL_DARK[$neutral] : self::NEUTRAL_LIGHT[$neutral];
-        return $neutralTokens + [
-            '--accent' => $mode === 'dark' ? $dark : $light,
-            '--accent-ink' => '#ffffff',
-        ];
+        return self::neutralVars($neutral, $mode) + self::accentVars($accent, $mode);
     }
 
     /** Override CSS for a validated pair, or '' when it is the default. */
@@ -110,14 +105,72 @@ final class ThemeColors
         if ($accent === self::DEFAULT_ACCENT && $neutral === self::DEFAULT_NEUTRAL) {
             return '';
         }
-        $emit = static function (array $tokens): string {
-            $decls = '';
-            foreach ($tokens as $name => $value) {
-                $decls .= "{$name}:{$value};";
-            }
-            return $decls;
+        return ':root{' . self::declarations(self::tokens($accent, $neutral, 'light')) . '}'
+            . 'html[data-theme="dark"]{' . self::declarations(self::tokens($accent, $neutral, 'dark')) . '}';
+    }
+
+    /**
+     * Deterministic scope class for a scoped re-skin, or '' when neither resolves.
+     * An unset/invalid dimension becomes the literal 'none' (style-block spec §4.1).
+     */
+    public static function skinClass(?string $accent, ?string $neutral): string
+    {
+        $a = self::normalizeAccent($accent ?? '');
+        $n = self::normalizeNeutral($neutral ?? '');
+        if ($a === null && $n === null) {
+            return '';
+        }
+        return 'thallo-skin-' . ($a ?? 'none') . '-' . ($n ?? 'none');
+    }
+
+    /**
+     * Scoped CSS re-skinning ONLY the set dimensions, following the global mode:
+     *   .scope{ <light> } html[data-theme="dark"] .scope{ <dark> }
+     * Returns '' when neither accent nor neutral resolves (style-block spec §4.1).
+     */
+    public static function scopedCss(?string $accent, ?string $neutral, string $scopeClass): string
+    {
+        $a = self::normalizeAccent($accent ?? '');
+        $n = self::normalizeNeutral($neutral ?? '');
+        if ($a === null && $n === null) {
+            return '';
+        }
+        $vars = static function (string $mode) use ($a, $n): array {
+            return ($n !== null ? self::neutralVars($n, $mode) : [])
+                + ($a !== null ? self::accentVars($a, $mode) : []);
         };
-        return ':root{' . $emit(self::tokens($accent, $neutral, 'light')) . '}'
-            . 'html[data-theme="dark"]{' . $emit(self::tokens($accent, $neutral, 'dark')) . '}';
+        return '.' . $scopeClass . '{' . self::declarations($vars('light')) . '}'
+            . 'html[data-theme="dark"] .' . $scopeClass . '{' . self::declarations($vars('dark')) . '}';
+    }
+
+    /**
+     * The --accent / --accent-ink pair for one mode.
+     *
+     * @return array<string,string>
+     */
+    private static function accentVars(string $accent, string $mode): array
+    {
+        [$light, $dark] = self::ACCENT[$accent];
+        return ['--accent' => $mode === 'dark' ? $dark : $light, '--accent-ink' => '#ffffff'];
+    }
+
+    /**
+     * The six neutral vars for one mode.
+     *
+     * @return array<string,string>
+     */
+    private static function neutralVars(string $neutral, string $mode): array
+    {
+        return $mode === 'dark' ? self::NEUTRAL_DARK[$neutral] : self::NEUTRAL_LIGHT[$neutral];
+    }
+
+    /** @param array<string,string> $tokens */
+    private static function declarations(array $tokens): string
+    {
+        $decls = '';
+        foreach ($tokens as $name => $value) {
+            $decls .= "{$name}:{$value};";
+        }
+        return $decls;
     }
 }
