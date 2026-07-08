@@ -1,0 +1,46 @@
+{# blog_posts — dynamically lists published posts as cards (refs.md blogPosts). Leaf
+   block: fetches via entries() (no child blocks). The card is an inline same-file
+   macro (no separate blogPost block/partial in v1). Empty result shows a placeholder
+   ONLY in preview; public renders nothing. #}
+{% import _self as bp %}
+{% set columns = ({'1':'1','2':'2','3':'3','4':'4'}[data.columns|default('3')] ?? '3') %}
+{% set variant = ({outline:'outline',soft:'soft',subtle:'subtle',ghost:'ghost',naked:'naked'}[data.variant|default('outline')] ?? 'outline') %}
+{% set orientation = ({vertical:'vertical',horizontal:'horizontal'}[data.orientation|default('vertical')] ?? 'vertical') %}
+{% set rootClass = [
+  'thallo-block thallo-block-blog_posts',
+  'thallo-block-blog_posts--columns-' ~ columns,
+  'thallo-block-blog_posts--variant-' ~ variant,
+  'thallo-block-blog_posts--orientation-' ~ orientation,
+]|join(' ')|trim %}
+{% set posts = entries(data.type|default('post'), {
+  limit: data.limit|default(3),
+  order: data.order|default('newest'),
+  category: data.category|default(null),
+}) %}
+<div class="{{ rootClass }}">
+  {% if posts is not empty %}
+    <div class="thallo-block-blog_posts__grid">
+      {% for post in posts %}{{ bp.card(post) }}{% endfor %}
+    </div>
+  {% elseif is_preview() %}
+    <div class="thallo-block-blog_posts__empty">No posts found.</div>
+  {% endif %}
+</div>
+{% macro card(post) %}
+{% set f = post.fields|default({}) %}
+{% set cover = f.cover|default(null) %}
+{% set url = post.href|default(null) %}
+<article class="thallo-block-blog_posts__card">
+  {% if cover %}<a class="thallo-block-blog_posts__image" href="{{ url|default('#') }}"><img src="{{ media(cover) }}" alt="" loading="lazy"></a>{% endif %}
+  <div class="thallo-block-blog_posts__body">
+    {% if f.categories is defined and f.categories is not empty %}
+    <div class="thallo-block-blog_posts__meta">
+      {% for cat in f.categories %}<span class="thallo-block-blog_posts__badge">{{ cat.title|default(cat.fields.title)|default('') }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    {% if f.title %}<h3 class="thallo-block-blog_posts__title">{% if url %}<a href="{{ url }}">{{ f.title }}</a>{% else %}{{ f.title }}{% endif %}</h3>{% endif %}
+    {% if f.excerpt %}<p class="thallo-block-blog_posts__description">{{ f.excerpt }}</p>{% endif %}
+    {% if post.published_at %}<time class="thallo-block-blog_posts__date" datetime="{{ post.published_at }}">{{ post.published_at|date('M j, Y') }}</time>{% endif %}
+  </div>
+</article>
+{% endmacro %}

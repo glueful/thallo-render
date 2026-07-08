@@ -26,6 +26,7 @@ use Thallo\Contracts\Settings\SiteLogoProvider;
 use Thallo\Contracts\Settings\ThemeAppearanceChanged;
 use Thallo\Contracts\Settings\ThemeChanged;
 use Thallo\Contracts\Settings\ThemeSettingProvider;
+use Thallo\Contracts\Delivery\EntryListReader;
 use Thallo\Contracts\Delivery\EntryTargetResolver;
 use Thallo\Contracts\Delivery\FacetCountsReader;
 use Thallo\Contracts\Delivery\PreviewThemeValidator;
@@ -416,6 +417,10 @@ final class RenderServiceProvider extends ServiceProvider
             // assets dir — the SAME dir themeAsset() serves from — so ?v=<mtime> matches
             // the file the browser actually fetches.
             themeAssetsDir: $container->get(ThemeLocator::class)->activePaths()['assets'],
+            // entries() (blog-posts spec): soft-bound; null = [] (block renders nothing).
+            entryReader: $container->has(EntryListReader::class)
+                ? $container->get(EntryListReader::class)
+                : null,
         );
     }
 

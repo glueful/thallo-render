@@ -8,6 +8,7 @@ use Thallo\Contracts\Content\BlockEditableFieldResolver;
 use Thallo\Contracts\Content\RegionReader;
 use Thallo\Contracts\Content\RichHtmlSanitizer;
 use Thallo\Contracts\Delivery\EntryTargetResolver;
+use Thallo\Contracts\Delivery\EntryListReader;
 use Thallo\Contracts\Delivery\FacetCountsReader;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
 use Thallo\Contracts\Settings\SiteFaviconProvider;
@@ -126,6 +127,8 @@ final class RenderContextExtension extends AbstractExtension
          * fires on a theme SWITCH, not an in-place edit.
          */
         private readonly ?string $themeAssetsDir = null,
+        /** Soft-bound (blog-posts spec): null → entries() returns [] (block renders nothing). */
+        private readonly ?EntryListReader $entryReader = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -143,6 +146,8 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('path', $this->path(...)),
             new TwigFunction('asset', $this->asset(...)),
             new TwigFunction('facets', $this->facets(...)),
+            new TwigFunction('entries', $this->entries(...)),
+            new TwigFunction('is_preview', $this->isPreview(...)),
             new TwigFunction('blocks', $this->blocks(...), [
                 'needs_environment' => true,
                 'needs_context' => true,
@@ -651,6 +656,35 @@ final class RenderContextExtension extends AbstractExtension
         $result = $this->facetReader->counts($type, $field, $this->locale, $limit);
         $this->collectTags($result['cache_tags']);
         return $result['items'];
+    }
+
+    /**
+     * Published-entry listing for templates (the blog_posts block). Null reader →
+     * [] (block renders nothing). Carries its own cache tags — including the broad
+     * thallo:type:{slug} dependency — which are collected into the render's Cache-Tag
+     * header just like facets().
+     *
+     * @param array{limit?: int, order?: string, category?: ?string} $opts
+     * @return list<array<string,mixed>>
+     */
+    public function entries(string $type, array $opts = []): array
+    {
+        if ($this->entryReader === null) {
+            return [];
+        }
+        $result = $this->entryReader->list($type, $opts, $this->locale);
+        $this->collectTags($result['cache_tags']);
+        return $result['items'];
+    }
+
+    /**
+     * True only in the editor/canvas block-annotation render mode — NOT a session or
+     * token check. Templates use it to show an empty-state placeholder in the editor
+     * while rendering nothing on the public site.
+     */
+    public function isPreview(): bool
+    {
+        return $this->annotateBlocks;
     }
 
     /** @param list<string> $tags */
