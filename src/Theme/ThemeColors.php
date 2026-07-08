@@ -58,6 +58,7 @@ final class ThemeColors
      * follow 50/100/900/500/200. slate is frozen to the shipped site.css values.
      * @var array<string,array<string,string>>
      */
+    // phpcs:disable Generic.Files.LineLength.TooLong -- intentional one-line-per-family palette tables
     private const NEUTRAL_LIGHT = [
         'slate'   => ['--bg' => '#ffffff', '--surface' => '#f6f7f9', '--surface-2' => '#eef0f4', '--ink' => '#0f172a', '--muted' => '#64748b', '--line' => '#e2e8f0'],
         'gray'    => ['--bg' => '#ffffff', '--surface' => '#f9fafb', '--surface-2' => '#f3f4f6', '--ink' => '#111827', '--muted' => '#6b7280', '--line' => '#e5e7eb'],
@@ -78,6 +79,7 @@ final class ThemeColors
         'neutral' => ['--bg' => '#0a0a0a', '--surface' => '#171717', '--surface-2' => '#262626', '--ink' => '#e5e5e5', '--muted' => '#a3a3a3', '--line' => '#262626'],
         'stone'   => ['--bg' => '#0c0a09', '--surface' => '#1c1917', '--surface-2' => '#292524', '--ink' => '#e7e5e4', '--muted' => '#a8a29e', '--line' => '#292524'],
     ];
+    // phpcs:enable Generic.Files.LineLength.TooLong
 
     public static function normalizeAccent(string $v): ?string
     {

@@ -13,6 +13,7 @@ namespace Thallo\Render;
 final class ColorMode
 {
     /** The inline no-flash resolver. Byte-stable literal — do NOT edit without updating RESOLVER_SHA256. */
+    // phpcs:ignore Generic.Files.LineLength.TooLong -- hash-pinned literal; wrapping would break RESOLVER_SHA256
     public const RESOLVER_JS = "(function(){try{var k=localStorage.getItem('thallo.colorMode')||'system';var d=k==='dark'||(k!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();";
 
     /** base64(sha256(RESOLVER_JS)) — the value operators add to a strict CSP as 'sha256-...'. */
