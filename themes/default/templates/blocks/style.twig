@@ -6,7 +6,30 @@
    NOTE (canvas): the <style> is rendered LAST, AFTER __inner, so the canvas bridge's
    host (w.firstElementChild) is always the content wrapper — never the <style> (P1). #}
 {% set scope = theme_style_scope(data.accent|default(''), data.neutral|default('')) %}
-<div class="thallo-block thallo-block-style{{ scope.class }}{{ data.class_hook|default('')|style_hook }}">
+{# Leading-space-in-value convention (matches scope.class / style_hook) so unset
+   dimensions contribute '' and the class list stays single-spaced — the Feature-C
+   exact-class-match test depends on this. Maps are allowlist guards (?? ''). #}
+{% set shadowCls = {
+  none: '', '2xs': ' thallo-shadow-2xs', xs: ' thallo-shadow-xs', sm: ' thallo-shadow-sm',
+  md: ' thallo-shadow-md', lg: ' thallo-shadow-lg', xl: ' thallo-shadow-xl', '2xl': ' thallo-shadow-2xl',
+}[data.shadow|default('none')] ?? '' %}
+{% set padCls = {
+  none: '', small: ' thallo-block-style--pad-small',
+  medium: ' thallo-block-style--pad-medium', large: ' thallo-block-style--pad-large',
+}[data.padding|default('none')] ?? '' %}
+{% set marCls = {
+  none: '', small: ' thallo-block-style--mar-small',
+  medium: ' thallo-block-style--mar-medium', large: ' thallo-block-style--mar-large',
+}[data.margin|default('none')] ?? '' %}
+{% set hasShadow = shadowCls is not empty %}
+{% set vars = [] %}
+{# Render-time trust boundary (NOT just the admin pattern): only emit a hex that
+   matches the field's shape, and a numeric opacity clamped to 0..200. Stale or
+   malicious block content can't inject extra CSS declarations into the style
+   attribute (parity with the class_hook sanitizer). #}
+{% if hasShadow and data.shadow_color|default('') matches '/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/' %}{% set vars = vars|merge(['--shadow-color: ' ~ data.shadow_color]) %}{% endif %}
+{% if hasShadow and data.shadow_opacity is defined and data.shadow_opacity is not null and data.shadow_opacity matches '/^[0-9]+(\.[0-9]+)?$/' %}{% set vars = vars|merge(['--shadow-strength: ' ~ (max(0, min(200, data.shadow_opacity)) / 100)]) %}{% endif %}
+<div class="thallo-block thallo-block-style{{ scope.class }}{{ shadowCls }}{{ padCls }}{{ marCls }}{{ data.class_hook|default('')|style_hook }}"{% if vars is not empty %} style="{{ vars|join('; ') }}"{% endif %}>
   <div class="thallo-block-style__inner">{{ blocks(data.content|default([])) }}</div>
   {{ scope.style }}
 </div>

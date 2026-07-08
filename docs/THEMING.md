@@ -485,3 +485,30 @@ Style values are ordinary published block content, so they preview through the n
 content preview and their rendered HTML is invalidated by the existing content/publish
 cache purge (the render entry is tagged with the page's entry surrogate). There is no
 separate preview token, appearance fingerprint, or purge listener for this block.
+
+## 11. Shadows (elevation scale + block controls)
+
+The theme ships a Tailwind-derived elevation scale as design tokens in `site.css`,
+light + dark aware, plus page-builder controls on the Style and Container blocks.
+
+### 11.1 The scale
+`--shadow-none`, `--shadow-2xs`, `--shadow-xs`, `--shadow-sm`, `--shadow-md`,
+`--shadow-lg`, `--shadow-xl`, `--shadow-2xl`. `--shadow` aliases `--shadow-md` (the
+default), so every component that used the old flat shadow now renders md; floating
+overlays (nav dropdown) use `--shadow-lg`. Apply a depth anywhere with the utility
+classes `.thallo-shadow-{level}`.
+
+### 11.2 Overridable color + opacity
+Each token composes its color from `--shadow-color` and its opacity from
+`calc(<base>% * --shadow-strength)` via `color-mix()`. Defaults: light slate-900 /
+strength 1; dark black / strength 2.5 (the scale recomputes automatically in dark —
+no separate dark shadow values). Override either variable on an element for a colored
+or stronger/softer shadow.
+
+### 11.3 Block controls
+- **Style block:** `shadow` (depth), `shadow_color` (any hex — the "colored shadow"),
+  `shadow_opacity` (0–200, where 100 = as-designed — the "opacity modifier"),
+  `padding` (all sides) and `margin` (vertical). Color/opacity are emitted as inline
+  `--shadow-color` / `--shadow-strength` on the wrapper, and are only applied when they
+  pass a render-time shape/range guard. All default to `none`/unset.
+- **Container:** `shadow` (depth) only. Defaults to `none`.

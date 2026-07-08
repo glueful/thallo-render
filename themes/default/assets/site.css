@@ -15,7 +15,20 @@
   --line: #e2e8f0;
   --accent: #2563eb;
   --accent-ink: #ffffff;
-  --shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 8px 24px rgb(15 23 42 / 0.08);
+  /* Elevation scale (Tailwind-derived). Each token composes its color from
+     --shadow-color and its opacity from calc(<base>% * --shadow-strength), so an
+     element can retint (colored shadow) or restrength (opacity modifier) its shadow. */
+  --shadow-color: #0f172a;   /* slate-900; dark mode + operators override */
+  --shadow-strength: 1;
+  --shadow-none: none;
+  --shadow-2xs: 0 1px color-mix(in srgb, var(--shadow-color) calc(5% * var(--shadow-strength)), transparent);
+  --shadow-xs:  0 1px 2px 0 color-mix(in srgb, var(--shadow-color) calc(5% * var(--shadow-strength)), transparent);
+  --shadow-sm:  0 1px 3px 0 color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent), 0 1px 2px -1px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent);
+  --shadow-md:  0 4px 6px -1px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent), 0 2px 4px -2px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent);
+  --shadow-lg:  0 10px 15px -3px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent), 0 4px 6px -4px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent);
+  --shadow-xl:  0 20px 25px -5px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent), 0 8px 10px -6px color-mix(in srgb, var(--shadow-color) calc(10% * var(--shadow-strength)), transparent);
+  --shadow-2xl: 0 25px 50px -12px color-mix(in srgb, var(--shadow-color) calc(25% * var(--shadow-strength)), transparent);
+  --shadow: var(--shadow-md);
   --radius: 12px;
   --radius-lg: 20px;
   --container: 72rem;
@@ -37,7 +50,9 @@ html[data-theme="dark"] {
   --line: #1e293b;
   --accent: #3b82f6;
   --accent-ink: #ffffff;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.5);
+  /* Shadows recompute from the scale; dark just darkens the tint and boosts strength. */
+  --shadow-color: #000000;
+  --shadow-strength: 2.5;
 }
 
 * { box-sizing: border-box; }

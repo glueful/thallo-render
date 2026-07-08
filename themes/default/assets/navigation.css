@@ -101,7 +101,7 @@
   list-style: none; margin: 0; padding: var(--space-2);
   min-width: 12rem; display: none; z-index: 30;
   background: var(--bg); border: 1px solid var(--line);
-  border-radius: var(--radius); box-shadow: var(--shadow);
+  border-radius: var(--radius); box-shadow: var(--shadow-lg);
 }
 .thallo-block-navigation--horizontal .thallo-block-navigation__item--parent > .thallo-block-navigation__submenu,
 .thallo-block-navigation--horizontal .thallo-block-navigation__details > .thallo-block-navigation__submenu {

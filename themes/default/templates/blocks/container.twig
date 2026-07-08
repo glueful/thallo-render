@@ -41,10 +41,14 @@
   left:   'thallo-block-container--bgpos-left',
   right:  'thallo-block-container--bgpos-right',
 }[data.bg_position|default('center')] ?? 'thallo-block-container--bgpos-center' %}
+{% set shadowMod = {
+  none: '', '2xs': 'thallo-shadow-2xs', xs: 'thallo-shadow-xs', sm: 'thallo-shadow-sm',
+  md: 'thallo-shadow-md', lg: 'thallo-shadow-lg', xl: 'thallo-shadow-xl', '2xl': 'thallo-shadow-2xl',
+}[data.shadow|default('none')] ?? '' %}
 
 {% set rootClass = [
   'thallo-block thallo-block-container',
-  widthMod, padMod, heightMod, bgSizeMod, bgRepeatMod, bgPosMod,
+  widthMod, padMod, heightMod, bgSizeMod, bgRepeatMod, bgPosMod, shadowMod,
 ]|join(' ')|trim %}
 
 {# freeform → CSS vars only (base .thallo-block-container / __overlay rules paint them) #}

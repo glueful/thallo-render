@@ -963,3 +963,21 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
    blocks already consume. The scoped values arrive via the block's inline <style>. */
 .thallo-block-style { display: block; }
 .thallo-block-style__inner { display: block; }
+.thallo-block-style--pad-small { padding: var(--space-3); }
+.thallo-block-style--pad-medium { padding: var(--space-4); }
+.thallo-block-style--pad-large { padding: var(--space-5); }
+.thallo-block-style--mar-small { margin-block: var(--space-3); }
+.thallo-block-style--mar-medium { margin-block: var(--space-4); }
+.thallo-block-style--mar-large { margin-block: var(--space-5); }
+
+/* Shadow elevation utilities (shadow-system plan): a block opts into a depth by
+   adding one of these; --shadow-color / --shadow-strength (set inline by the block)
+   retint / restrength it. */
+.thallo-shadow-none { box-shadow: var(--shadow-none); }
+.thallo-shadow-2xs { box-shadow: var(--shadow-2xs); }
+.thallo-shadow-xs { box-shadow: var(--shadow-xs); }
+.thallo-shadow-sm { box-shadow: var(--shadow-sm); }
+.thallo-shadow-md { box-shadow: var(--shadow-md); }
+.thallo-shadow-lg { box-shadow: var(--shadow-lg); }
+.thallo-shadow-xl { box-shadow: var(--shadow-xl); }
+.thallo-shadow-2xl { box-shadow: var(--shadow-2xl); }
