@@ -7,12 +7,23 @@
         vars (painted by blocks.css); spacing/border/sizing are direct declarations.
    The `padding`/`margin`/`radius` BOXES (per-side px) override the padding_preset /
    emit margin & radius when any side is set. `max_width` overrides the width enum on
-   __inner; `min_height_px` overrides the min_height enum. A background_video renders as
-   a muted looping <video> layer (behind the overlay, over any background_image).
-   content_align places the inner content vertically (needs a min_height). #}
+   __inner; `min_height_px` overrides the min_height enum. A background_video (blob) or
+   background_video_url renders a muted looping layer behind the overlay: a blob/direct
+   file URL as <video>, a YouTube/Vimeo URL as a cover iframe (id parsed by video_embed,
+   so the raw URL never reaches src). The blob wins if both are set.
+   content_align places the inner content vertically (needs a min_height). `layout:
+   flex` turns __inner into a flex container (flex_direction / justify / align_items /
+   flex_wrap classes + a `--container-gap` var); block mode (default) keeps normal flow,
+   so untouched containers are unchanged. #}
 {% import _self as fx %}
 {% set img = data.background_image ? media(data.background_image) : null %}
+{# Background video precedence: uploaded blob > URL. A URL is either a YouTube/Vimeo
+   embed (rendered as a cover iframe, id parsed by video_embed so the raw URL never
+   reaches src) or a direct video-file URL (native <video>, scheme-allowlisted). #}
 {% set vid = data.background_video ? media(data.background_video) : null %}
+{% set vidUrl = (data.background_video_url|default(''))|trim %}
+{% set vidEmbed = (not vid and vidUrl) ? video_embed(vidUrl) : null %}
+{% set videoSrc = vid ?? ((not vidEmbed and vidUrl) ? (vidUrl|safe_url) : null) %}
 
 {% set widthMod = {
   contained: 'thallo-block-container--contained',
@@ -59,10 +70,25 @@
   none: '', '2xs': 'thallo-shadow-2xs', xs: 'thallo-shadow-xs', sm: 'thallo-shadow-sm',
   md: 'thallo-shadow-md', lg: 'thallo-shadow-lg', xl: 'thallo-shadow-xl', '2xl': 'thallo-shadow-2xl',
 }[data.shadow|default('none')] ?? '' %}
+{# Flex layout: the classes below only bite in flex mode; block mode (default) emits
+   nothing so normal flow + the min_height centering above are untouched. #}
+{% set isFlex = (data.layout|default('block')) == 'flex' %}
+{% set flexMods = isFlex ? ([
+  'thallo-block-container--layout-flex',
+  ({row: 'thallo-block-container--dir-row', column: 'thallo-block-container--dir-column',
+    'row-reverse': 'thallo-block-container--dir-row-reverse',
+    'column-reverse': 'thallo-block-container--dir-column-reverse'}[data.flex_direction|default('row')] ?? 'thallo-block-container--dir-row'),
+  ({start: 'thallo-block-container--justify-start', center: 'thallo-block-container--justify-center',
+    end: 'thallo-block-container--justify-end', between: 'thallo-block-container--justify-between',
+    around: 'thallo-block-container--justify-around', evenly: 'thallo-block-container--justify-evenly'}[data.justify|default('start')] ?? 'thallo-block-container--justify-start'),
+  ({start: 'thallo-block-container--items-start', center: 'thallo-block-container--items-center',
+    end: 'thallo-block-container--items-end', stretch: 'thallo-block-container--items-stretch'}[data.align_items|default('stretch')] ?? 'thallo-block-container--items-stretch'),
+  ({nowrap: '', wrap: 'thallo-block-container--wrap'}[data.flex_wrap|default('nowrap')] ?? ''),
+]|join(' ')|trim) : '' %}
 
 {% set rootClass = [
   'thallo-block thallo-block-container',
-  widthMod, padMod, heightMod, alignMod, bgSizeMod, bgRepeatMod, bgPosMod, shadowMod,
+  widthMod, padMod, heightMod, alignMod, bgSizeMod, bgRepeatMod, bgPosMod, shadowMod, flexMods,
 ]|join(' ')|trim %}
 
 {# freeform → inline style: --container-* vars (painted by blocks.css) + direct
@@ -77,9 +103,17 @@
 {% if data.radius is not empty %}{% set style = style|merge(['border-radius: ' ~ fx.box(data.radius)]) %}{% endif %}
 {% if data.border_style is defined and data.border_style and data.border_style != 'none' %}{% set style = style|merge(['border: ' ~ (data.border_width|default(1)) ~ 'px ' ~ data.border_style ~ ' ' ~ (data.border_color|default('#000000'))]) %}{% endif %}
 {% if data.min_height_px %}{% set style = style|merge(['min-height: ' ~ data.min_height_px ~ 'px']) %}{% endif %}
+{% if isFlex and data.gap %}{% set style = style|merge(['--container-gap: ' ~ data.gap ~ 'px']) %}{% endif %}
 
 <div class="{{ rootClass }}"{% if style is not empty %} style="{{ style|join('; ') }}"{% endif %}>
-  {% if vid %}<video class="thallo-block-container__video" src="{{ vid }}" autoplay muted loop playsinline></video>{% endif %}
+  {% if videoSrc %}<video class="thallo-block-container__video" src="{{ videoSrc }}" autoplay muted loop playsinline></video>
+  {% elseif vidEmbed %}<div class="thallo-block-container__video-cover">
+    {%- if vidEmbed.provider == 'youtube' -%}
+      <iframe class="thallo-block-container__video-frame" src="https://www.youtube-nocookie.com/embed/{{ vidEmbed.id }}?autoplay=1&mute=1&loop=1&playlist={{ vidEmbed.id }}&controls=0&modestbranding=1&playsinline=1&showinfo=0&rel=0" title="" loading="lazy" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    {%- elseif vidEmbed.provider == 'vimeo' -%}
+      <iframe class="thallo-block-container__video-frame" src="https://player.vimeo.com/video/{{ vidEmbed.id }}?autoplay=1&muted=1&loop=1&background=1" title="" loading="lazy" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    {%- endif -%}
+  </div>{% endif %}
   {% if data.overlay_color %}<div class="thallo-block-container__overlay"></div>{% endif %}
   <div class="thallo-block-container__inner"{% if data.max_width %} style="max-width: {{ data.max_width }}px"{% endif %}>{{ blocks(data.content) }}</div>
 </div>

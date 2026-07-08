@@ -86,7 +86,6 @@
   max-width: min(100%, 40rem);
   max-height: 26rem;
   object-fit: cover;
-  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
 }
 /* Links rows: the button block collapses its align wrapper and takes the
@@ -215,7 +214,6 @@
   max-width: var(--container);
   margin-inline: auto;
   padding: var(--space-6) var(--space-5);
-  border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -261,7 +259,6 @@
 }
 .thallo-block-image img {
   max-width: 100%;
-  border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
 .thallo-block-image--wide img { width: 100%; }
@@ -319,6 +316,7 @@
   background: var(--container-overlay, transparent);
   opacity: var(--container-overlay-opacity, 0.5);
   pointer-events: none;
+  border-radius: inherit;
 }
 .thallo-block-container__inner { position: relative; z-index: 1; }
 .thallo-block-container--contained .thallo-block-container__inner {
@@ -337,17 +335,42 @@
 .thallo-block-container--pad-large { padding-block: var(--space-7); }
 .thallo-block-container--h-half { min-height: 50vh; }
 .thallo-block-container--h-full { min-height: 100vh; }
-.thallo-block-container--h-half .thallo-block-container__inner,
-.thallo-block-container--h-full .thallo-block-container__inner {
+/* Block-mode vertical centering (scoped away from flex mode, which owns __inner's
+   flex behaviour). */
+.thallo-block-container--h-half:not(.thallo-block-container--layout-flex) .thallo-block-container__inner,
+.thallo-block-container--h-full:not(.thallo-block-container--layout-flex) .thallo-block-container__inner {
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-height: inherit;
 }
 /* content_align overrides the default centering (only visible once the flex column
-   above is in effect, i.e. a min_height is set). */
-.thallo-block-container--align-top .thallo-block-container__inner { justify-content: flex-start; }
-.thallo-block-container--align-bottom .thallo-block-container__inner { justify-content: flex-end; }
+   above is in effect, i.e. a min_height is set — and not in flex layout mode). */
+.thallo-block-container--align-top:not(.thallo-block-container--layout-flex) .thallo-block-container__inner { justify-content: flex-start; }
+.thallo-block-container--align-bottom:not(.thallo-block-container--layout-flex) .thallo-block-container__inner { justify-content: flex-end; }
+
+/* Flex layout mode: __inner lays its child blocks out as flex items. Direction /
+   justify / align / wrap come from the modifier classes; gap from the inline var. */
+.thallo-block-container--layout-flex .thallo-block-container__inner {
+  display: flex;
+  gap: var(--container-gap, 0);
+  min-height: inherit;
+}
+.thallo-block-container--dir-row .thallo-block-container__inner { flex-direction: row; }
+.thallo-block-container--dir-column .thallo-block-container__inner { flex-direction: column; }
+.thallo-block-container--dir-row-reverse .thallo-block-container__inner { flex-direction: row-reverse; }
+.thallo-block-container--dir-column-reverse .thallo-block-container__inner { flex-direction: column-reverse; }
+.thallo-block-container--justify-start .thallo-block-container__inner { justify-content: flex-start; }
+.thallo-block-container--justify-center .thallo-block-container__inner { justify-content: center; }
+.thallo-block-container--justify-end .thallo-block-container__inner { justify-content: flex-end; }
+.thallo-block-container--justify-between .thallo-block-container__inner { justify-content: space-between; }
+.thallo-block-container--justify-around .thallo-block-container__inner { justify-content: space-around; }
+.thallo-block-container--justify-evenly .thallo-block-container__inner { justify-content: space-evenly; }
+.thallo-block-container--items-start .thallo-block-container__inner { align-items: flex-start; }
+.thallo-block-container--items-center .thallo-block-container__inner { align-items: center; }
+.thallo-block-container--items-end .thallo-block-container__inner { align-items: flex-end; }
+.thallo-block-container--items-stretch .thallo-block-container__inner { align-items: stretch; }
+.thallo-block-container--wrap .thallo-block-container__inner { flex-wrap: wrap; }
 /* background_video — a muted looping cover layer behind the overlay, over any
    background_image. z-index 0 sits under __inner (z-index 1). */
 .thallo-block-container__video {
@@ -358,6 +381,29 @@
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+  border-radius: inherit;
+}
+/* URL-embed (YouTube/Vimeo) background: a clipped cover wrapper holding the iframe.
+   The iframe fills the width at 16:9 and centers vertically, so a wide container
+   crops top/bottom (covers). A much taller-than-wide container can letterbox — a
+   known limit of iframe backgrounds; a self-hosted/mp4 background avoids it. */
+.thallo-block-container__video-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.thallo-block-container__video-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  border: 0;
 }
 
 /* grid — wrapping grid (equal rows) or masonry (CSS columns) */
@@ -408,11 +454,9 @@
   gap: var(--space-1, 0.25rem);
   padding: 0.25rem;
   background: var(--surface);
-  border-radius: var(--radius);
 }
 .thallo-block-tabs__label {
   padding: 0.4rem 0.9rem;
-  border-radius: calc(var(--radius) - 0.2rem);
   font-size: 0.95rem;
   font-weight: 500;
   color: var(--muted);
@@ -605,7 +649,6 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 0;
-  border-radius: var(--radius);
   box-shadow: var(--shadow);
   background: var(--surface);
 }
@@ -646,23 +689,24 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 }
 
 /* ── Centered page layout (opt-in via main.layout--centered) ────────────────
-   Band blocks present as CONTAINED cards instead of edge-to-edge bands.
-   Dormant in themes that never emit layout classes — full-bleed stays the
-   classless default (standalone-ness holds). */
+   Band blocks present CONTAINED (width-clamped, centered) instead of edge-to-
+   edge bands — no card radius; corners stay square. Dormant in themes that
+   never emit layout classes — full-bleed stays the classless default
+   (standalone-ness holds).
+   The generic container is EXCLUDED: it's a self-governed wrapper with its own
+   width and radius box controls, so the layout mode must not clamp its width or
+   impose a radius over the author's setting. */
 .layout--centered .thallo-block-hero,
 .layout--centered .thallo-block-section,
-.layout--centered .thallo-block-container,
 .layout--centered .thallo-block-cta {
   max-width: var(--container);
   margin-inline: auto;
-  border-radius: var(--radius-lg);
 }
 .layout--centered .thallo-block-hero { padding-block: var(--space-6); }
 .layout--centered .thallo-block-image--full {
   max-width: var(--container);
   padding-inline: var(--space-4);
 }
-.layout--centered .thallo-block-image--full img { border-radius: var(--radius); }
 
 /* ── Full-width page layout (opt-in via main.layout--full) ───────────────────
    Symmetric to .layout--centered: instead of boxing bands, full mode releases
@@ -729,7 +773,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
   display: flex; align-items: center; gap: var(--space-2);
   padding-block: var(--space-2); min-width: 0;
   font-weight: 500; color: var(--ink); cursor: pointer;
-  border-radius: var(--radius); list-style: none;
+  list-style: none;
 }
 .thallo-block-accordion__summary::-webkit-details-marker { display: none; }
 .thallo-block-accordion__summary:focus-visible {
@@ -822,7 +866,6 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
    0fr->1fr transition on __panel animates the reveal without measuring JS. */
 .thallo-block-collapsible {
   border: 1px solid var(--line);
-  border-radius: var(--radius);
   background: var(--surface);
 }
 .thallo-block-collapsible__summary {
@@ -834,7 +877,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 }
 .thallo-block-collapsible__summary::-webkit-details-marker { display: none; }
 .thallo-block-collapsible__summary:focus-visible {
-  outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius);
+  outline: 2px solid var(--accent); outline-offset: -2px;
 }
 .thallo-block-collapsible__label { min-width: 0; }
 .thallo-block-collapsible__chevron {
