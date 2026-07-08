@@ -1,30 +1,44 @@
-{# container — a layout wrapper with background/overlay controls. Authored in the
-   theme's BEM/computed-class convention (see navigation.twig / separator.twig):
-   ENUMERATED tokens (width/padding/min_height/bg_size/bg_repeat/bg_position) → guarded
-   `--modifier` maps; FREEFORM values (background_color, background_image, overlay_color,
-   overlay_opacity) → inline `--container-*` CSS vars ONLY — the paint declarations that
-   consume them live in blocks.css, so the style attribute stays the single, minimal
-   injection surface. Fields: width, padding, min_height, bg_size, bg_repeat,
-   bg_position, background_color, background_image, overlay_color, overlay_opacity,
-   content (child blocks). #}
+{# container — a layout wrapper with background/overlay/spacing/border controls.
+   Authored in the theme's BEM/computed-class convention (see navigation.twig): two
+   layers of control, all optional so an untouched container renders on its defaults —
+     1. ENUM presets → guarded `--modifier` classes (width, padding_preset, min_height,
+        content_align, bg_size/repeat/position, shadow, border_style).
+     2. FREEFORM values → inline style. Backgrounds/overlay stay `--container-*` CSS
+        vars (painted by blocks.css); spacing/border/sizing are direct declarations.
+   The `padding`/`margin`/`radius` BOXES (per-side px) override the padding_preset /
+   emit margin & radius when any side is set. `max_width` overrides the width enum on
+   __inner; `min_height_px` overrides the min_height enum. A background_video renders as
+   a muted looping <video> layer (behind the overlay, over any background_image).
+   content_align places the inner content vertically (needs a min_height). #}
+{% import _self as fx %}
 {% set img = data.background_image ? media(data.background_image) : null %}
+{% set vid = data.background_video ? media(data.background_video) : null %}
 
 {% set widthMod = {
   contained: 'thallo-block-container--contained',
   full:      '',
   narrow:    'thallo-block-container--narrow',
 }[data.width|default('contained')] ?? 'thallo-block-container--contained' %}
-{% set padMod = {
+{# The padding BOX (per-side px) overrides the token preset — the preset class is only
+   emitted when no box side is set. #}
+{% set padMod = data.padding is empty ? ({
   none:   'thallo-block-container--pad-none',
   small:  'thallo-block-container--pad-small',
   medium: 'thallo-block-container--pad-medium',
   large:  'thallo-block-container--pad-large',
-}[data.padding|default('medium')] ?? 'thallo-block-container--pad-medium' %}
+}[data.padding_preset|default('medium')] ?? 'thallo-block-container--pad-medium') : '' %}
 {% set heightMod = {
   auto:   '',
   screen: 'thallo-block-container--h-full',
   half:   'thallo-block-container--h-half',
 }[data.min_height|default('auto')] ?? '' %}
+{# Default 'center' preserves the pre-existing behaviour: a container with a
+   min_height already centered its content. top/bottom override that. #}
+{% set alignMod = {
+  center: '',
+  top:    'thallo-block-container--align-top',
+  bottom: 'thallo-block-container--align-bottom',
+}[data.content_align|default('center')] ?? '' %}
 {% set bgSizeMod = {
   cover:   'thallo-block-container--bgsize-cover',
   contain: 'thallo-block-container--bgsize-contain',
@@ -48,17 +62,25 @@
 
 {% set rootClass = [
   'thallo-block thallo-block-container',
-  widthMod, padMod, heightMod, bgSizeMod, bgRepeatMod, bgPosMod, shadowMod,
+  widthMod, padMod, heightMod, alignMod, bgSizeMod, bgRepeatMod, bgPosMod, shadowMod,
 ]|join(' ')|trim %}
 
-{# freeform → CSS vars only (base .thallo-block-container / __overlay rules paint them) #}
-{% set vars = [] %}
-{% if data.background_color %}{% set vars = vars|merge(['--container-bg: ' ~ data.background_color]) %}{% endif %}
-{% if img %}{% set vars = vars|merge(['--container-bg-image: url(' ~ img ~ ')']) %}{% endif %}
-{% if data.overlay_color %}{% set vars = vars|merge(['--container-overlay: ' ~ data.overlay_color]) %}{% endif %}
-{% if data.overlay_opacity is defined and data.overlay_opacity is not null %}{% set vars = vars|merge(['--container-overlay-opacity: ' ~ (data.overlay_opacity / 100)]) %}{% endif %}
+{# freeform → inline style: --container-* vars (painted by blocks.css) + direct
+   spacing/border/sizing declarations (box-sizing is border-box globally). #}
+{% set style = [] %}
+{% if data.background_color %}{% set style = style|merge(['--container-bg: ' ~ data.background_color]) %}{% endif %}
+{% if img %}{% set style = style|merge(['--container-bg-image: url(' ~ img ~ ')']) %}{% endif %}
+{% if data.overlay_color %}{% set style = style|merge(['--container-overlay: ' ~ data.overlay_color]) %}{% endif %}
+{% if data.overlay_opacity is defined and data.overlay_opacity is not null %}{% set style = style|merge(['--container-overlay-opacity: ' ~ (data.overlay_opacity / 100)]) %}{% endif %}
+{% if data.padding is not empty %}{% set style = style|merge(['padding: ' ~ fx.box(data.padding)]) %}{% endif %}
+{% if data.margin is not empty %}{% set style = style|merge(['margin: ' ~ fx.box(data.margin)]) %}{% endif %}
+{% if data.radius is not empty %}{% set style = style|merge(['border-radius: ' ~ fx.box(data.radius)]) %}{% endif %}
+{% if data.border_style is defined and data.border_style and data.border_style != 'none' %}{% set style = style|merge(['border: ' ~ (data.border_width|default(1)) ~ 'px ' ~ data.border_style ~ ' ' ~ (data.border_color|default('#000000'))]) %}{% endif %}
+{% if data.min_height_px %}{% set style = style|merge(['min-height: ' ~ data.min_height_px ~ 'px']) %}{% endif %}
 
-<div class="{{ rootClass }}"{% if vars is not empty %} style="{{ vars|join('; ') }}"{% endif %}>
+<div class="{{ rootClass }}"{% if style is not empty %} style="{{ style|join('; ') }}"{% endif %}>
+  {% if vid %}<video class="thallo-block-container__video" src="{{ vid }}" autoplay muted loop playsinline></video>{% endif %}
   {% if data.overlay_color %}<div class="thallo-block-container__overlay"></div>{% endif %}
-  <div class="thallo-block-container__inner">{{ blocks(data.content) }}</div>
+  <div class="thallo-block-container__inner"{% if data.max_width %} style="max-width: {{ data.max_width }}px"{% endif %}>{{ blocks(data.content) }}</div>
 </div>
+{% macro box(b) %}{{ b.top|default(0) }}px {{ b.right|default(0) }}px {{ b.bottom|default(0) }}px {{ b.left|default(0) }}px{% endmacro %}

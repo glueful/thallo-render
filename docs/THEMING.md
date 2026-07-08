@@ -149,8 +149,8 @@ classes/attributes you must keep stable are ones your **own `blocks.js`** select
 ### 4.4 The block set
 
 `accordion` · `accordion_item` · `audio` · `button` · `card` · `carousel` ·
-`collapsible` · `columns` · `container` · `cta` · `feature` · `footer` ·
-`footer_columns` · `grid` · `hero` · `html` · `icon` · `image` · `links` ·
+`collapsible` · `columns` · `container` · `cta` · `feature` · `file` · `footer` ·
+`grid` · `heading` · `hero` · `html` · `icon` · `image` · `links` ·
 `logo` · `logos` · `navigation` · `rich_text` · `section` · `separator` ·
 `shortcode` · `social_link` · `social_links` · `spacer` · `stepper` ·
 `stepper_item` · `tab` · `tabs` · `video`

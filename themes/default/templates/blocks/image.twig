@@ -1,15 +1,22 @@
 {# image — a figure with optional caption. Authored in the theme's BEM/computed-class
    convention (see navigation.twig / separator.twig): the root class string is built in
-   a {% set %} map up top, guarded with ?? so an unknown stored width degrades to the
+   a {% set %} map up top, guarded with ?? so an unknown stored size degrades to the
    default modifier instead of emitting a class no CSS matches. media() resolves the
    blob and the <img> is skipped when it nulls (private/unresolvable blob).
-   Fields: image, alt, caption, width (normal|wide|full). #}
+   Fields: image, alt, caption, size (normal|wide|full), width/height (px, optional).
+   `size` presets the figure's layout width within the content column; width/height set
+   the <img>'s intrinsic size — one alone keeps aspect ratio (the other stays auto),
+   both are exact. `max-width:100%` in the theme still keeps a large width responsive. #}
 {% set img = data.image ? media(data.image) : null %}
 {% set rootClass = [
   'thallo-block thallo-block-image',
-  'thallo-block-image--' ~ ({normal: 'normal', wide: 'wide', full: 'full'}[data.width|default('normal')] ?? 'normal'),
+  'thallo-block-image--' ~ ({normal: 'normal', wide: 'wide', full: 'full'}[data.size|default('normal')] ?? 'normal'),
 ]|join(' ')|trim %}
+{% set styleParts = [] %}
+{% if data.width %}{% set styleParts = styleParts|merge(['width:' ~ data.width ~ 'px']) %}{% endif %}
+{% if data.height %}{% set styleParts = styleParts|merge(['height:' ~ data.height ~ 'px']) %}{% endif %}
+{% set imgStyle = styleParts|join(';') %}
 <figure class="{{ rootClass }}">
-  {% if img %}<img src="{{ img }}" alt="{{ data.alt|default('') }}">{% endif %}
+  {% if img %}<img src="{{ img }}" alt="{{ data.alt|default('') }}"{% if imgStyle %} style="{{ imgStyle }}"{% endif %}>{% endif %}
   {% if data.caption %}<figcaption>{{ data.caption|editable_text('caption') }}</figcaption>{% endif %}
 </figure>

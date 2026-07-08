@@ -281,6 +281,17 @@
   padding-inline: var(--space-4);
 }
 
+/* heading — a single heading/label on the content measure. Type scale comes from the
+   theme's base h1–h6; this only handles placement + alignment (color is inline). */
+.thallo-block-heading {
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.thallo-block-heading--start { text-align: start; }
+.thallo-block-heading--center { text-align: center; }
+.thallo-block-heading--end { text-align: end; }
+
 /* container — free-form styled wrapper; per-instance backgrounds come in as
    CSS custom properties on the style attribute (typed validated fields only). */
 .thallo-block-container {
@@ -332,6 +343,21 @@
   flex-direction: column;
   justify-content: center;
   min-height: inherit;
+}
+/* content_align overrides the default centering (only visible once the flex column
+   above is in effect, i.e. a min_height is set). */
+.thallo-block-container--align-top .thallo-block-container__inner { justify-content: flex-start; }
+.thallo-block-container--align-bottom .thallo-block-container__inner { justify-content: flex-end; }
+/* background_video — a muted looping cover layer behind the overlay, over any
+   background_image. z-index 0 sits under __inner (z-index 1). */
+.thallo-block-container__video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
 }
 
 /* grid — wrapping grid (equal rows) or masonry (CSS columns) */
@@ -591,6 +617,27 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .thallo-block-audio__player { width: 100%; }
 .thallo-block-audio__title { font-weight: 600; margin-bottom: var(--space-2); }
 
+/* file — a download link/button to an uploaded blob. */
+.thallo-block-file { max-width: var(--content); margin-inline: auto; padding-inline: var(--space-4); }
+.thallo-block-file__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+.thallo-block-file__link:hover,
+.thallo-block-file__link:focus-visible { background: var(--surface); }
+.thallo-block-file__link svg { width: 1.1em; height: 1.1em; flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-file__link { transition: none; }
+}
+
 /* html / shortcode — layout-neutral wrappers */
 .thallo-block-html, .thallo-block-shortcode {
   max-width: var(--container);
@@ -837,33 +884,6 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .thallo-block-links__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
   .thallo-block-links__link { transition: none; }
-}
-
-/* footer_columns — a responsive grid of titled link-lists (refs.md footerColumns).
-   Columns auto-fit into as many tracks as fit, then share the row evenly. */
-.thallo-block-footer_columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: var(--space-5);
-}
-.thallo-block-footer_columns__col-title {
-  margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--ink);
-}
-.thallo-block-footer_columns__list {
-  list-style: none; margin: var(--space-4) 0 0; padding: 0;
-  display: flex; flex-direction: column; gap: var(--space-3);
-}
-.thallo-block-footer_columns__item { min-width: 0; }
-.thallo-block-footer_columns__link {
-  display: block; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font-size: 0.9rem; color: var(--muted); text-decoration: none;
-  transition: color .15s ease;
-}
-.thallo-block-footer_columns__link:hover,
-.thallo-block-footer_columns__link:focus-visible { color: var(--ink); }
-@media (prefers-reduced-motion: reduce) {
-  .thallo-block-footer_columns__link { transition: none; }
 }
 
 /* footer — a <footer> bar (refs.md `footer`). Optional top band over a

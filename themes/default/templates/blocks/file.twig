@@ -1,0 +1,16 @@
+{# file — a download link to any uploaded blob (not media-type-specific). media()
+   resolves the blob URL (public + anonymously-retrievable only; nulls otherwise, so
+   nothing renders). `label` is the link text, falling back to "Download" (the resolver
+   exposes no filename). `new_tab` opens the file in a new tab to VIEW it (target
+   _blank, no download attr); otherwise the link forces a download. Fields: file,
+   label, new_tab. #}
+{% set href = data.file ? media(data.file) : null %}
+{% set label = data.label|default('')|trim ?: 'Download' %}
+<div class="thallo-block thallo-block-file">
+  {% if href %}
+    <a class="thallo-block-file__link" href="{{ href }}"
+       {%- if data.new_tab %} target="_blank" rel="noopener noreferrer"{% else %} download{% endif %}>
+      {{ icon('download') }}<span class="thallo-block-file__label">{{ label }}</span>
+    </a>
+  {% endif %}
+</div>

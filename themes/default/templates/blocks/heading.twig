@@ -1,0 +1,13 @@
+{# heading — a single heading/label line (the lightweight alternative to a rich_text
+   block for one line). Authored in the theme's BEM/computed-class convention (see
+   icon.twig / image.twig): the level and align enums are guarded through {…} maps so an
+   unknown stored value degrades to the default (h2 / start) instead of emitting an
+   invalid tag or a class no CSS matches. `text` is escaped plain text (headings are
+   structural, not rich). `color` is an optional freeform hex → inline `color:`.
+   Fields: text, level (h1–h6, default h2), align (start|center|end), color. #}
+{% set level = {h1: 'h1', h2: 'h2', h3: 'h3', h4: 'h4', h5: 'h5', h6: 'h6'}[data.level|default('h2')] ?? 'h2' %}
+{% set rootClass = [
+  'thallo-block thallo-block-heading',
+  'thallo-block-heading--' ~ ({start: 'start', center: 'center', end: 'end'}[data.align|default('start')] ?? 'start'),
+]|join(' ')|trim %}
+<{{ level }} class="{{ rootClass }}"{% if data.color %} style="color:{{ data.color }}"{% endif %}>{{ data.text|default('')|editable_text('text') }}</{{ level }}>
