@@ -1,3 +1,12 @@
 {% extends 'layout.twig' %}
 {% block title %}Error — {{ site.name }}{% endblock %}
-{% block content %}<h1>Something went wrong</h1><p>Please try again later.</p>{% endblock %}
+{% block content %}
+<section class="error-page">
+  <p class="error-page__code">Error</p>
+  <h1 class="error-page__title">Something went wrong</h1>
+  <p class="error-page__lead">An unexpected error occurred. Please try again in a moment.</p>
+  <div class="error-page__actions">
+    <a class="error-page__btn error-page__btn--primary" href="/">Go back home</a>
+  </div>
+</section>
+{% endblock %}

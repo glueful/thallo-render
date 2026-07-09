@@ -164,3 +164,67 @@ main { min-height: 60vh; padding-block: var(--space-5) var(--space-7); }
 }
 .preview-banner__action:hover { color: var(--ink); }
 .preview-banner__action svg { width: 0.9rem; height: 0.9rem; }
+
+/* ── Error / not-found pages (404, error) ───────────────────────────────────
+   Centered hero, translated from the Tailwind UI "centered" 404 into theme
+   tokens: brand comes from --accent, so theme_colors_style() and dark mode
+   recolor it for free. Shared by 404.twig and error.twig. */
+.error-page {
+  min-height: 60vh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  padding-inline: var(--space-4);
+}
+.error-page__code {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+.error-page__title {
+  margin: 0;
+  font-size: clamp(2.5rem, 1.8rem + 3.4vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.error-page__lead {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 1.15rem;
+  text-wrap: pretty;
+}
+.error-page__actions {
+  margin-top: var(--space-2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+.error-page__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.error-page__btn--primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-xs);
+}
+.error-page__btn--primary:hover {
+  background: color-mix(in srgb, var(--accent) 88%, #000);
+}
