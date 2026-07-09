@@ -729,6 +729,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .layout--full .thallo-block-html,
 .layout--full .thallo-block-shortcode,
 .layout--full .thallo-block-rich_text,
+.layout--full .thallo-block-form,
 .layout--full .entry-content {
   max-width: none;
 }
@@ -1229,25 +1230,48 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 
 /* form block (form-block spec): contact form with sealed descriptor. Inherits the
    theme's field/button tokens; the honeypot is visually removed but stays in the DOM. */
-.thallo-block-form { display: grid; gap: var(--space-4); max-width: 34rem; }
+/* Self-constrains to the reading measure like every other content block (rich_text,
+   heading): the entry body renders blocks as DIRECT <main> children, so each block
+   owns its width — without this the form pins to the viewport's left edge. */
+.thallo-block-form {
+  display: grid;
+  gap: 1.1rem;
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
 .thallo-block-form__heading { margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--ink); }
 .thallo-block-form__intro { margin: 0; color: var(--muted); }
-.thallo-block-form__field { display: grid; gap: var(--space-2); }
-.thallo-block-form__field label { font-weight: 600; color: var(--ink); }
+.thallo-block-form__field { display: grid; gap: 0.375rem; }
+/* Tailwind-form-style labels + controls: compact padding, a modest radius, and an
+   accent focus ring — deliberately NOT the theme's large --radius/--space-3 pills. */
+.thallo-block-form__field label { font-size: 0.875rem; font-weight: 500; color: var(--ink); }
 .thallo-block-form__field input, .thallo-block-form__field textarea {
-  width: 100%; padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius);
-  background: var(--bg); color: var(--ink); font: inherit;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--line) 85%, var(--ink));
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.thallo-block-form__field input::placeholder, .thallo-block-form__field textarea::placeholder { color: var(--muted); }
+.thallo-block-form__field input:focus, .thallo-block-form__field textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .thallo-block-form__field--checkbox { grid-auto-flow: column; justify-content: start; align-items: center; }
 .thallo-block-form__checkbox { display: flex; gap: var(--space-2); align-items: center; font-weight: 400; }
 .thallo-block-form__checkbox input { width: auto; }
-.thallo-block-form__field textarea { min-height: 8rem; resize: vertical; }
-.thallo-block-form__submit {
-  justify-self: start; padding: var(--space-3) var(--space-5); border: 0; border-radius: var(--radius);
-  background: var(--btn-accent); color: var(--btn-accent-ink); font-weight: 600; cursor: pointer;
-}
+.thallo-block-form__field textarea { min-height: 7rem; resize: vertical; }
+/* Visual style comes from the shared button classes; this only pins alignment/cursor. */
+.thallo-block-form__submit { justify-self: start; cursor: pointer; }
 .thallo-block-form__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-.thallo-block-form__result { padding: var(--space-3); border-radius: var(--radius); }
+.thallo-block-form__result { padding: 0.6rem 0.75rem; border-radius: 0.5rem; }
 .thallo-block-form__result:empty { display: none; }
 .thallo-block-form__result--error { background: color-mix(in srgb, #dc2626 12%, var(--bg)); color: #b91c1c; }
 .thallo-block-form__result--ok { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); color: var(--accent); }

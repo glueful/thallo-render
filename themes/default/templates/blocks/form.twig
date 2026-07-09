@@ -39,6 +39,14 @@
       </div>
     {% endfor %}
     <div class="thallo-block-form__result" role="status" aria-live="polite"></div>
-    <button type="submit" class="thallo-block-form__submit">{{ f.submit_label }}</button>
+    {# Submit button reuses the button block's classes so it inherits every variant/color
+       for free; unknown stored enums degrade to the default modifier (never a dead class). #}
+    {% set submitClass = [
+      'thallo-block-button__link thallo-block-form__submit',
+      'thallo-block-button__link--' ~ ({solid: 'solid', outline: 'outline', soft: 'soft', subtle: 'subtle', ghost: 'ghost', link: 'link'}[f.submit_variant] ?? 'solid'),
+      'thallo-block-button__link--' ~ ({primary: 'primary', neutral: 'neutral'}[f.submit_color] ?? 'primary'),
+      'thallo-block-button__link--md',
+    ]|join(' ')|trim %}
+    <button type="submit" class="{{ submitClass }}">{{ f.submit_label }}</button>
   </form>
 {% endif %}

@@ -354,6 +354,8 @@ final class RenderContextExtension extends AbstractExtension
         $data = is_array($block['data'] ?? null) ? $block['data'] : [];
         $submit = is_string($data['submit_label'] ?? null) && $data['submit_label'] !== ''
             ? $data['submit_label'] : 'Send';
+        // Submit button style mirrors the button block's variant/color vocabulary; the
+        // template maps these to the shared button classes (unknown values degrade there).
         return [
             'token' => $sealed->token,
             'key' => $d->formKey,
@@ -363,6 +365,8 @@ final class RenderContextExtension extends AbstractExtension
             'heading' => is_string($data['heading'] ?? null) ? $data['heading'] : null,
             'intro' => is_string($data['intro'] ?? null) ? $data['intro'] : null,
             'submit_label' => $submit,
+            'submit_variant' => is_string($data['submit_variant'] ?? null) ? $data['submit_variant'] : 'solid',
+            'submit_color' => is_string($data['submit_color'] ?? null) ? $data['submit_color'] : 'primary',
             'success_message' => $d->successMessage,
         ];
     }
