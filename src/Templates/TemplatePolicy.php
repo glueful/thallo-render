@@ -28,8 +28,8 @@ final class TemplatePolicy
      * allowlist or enforcement change (tags/filters/functions/tests/node classes/
      * linter rules); the next render then recompiles — and re-lints — everything.
      */
-    // bumped: Twig 3.28's ConfigNode joined the node allowlist
-    public const CACHE_VERSION = 10;
+    // bumped: form_render joined the function allowlist (form-block spec §4)
+    public const CACHE_VERSION = 11;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim'];
 
@@ -43,7 +43,7 @@ final class TemplatePolicy
 
     public const FUNCTIONS = [
         'menu', 'path', 'asset', 'facets', 'blocks', 'media', 'site_logo', 'video_embed', 'icon',
-        'region_blocks', 'region_settings', 'site_favicon', 'custom_css',
+        'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'range',
     ];
 

@@ -18,6 +18,7 @@ use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Contracts\Capability\Capability;
 use Thallo\Contracts\Capability\CapabilityRegistry;
 use Thallo\Contracts\Content\BlockEditableFieldResolver;
+use Thallo\Contracts\Content\FormSealer;
 use Thallo\Contracts\Content\RegionReader;
 use Thallo\Contracts\Content\RichHtmlSanitizer;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
@@ -420,6 +421,10 @@ final class RenderServiceProvider extends ServiceProvider
             // entries() (blog-posts spec): soft-bound; null = [] (block renders nothing).
             entryReader: $container->has(EntryListReader::class)
                 ? $container->get(EntryListReader::class)
+                : null,
+            // form_render() (form-block spec §4): soft-bound; null = disabled notice.
+            formSealer: $container->has(FormSealer::class)
+                ? $container->get(FormSealer::class)
                 : null,
         );
     }

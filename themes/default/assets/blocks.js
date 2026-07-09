@@ -270,3 +270,44 @@
   };
 })();
 /* color-mode:end */
+
+/* form-block:start — progressive enhancement for [data-thallo-form].
+   No-JS baseline is a normal POST to /_forms/submit (PRG). With JS, we intercept,
+   POST via fetch with Accept: application/json, and render the result inline. The
+   server returns the SAME semantics for both paths (form-block spec §6). */
+(function () {
+  'use strict';
+  function setResult(box, message, ok) {
+    if (!box) return;
+    box.textContent = message;
+    box.classList.remove('thallo-block-form__result--error', 'thallo-block-form__result--ok');
+    box.classList.add(ok ? 'thallo-block-form__result--ok' : 'thallo-block-form__result--error');
+  }
+  document.querySelectorAll('form[data-thallo-form]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var box = form.querySelector('.thallo-block-form__result');
+      var btn = form.querySelector('.thallo-block-form__submit');
+      if (btn) btn.disabled = true;
+      fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' }
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; });
+      }).then(function (json) {
+        if (json && json.ok) {
+          form.reset();
+          setResult(box, json.message || 'Thanks — your message has been sent.', true);
+        } else {
+          setResult(box, (json && json.error) || 'Please check your entries and try again.', false);
+        }
+      }).catch(function () {
+        setResult(box, 'Something went wrong. Please try again.', false);
+      }).then(function () {
+        if (btn) btn.disabled = false;
+      });
+    });
+  });
+})();
+/* form-block:end */

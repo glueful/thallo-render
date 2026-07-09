@@ -1,0 +1,44 @@
+{# form block (form-block spec §4/§6): sealed-descriptor contact form. form_render()
+   derives+seals ONCE and returns everything the template needs; null (not a form,
+   un-routable, or forms unavailable) renders the disabled notice. The descriptor
+   hides recipient/config and is the ONLY validation source server-side — visible
+   field names are never trusted. #}
+{% set f = form_render(block) %}
+{% if f is null %}
+  <div class="thallo-block thallo-block-form thallo-block-form--disabled">
+    <p>This form isn’t configured yet — set a recipient email to activate it.</p>
+  </div>
+{% else %}
+  <form class="thallo-block thallo-block-form" method="post" action="/_forms/submit"
+        data-thallo-form data-form-key="{{ f.key }}">
+    {% if f.heading %}<h2 class="thallo-block-form__heading">{{ f.heading }}</h2>{% endif %}
+    {% if f.intro %}<p class="thallo-block-form__intro">{{ f.intro }}</p>{% endif %}
+    <input type="hidden" name="_form" value="{{ f.token }}">
+    <input type="hidden" name="_return" value="{{ current_path|default('/') }}">
+    <input type="hidden" name="_t" value="{{ 'now'|date('U') }}">
+    {# Honeypot: present in markup by necessity — its value is behavioral (must stay
+       empty), not secret; integrity of the sealed field name is what matters. #}
+    <div class="thallo-block-form__hp" aria-hidden="true">
+      <label>{{ f.honeypot }}<input type="text" name="{{ f.honeypot }}" tabindex="-1" autocomplete="off"></label>
+    </div>
+    {% for field in f.fields %}
+      <div class="thallo-block-form__field thallo-block-form__field--{{ field.type }}">
+        {% if field.type == 'checkbox' %}
+          <label class="thallo-block-form__checkbox">
+            <input id="ff-{{ field.key }}" type="checkbox" name="{{ field.key }}"{% if field.required %} required{% endif %}>
+            <span>{{ field.label }}{% if field.required %} <span aria-hidden="true">*</span>{% endif %}</span>
+          </label>
+        {% else %}
+          <label for="ff-{{ field.key }}">{{ field.label }}{% if field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+          {% if field.type == 'textarea' %}
+            <textarea id="ff-{{ field.key }}" name="{{ field.key }}"{% if field.required %} required{% endif %} placeholder="{{ field.placeholder }}"></textarea>
+          {% else %}
+            <input id="ff-{{ field.key }}" type="{{ field.type }}" name="{{ field.key }}"{% if field.required %} required{% endif %} placeholder="{{ field.placeholder }}">
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endfor %}
+    <div class="thallo-block-form__result" role="status" aria-live="polite"></div>
+    <button type="submit" class="thallo-block-form__submit">{{ f.submit_label }}</button>
+  </form>
+{% endif %}

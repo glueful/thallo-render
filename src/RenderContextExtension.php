@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Thallo\Render;
 
 use Thallo\Contracts\Content\BlockEditableFieldResolver;
+use Thallo\Contracts\Content\FormSealer;
 use Thallo\Contracts\Content\RegionReader;
 use Thallo\Contracts\Content\RichHtmlSanitizer;
 use Thallo\Contracts\Delivery\EntryTargetResolver;
@@ -129,6 +130,11 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?string $themeAssetsDir = null,
         /** Soft-bound (blog-posts spec): null → entries() returns [] (block renders nothing). */
         private readonly ?EntryListReader $entryReader = null,
+        /**
+         * Soft-bound (form-block spec §4): null → form_render() returns null, so the
+         * form block renders its disabled notice (never a partial/insecure form).
+         */
+        private readonly ?FormSealer $formSealer = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -174,6 +180,9 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('theme_colors_style', $this->themeColorsStyle(...), ['is_safe' => ['html']]),
             // No is_safe: returns an array whose members carry their own safety (P2a).
             new TwigFunction('theme_style_scope', $this->themeStyleScope(...)),
+            // form-block spec §4/§6: ONE narrow function — derives+seals in a single
+            // pass and returns the render array; no re-open, no extra sandbox surface.
+            new TwigFunction('form_render', $this->formRender(...), ['needs_context' => true]),
         ];
     }
 
@@ -302,7 +311,9 @@ final class RenderContextExtension extends AbstractExtension
         $saved = $this->annotateBlocks;
         $this->annotateBlocks = false;
         try {
-            $html = $this->blocks($env, $context, $list);
+            // Thread the region slug so a form placed in a region gets a stable,
+            // region-scoped source key (form-block spec §5).
+            $html = $this->blocks($env, ['region_slug' => $slug] + $context, $list);
         } finally {
             $this->annotateBlocks = $saved;
         }
@@ -313,6 +324,47 @@ final class RenderContextExtension extends AbstractExtension
     public function regionSettings(string $slug): array
     {
         return $this->regions?->settings($slug) ?? [];
+    }
+
+    /**
+     * Render payload for a `form` block (form-block spec §4/§6): ONE derive+seal
+     * pass via the app-bound FormSealer, reading fields/honeypot/key straight off
+     * the returned SealedForm — the encrypted token is never re-opened in the render
+     * path. Null means "not a form block", "un-routable/underivable", or "forms
+     * unavailable" → the template renders the disabled notice. needs_context so the
+     * source identity can key off entry/current_path/region_slug.
+     *
+     * @param array<string,mixed> $context
+     * @param array<string,mixed> $block
+     * @return array<string,mixed>|null
+     */
+    public function formRender(array $context, array $block): ?array
+    {
+        if ($this->formSealer === null || ($block['type'] ?? null) !== 'form') {
+            return null; // gated: only the form block may seal a descriptor
+        }
+        $entry = is_array($context['entry'] ?? null) ? $context['entry'] : null;
+        $path = is_string($context['current_path'] ?? null) ? $context['current_path'] : null;
+        $region = is_string($context['region_slug'] ?? null) ? $context['region_slug'] : null;
+        $sealed = $this->formSealer->describe($block, $entry, $path, $region);
+        if ($sealed === null) {
+            return null; // un-routable / underivable → disabled notice
+        }
+        $d = $sealed->descriptor;
+        $data = is_array($block['data'] ?? null) ? $block['data'] : [];
+        $submit = is_string($data['submit_label'] ?? null) && $data['submit_label'] !== ''
+            ? $data['submit_label'] : 'Send';
+        return [
+            'token' => $sealed->token,
+            'key' => $d->formKey,
+            'honeypot' => $d->honeypotField,
+            // Untyped closure: the render pack must not import the app's FieldDef VO.
+            'fields' => array_map(static fn ($f): array => $f->toArray(), $d->fields),
+            'heading' => is_string($data['heading'] ?? null) ? $data['heading'] : null,
+            'intro' => is_string($data['intro'] ?? null) ? $data['intro'] : null,
+            'submit_label' => $submit,
+            'success_message' => $d->successMessage,
+        ];
     }
 
     /**
@@ -591,6 +643,9 @@ final class RenderContextExtension extends AbstractExtension
                         // like site — block templates get a FRESH context, so
                         // active-state detection needs the caller's value.
                         'current_path' => $context['current_path'] ?? null,
+                        // Region identity for form_render()'s source key (form-block
+                        // spec §5): set by regionBlocks(), null for page-body blocks.
+                        'region_slug' => $context['region_slug'] ?? null,
                         'index' => $index,
                     ]);
                 } finally {
