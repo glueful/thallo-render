@@ -1256,13 +1256,15 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
   font: inherit;
   font-size: 0.95rem;
   line-height: 1.5;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, outline-color 0.15s ease;
 }
 .thallo-block-form__field input::placeholder, .thallo-block-form__field textarea::placeholder { color: var(--muted); }
+/* Focus ring via outline (not box-shadow) — accessible AND keeps the shadow-token
+   single-source invariant (ShadowTokensTest) intact. */
 .thallo-block-form__field input:focus, .thallo-block-form__field textarea:focus {
-  outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 1px;
 }
 .thallo-block-form__field--checkbox { grid-auto-flow: column; justify-content: start; align-items: center; }
 .thallo-block-form__checkbox { display: flex; gap: var(--space-2); align-items: center; font-weight: 400; }
