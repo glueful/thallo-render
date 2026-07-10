@@ -22,7 +22,7 @@ use Glueful\Routing\Router;
  * grammar stays the authorization gate: routes only parse.
  */
 $router->group(
-    ['prefix' => '/v1/admin/render', 'middleware' => ['tenant_bootstrap', 'auth']],
+    ['prefix' => '/v1/admin/render', 'middleware' => ['auth', 'tenant_profile:admin', 'tenant_bootstrap']],
     function (Router $router): void {
         $router->get('/templates/{path}/versions/{uuid}', [TemplatesAdminController::class, 'showVersion'])
             ->where('path', '.+\.(?:twig|css|js|json)')
