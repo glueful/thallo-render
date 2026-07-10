@@ -35,6 +35,7 @@ use Thallo\Contracts\Navigation\MenuReader;
 use Thallo\Contracts\Content\RegionUpdated;
 use Thallo\Contracts\Navigation\MenuUpdated;
 use Thallo\Render\Console\ClearRenderCacheCommand;
+use Thallo\Tenancy\Cache\TenantCacheSegment;
 use Thallo\Render\Console\ThemeCloneCommand;
 use Thallo\Contracts\Delivery\PreviewSessionVerifier;
 use Thallo\Render\Http\Controllers\RenderController;
@@ -258,6 +259,8 @@ final class RenderServiceProvider extends ServiceProvider
             $appearance->accent() . '-' . $appearance->neutral(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
+            $container->get(TenantCacheSegment::class),
+            $context,
         );
     }
 
@@ -273,6 +276,8 @@ final class RenderServiceProvider extends ServiceProvider
             $appearance->accent() . '-' . $appearance->neutral(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
+            $container->get(TenantCacheSegment::class),
+            $context,
         );
     }
 
@@ -306,6 +311,7 @@ final class RenderServiceProvider extends ServiceProvider
             $container->has(\Thallo\Contracts\Settings\AdminUrlProvider::class)
                 ? $container->get(\Thallo\Contracts\Settings\AdminUrlProvider::class)
                 : null,
+            $container->get(TenantCacheSegment::class),
         );
     }
 
@@ -441,6 +447,8 @@ final class RenderServiceProvider extends ServiceProvider
                 // cache's theme keying; a fallen-back locator must not apply another
                 // theme's overrides.
                 $container->get(ThemeLocator::class)->activePaths()['name'],
+                $container->get(TenantCacheSegment::class),
+                $context,
             );
         }
         return new TwigFactory(

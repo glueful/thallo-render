@@ -31,7 +31,10 @@ final class ClearRenderCacheCommand extends BaseCommand
     /** The testable unit: drop every render:* key. */
     public function clear(): bool
     {
-        return $this->cache->deletePattern('render:*');
+        $legacy = $this->cache->deletePattern('render:*');
+        $segmented = $this->cache->deletePattern('tenant:*:render:*');
+
+        return $legacy && $segmented;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Thallo\Render\Http\Middleware;
 
 use Glueful\Cache\CacheStore;
+use Glueful\Bootstrap\ApplicationContext;
 use Glueful\Routing\RouteMiddleware;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Thallo\Tenancy\Cache\TenantCacheSegment;
 
 /**
  * Full-page cache for the rendered site (render caching spec §2–§3, §5).
@@ -36,6 +38,8 @@ final class RenderPageCache implements RouteMiddleware
         private readonly string $appearance,
         private readonly bool $enabled,
         private readonly int $ttl,
+        private readonly ?TenantCacheSegment $tenantCache = null,
+        private readonly ?ApplicationContext $context = null,
     ) {
     }
 
@@ -103,7 +107,12 @@ final class RenderPageCache implements RouteMiddleware
      */
     private function key(string $path): string
     {
-        return "render:{$this->theme}:{$this->appearance}:" . rawurlencode(self::normalizePath($path));
+        $prefix = $this->tenantCache !== null && $this->context !== null
+            ? $this->tenantCache->segment($this->context, 'render')
+            : '';
+
+        return $prefix . "render:{$this->theme}:{$this->appearance}:"
+            . rawurlencode(self::normalizePath($path));
     }
 
     /**

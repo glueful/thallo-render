@@ -25,6 +25,7 @@ use Thallo\Render\Templates\TemplateLinter;
 use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Render\ThemeLocator;
 use Thallo\Render\TwigFactory;
+use Thallo\Tenancy\Cache\TenantCacheSegment;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,6 +62,7 @@ final class RenderController
         private readonly ?EntryTargetResolver $targets = null,
         /** Admin base URL (DB setting first); null = config-only fallback. */
         private readonly ?AdminUrlProvider $adminUrlProvider = null,
+        private readonly ?TenantCacheSegment $tenantCache = null,
     ) {
     }
 
@@ -224,6 +226,8 @@ final class RenderController
                     $this->templates,
                     $this->templateLinter,
                     $locator->activePaths()['name'],
+                    $this->tenantCache,
+                    $this->context,
                 )
                 : null;
             $factory = new TwigFactory(

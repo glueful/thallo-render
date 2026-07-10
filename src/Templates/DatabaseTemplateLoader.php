@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Templates;
 
+use Glueful\Bootstrap\ApplicationContext;
+use Thallo\Tenancy\Cache\TenantCacheSegment;
 use Twig\Error\LoaderError;
 use Twig\Loader\LoaderInterface;
 use Twig\Source;
@@ -28,6 +30,8 @@ final class DatabaseTemplateLoader implements LoaderInterface
         private readonly TemplateRepository $repo,
         private readonly TemplateLinter $linter,
         private readonly string $theme,
+        private readonly ?TenantCacheSegment $tenantCache = null,
+        private readonly ?ApplicationContext $context = null,
     ) {
     }
 
@@ -54,7 +58,11 @@ final class DatabaseTemplateLoader implements LoaderInterface
         // The policy version is part of the key (spec §3/§4): the compile-time lint
         // only runs on compile, so a policy TIGHTENING must orphan every previously
         // compiled DB template — otherwise old compilations keep executing unchecked.
-        return 'db:' . $this->theme . ':' . $name . ':' . $version
+        $prefix = $this->tenantCache !== null && $this->context !== null
+            ? $this->tenantCache->segment($this->context, 'template')
+            : '';
+
+        return $prefix . 'db:' . $this->theme . ':' . $name . ':' . $version
             . ':policy:' . TemplatePolicy::CACHE_VERSION;
     }
 

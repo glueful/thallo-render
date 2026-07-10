@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Thallo\Render;
 
 use Glueful\Cache\CacheStore;
+use Glueful\Bootstrap\ApplicationContext;
 use Symfony\Component\HttpFoundation\Response;
+use Thallo\Tenancy\Cache\TenantCacheSegment;
 
 /**
  * The fixed single-body 404/410 cache (spec §2 amendment). Consulted by the controller
@@ -28,13 +30,19 @@ final class RenderErrorCache
         private readonly string $appearance,
         private readonly bool $enabled,
         private readonly int $ttl,
+        private readonly ?TenantCacheSegment $tenantCache = null,
+        private readonly ?ApplicationContext $context = null,
     ) {
     }
 
     /** Fixed error-body key, appearance-scoped so a color switch can't serve stale chrome. */
     private function key(int $status): string
     {
-        return "render:{$this->theme}:{$this->appearance}:{$status}";
+        $prefix = $this->tenantCache !== null && $this->context !== null
+            ? $this->tenantCache->segment($this->context, 'render')
+            : '';
+
+        return $prefix . "render:{$this->theme}:{$this->appearance}:{$status}";
     }
 
     /** @param callable(): Response $render renders 404.twig — invoked only on a cold key */
