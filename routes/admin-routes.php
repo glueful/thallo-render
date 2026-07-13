@@ -22,7 +22,12 @@ use Glueful\Routing\Router;
  * grammar stays the authorization gate: routes only parse.
  */
 $router->group(
-    ['prefix' => '/v1/admin/render', 'middleware' => ['auth', 'tenant_profile:admin', 'tenant_bootstrap']],
+    [
+        'prefix' => '/v1/admin/render',
+        // admin_tenant_binding binds the operator's selected workspace so render_templates(_versions)
+        // reads/writes scope to it (mirrors routes/admin.php); inert until full resolution.
+        'middleware' => ['auth', 'tenant_profile:admin', 'tenant_bootstrap', 'admin_tenant_binding'],
+    ],
     function (Router $router): void {
         $router->get('/templates/{path}/versions/{uuid}', [TemplatesAdminController::class, 'showVersion'])
             ->where('path', '.+\.(?:twig|css|js|json)')
