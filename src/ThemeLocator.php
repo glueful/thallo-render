@@ -10,8 +10,14 @@ namespace Thallo\Render;
  *   2. app theme present but invalid theme.json → ThemeConfigError (loud 500)
  *   3. pack default missing/invalid → RuntimeException (broken install, hard 500)
  *   4. per-TEMPLATE fallback happens in the Twig loader: activePaths() returns the app
- *      theme first and the pack default second, so a theme may omit any template.
+ *      theme first, then any contributed template dirs, then the pack default last, so a
+ *      theme may omit any template and a contribution may omit any template.
  * Resolution happens at construction (boot) — v1 theme changes require a restart.
+ *
+ * Contributed template dirs (storefront-rendering spec §5.2) resolve BETWEEN the app theme
+ * and the render default: the app theme overrides a contribution, and a contribution overrides
+ * the render default. Zero contributions leaves the chain byte-identical to before the seam
+ * existed.
  */
 final class ThemeLocator
 {
@@ -21,8 +27,13 @@ final class ThemeLocator
     /** @var array<string,mixed> validated theme.json `settings` block (may be empty) */
     private array $settings = [];
 
-    public function __construct(string $themeName, string $appThemesDir, ?string $packThemesDir = null)
-    {
+    /** @param list<string> $contributedTemplateDirs absolute dirs, in registry order (spec §5.2) */
+    public function __construct(
+        string $themeName,
+        string $appThemesDir,
+        ?string $packThemesDir = null,
+        array $contributedTemplateDirs = [],
+    ) {
         $packThemesDir ??= dirname(__DIR__) . '/themes';
         $default = $packThemesDir . '/default';
         if (!is_dir($default . '/templates') || $this->readThemeJson($default) === null) {
@@ -48,6 +59,9 @@ final class ThemeLocator
             $assets = $appTheme . '/assets';
             $name = $themeName;
             $json = $appJson;
+        }
+        foreach ($contributedTemplateDirs as $contributedDir) {
+            $templates[] = $contributedDir;
         }
         $templates[] = $default . '/templates';
 

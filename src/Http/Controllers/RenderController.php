@@ -13,6 +13,7 @@ use Thallo\Contracts\Delivery\HomepageEntryProvider;
 use Thallo\Contracts\Delivery\PreviewSession;
 use Thallo\Contracts\Delivery\PreviewSessionVerifier;
 use Thallo\Contracts\Delivery\PublicRouteResolver;
+use Thallo\Render\Contribution\RenderContributionRegistry;
 use Thallo\Render\HomepageConfigError;
 use Thallo\Render\Http\Middleware\PreviewSessionMiddleware;
 use Thallo\Render\Http\Middleware\RenderPageCache;
@@ -63,6 +64,16 @@ final class RenderController
         /** Admin base URL (DB setting first); null = config-only fallback. */
         private readonly ?AdminUrlProvider $adminUrlProvider = null,
         private readonly ?TenantCacheSegment $tenantCache = null,
+        /**
+         * Fix C (Commerce-Slice-2 review): frozen contributed template dirs for the
+         * PREVIEW-SESSION ThemeLocator {@see themedEnv()} builds — mirrors
+         * RenderServiceProvider::makeThemeLocator()'s boot-theme identical wiring. Null only
+         * in a test/minimal-wiring construction; a real boot always binds this (the registry
+         * is bound shared and unconditionally — see RenderContributionRegistry's own
+         * docblock), and a null value degrades to the pre-Fix-C behavior (no contributed
+         * dirs in a themed preview) rather than throwing.
+         */
+        private readonly ?RenderContributionRegistry $contributions = null,
     ) {
     }
 
@@ -218,7 +229,16 @@ final class RenderController
         }
         $base = $this->context->getBasePath();
         try {
-            $locator = new ThemeLocator($session->theme, $base . '/themes');
+            // Fix C (Commerce-Slice-2 review): pass the SAME frozen contributed template
+            // dirs makeThemeLocator() passes for the boot theme — without this, a
+            // pack-contributed template (e.g. a shop block template) vanishes from a
+            // non-default-theme preview even though it renders fine on a live page.
+            $locator = new ThemeLocator(
+                $session->theme,
+                $base . '/themes',
+                null,
+                $this->contributions?->frozenTemplatePaths() ?? [],
+            );
             // DB overrides for the LOCATOR-RESOLVED theme (spec §3): a vanished theme
             // that fell back to `default` must not carry the vanished theme's overrides.
             $db = $this->templates !== null && $this->templateLinter !== null

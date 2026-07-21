@@ -12,6 +12,7 @@ use Thallo\Contracts\Delivery\EntryTargetResolver;
 use Thallo\Contracts\Delivery\EntryListReader;
 use Thallo\Contracts\Delivery\FacetCountsReader;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
+use Thallo\Contracts\Delivery\StorefrontLinkResolver;
 use Thallo\Contracts\Settings\SiteFaviconProvider;
 use Thallo\Contracts\Settings\SiteLogoProvider;
 use Thallo\Contracts\Navigation\MenuReader;
@@ -135,6 +136,12 @@ final class RenderContextExtension extends AbstractExtension
          * form block renders its disabled notice (never a partial/insecure form).
          */
         private readonly ?FormSealer $formSealer = null,
+        /**
+         * Soft-bound (Commerce-Slice-2 Fix A): null → shop_product_url()/shop_category_url()/
+         * shop_index_url() all return null, so a block's no-JS fallback degrades to plain text
+         * instead of a link — never a fatal error when commerce isn't installed/active.
+         */
+        private readonly ?StorefrontLinkResolver $storefrontLinks = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -183,7 +190,41 @@ final class RenderContextExtension extends AbstractExtension
             // form-block spec §4/§6: ONE narrow function — derives+seals in a single
             // pass and returns the render array; no re-open, no extra sandbox surface.
             new TwigFunction('form_render', $this->formRender(...), ['needs_context' => true]),
+            // Commerce-Slice-2 Fix A: soft-bound storefront link helpers for a block's no-JS
+            // `<noscript>` fallback (see the $storefrontLinks constructor doc). All null-safe.
+            new TwigFunction('shop_product_url', $this->shopProductUrl(...)),
+            new TwigFunction('shop_category_url', $this->shopCategoryUrl(...)),
+            new TwigFunction('shop_index_url', $this->shopIndexUrl(...)),
         ];
+    }
+
+    /**
+     * The catalog product URL for `$slug` (Commerce-Slice-2 Fix A), or null when either the
+     * slug is blank/absent or no {@see StorefrontLinkResolver} is bound (commerce not
+     * installed/active) — a block template falls back to plain text on null, never a broken
+     * `href=""`.
+     */
+    public function shopProductUrl(?string $slug): ?string
+    {
+        if ($this->storefrontLinks === null || $slug === null || $slug === '') {
+            return null;
+        }
+        return $this->storefrontLinks->productUrl($slug);
+    }
+
+    /** The catalog category URL for `$slug` — same null rules as {@see self::shopProductUrl()}. */
+    public function shopCategoryUrl(?string $slug): ?string
+    {
+        if ($this->storefrontLinks === null || $slug === null || $slug === '') {
+            return null;
+        }
+        return $this->storefrontLinks->categoryUrl($slug);
+    }
+
+    /** The shop index ("browse all products") URL, or null when commerce isn't bound. */
+    public function shopIndexUrl(): ?string
+    {
+        return $this->storefrontLinks?->shopIndexUrl();
     }
 
     /**

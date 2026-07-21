@@ -35,9 +35,11 @@ use Thallo\Contracts\Navigation\MenuReader;
 use Thallo\Contracts\Content\RegionUpdated;
 use Thallo\Contracts\Navigation\MenuUpdated;
 use Thallo\Render\Console\ClearRenderCacheCommand;
+use Thallo\Render\Contribution\RenderContributionRegistry;
 use Thallo\Tenancy\Cache\TenantCacheSegment;
 use Thallo\Render\Console\ThemeCloneCommand;
 use Thallo\Contracts\Delivery\PreviewSessionVerifier;
+use Thallo\Contracts\Delivery\StorefrontLinkResolver;
 use Thallo\Render\Http\Controllers\RenderController;
 use Thallo\Render\Http\Controllers\TemplatesAdminController;
 use Thallo\Render\Templates\TemplateCatalog;
@@ -60,6 +62,15 @@ final class RenderServiceProvider extends ServiceProvider
     public static function services(): array
     {
         return [
+            // Reserved-path + template-path contributor seam (storefront-rendering spec §5) —
+            // bound SHARED and UNCONDITIONALLY (mirrors AdoptionContributorRegistry in
+            // thallo-tenancy): ReservedPaths and ThemeLocator consult it regardless of whether
+            // any pack has registered a contributor, so zero registrations stay a no-op.
+            RenderContributionRegistry::class => [
+                'class' => RenderContributionRegistry::class,
+                'shared' => true,
+                'autowire' => true,
+            ],
             ThemeLocator::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeThemeLocator'],
@@ -87,6 +98,14 @@ final class RenderServiceProvider extends ServiceProvider
             TwigFactory::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeTwigFactory'],
+            ],
+            // Commerce-Slice-2 Fix B: the route-less entry-blocks render seam. Autowired —
+            // its only dependencies (PublishedEntryBlocksReader, TwigFactory,
+            // RenderContextExtension) are all container-resolvable.
+            EntryBlocksRenderer::class => [
+                'class' => EntryBlocksRenderer::class,
+                'shared' => true,
+                'autowire' => true,
             ],
             ReservedPaths::class => [
                 'shared' => true,
@@ -305,13 +324,18 @@ final class RenderServiceProvider extends ServiceProvider
             $container->has(\Thallo\Contracts\Delivery\HomepageEntryProvider::class)
                 ? $container->get(\Thallo\Contracts\Delivery\HomepageEntryProvider::class)
                 : null,
-            $container->has(\Thallo\Contracts\Delivery\EntryTargetResolver::class)
-                ? $container->get(\Thallo\Contracts\Delivery\EntryTargetResolver::class)
+            $container->has(EntryTargetResolver::class)
+                ? $container->get(EntryTargetResolver::class)
                 : null,
             $container->has(\Thallo\Contracts\Settings\AdminUrlProvider::class)
                 ? $container->get(\Thallo\Contracts\Settings\AdminUrlProvider::class)
                 : null,
             $container->get(TenantCacheSegment::class),
+            // Fix C (Commerce-Slice-2 review): themedEnv() must build the preview-session
+            // ThemeLocator with the SAME frozen contributed template dirs makeThemeLocator()
+            // above uses — otherwise a pack-contributed template vanishes from a
+            // non-default-theme preview.
+            $container->get(RenderContributionRegistry::class),
         );
     }
 
@@ -321,9 +345,16 @@ final class RenderServiceProvider extends ServiceProvider
         // Theme-setting spec §2: the NAME comes from the per-request source
         // (stored override -> env -> default); ThemeLocator's own ladder
         // (missing dir silent fallback, broken PRESENT dir loud) is untouched.
+        // Contribution spec §5.2: this is the first place the registry is typically consumed —
+        // its frozen*() read here (or in makeReservedPaths(), whichever the container resolves
+        // first) takes the ONE snapshot for both reserved paths and template dirs. Both factories
+        // are lazy DI factories, only invoked when a request actually needs the service — always
+        // after every provider's register()+boot() has completed.
         return new ThemeLocator(
             $container->get(ActiveThemeSource::class)->name(),
             $context->getBasePath() . '/themes',
+            null,
+            $container->get(RenderContributionRegistry::class)->frozenTemplatePaths(),
         );
     }
 
@@ -432,6 +463,11 @@ final class RenderServiceProvider extends ServiceProvider
             formSealer: $container->has(FormSealer::class)
                 ? $container->get(FormSealer::class)
                 : null,
+            // shop_product_url()/shop_category_url()/shop_index_url() (Commerce-Slice-2 Fix A):
+            // soft-bound; null = every helper returns null, blocks degrade to plain text.
+            storefrontLinks: $container->has(StorefrontLinkResolver::class)
+                ? $container->get(StorefrontLinkResolver::class)
+                : null,
         );
     }
 
@@ -462,9 +498,19 @@ final class RenderServiceProvider extends ServiceProvider
     public static function makeReservedPaths(ContainerInterface $container): ReservedPaths
     {
         $context = $container->get(ApplicationContext::class);
+        // Contribution spec §5.1: config-declared prefixes/exacts first, contributed ones
+        // appended (frozen*() read — see makeThemeLocator()'s note on WHEN the freeze happens).
+        // Zero contributors → frozenReserved() returns empty lists → byte-identical to before.
+        $contributed = $container->get(RenderContributionRegistry::class)->frozenReserved();
         return new ReservedPaths(
-            array_values(array_map(strval(...), (array) config($context, 'render.reserved_prefixes', []))),
-            array_values(array_map(strval(...), (array) config($context, 'render.reserved_exact', []))),
+            array_merge(
+                array_values(array_map(strval(...), (array) config($context, 'render.reserved_prefixes', []))),
+                $contributed['prefixes'],
+            ),
+            array_merge(
+                array_values(array_map(strval(...), (array) config($context, 'render.reserved_exact', []))),
+                $contributed['exacts'],
+            ),
         );
     }
 
