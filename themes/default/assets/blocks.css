@@ -445,7 +445,7 @@
 .thallo-block-feature__title a:hover { color: var(--accent); }
 .thallo-block-feature__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; }
 
-/* tabs — CSS-only radio tabs (Tabs pill recipe; supports up to 8 tabs) */
+/* tabs — CSS-only radio tabs (Tabs pill recipe; authoring cap: 12 — theme-runtime spec §4) */
 .thallo-block-tabs { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
 .thallo-block-tabs__radio { position: absolute; opacity: 0; pointer-events: none; }
 .thallo-block-tabs__list {
@@ -464,7 +464,7 @@
 }
 .thallo-block-tabs__panels { margin-top: var(--space-4); }
 .thallo-block-tabs__panel { display: none; }
-/* nth radio checked -> nth label active + nth panel visible (cap: 8) */
+/* nth radio checked -> nth label active + nth panel visible (cap: 12) */
 .thallo-block-tabs__radio:nth-of-type(1):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(1),
 .thallo-block-tabs__radio:nth-of-type(2):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(2),
 .thallo-block-tabs__radio:nth-of-type(3):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(3),
@@ -472,7 +472,11 @@
 .thallo-block-tabs__radio:nth-of-type(5):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(5),
 .thallo-block-tabs__radio:nth-of-type(6):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(6),
 .thallo-block-tabs__radio:nth-of-type(7):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(7),
-.thallo-block-tabs__radio:nth-of-type(8):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(8) {
+.thallo-block-tabs__radio:nth-of-type(8):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(8),
+.thallo-block-tabs__radio:nth-of-type(9):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(9),
+.thallo-block-tabs__radio:nth-of-type(10):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(10),
+.thallo-block-tabs__radio:nth-of-type(11):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(11),
+.thallo-block-tabs__radio:nth-of-type(12):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(12) {
   background: var(--bg);
   color: var(--ink);
   box-shadow: var(--shadow);
@@ -484,9 +488,18 @@
 .thallo-block-tabs__radio:nth-of-type(5):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(5),
 .thallo-block-tabs__radio:nth-of-type(6):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(6),
 .thallo-block-tabs__radio:nth-of-type(7):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(7),
-.thallo-block-tabs__radio:nth-of-type(8):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(8) {
+.thallo-block-tabs__radio:nth-of-type(8):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(8),
+.thallo-block-tabs__radio:nth-of-type(9):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(9),
+.thallo-block-tabs__radio:nth-of-type(10):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(10),
+.thallo-block-tabs__radio:nth-of-type(11):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(11),
+.thallo-block-tabs__radio:nth-of-type(12):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(12) {
   display: block;
 }
+/* Enhanced mode (theme-runtime spec §4): once the tabs module marks the root, the
+   runtime owns panel visibility via the hidden attribute; the floor's display:none base
+   + enumerated checked-pairing stand down and must not fight it. */
+.thallo-block-tabs[data-thallo-enhanced~="tabs"] .thallo-block-tabs__panel { display: block; }
+.thallo-block-tabs[data-thallo-enhanced~="tabs"] .thallo-block-tabs__panel[hidden] { display: none; }
 .thallo-block-tab { margin-block: 0; }
 
 /* button — standalone action (Button variant/size recipes) */

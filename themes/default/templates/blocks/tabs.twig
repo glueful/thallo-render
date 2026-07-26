@@ -1,14 +1,20 @@
-{# tabs — maps to refs.md `tabs` (pill variant, size md). CSS-only radio tabs:
-   the __radio / __list / __label / __panels / __panel structural classes are
-   behaviour hooks the theme CSS selects (checked-sibling → active label + shown
-   panel) — keep them, plus the per-instance name="tabs-{id}" / id="tabs-{id}-N"
-   scoping so multiple tab blocks on a page stay independent. Fields:
+{# tabs — maps to refs.md `tabs` (pill variant, size md). CSS-only radio-tabs
+   FLOOR: the __radio / __list / __label / __panels / __panel structural classes
+   are behaviour hooks the theme CSS selects (checked-sibling → active label +
+   shown panel) — keep them, plus the per-instance name="tabs-{id}" /
+   id="tabs-{id}-N" scoping so multiple tab blocks on a page stay independent.
+   No ARIA here: radios+labels are not tabs semantics, so the floor claims none —
+   the theme runtime's tabs module adds REAL tab semantics (tablist/tab/tabpanel,
+   arrow keys) on enhancement and marks the root data-thallo-enhanced~="tabs".
+   Authoring cap: 12 items, server-enforced at save (theme-runtime spec §4) —
+   the floor's enumerated CSS pairs exactly that many, and over-cap content
+   cannot exist (pre-launch decision, no legacy-overflow rules). Fields:
    items — each a block with item.data.label; panel body renders the item itself. #}
 <div class="thallo-block thallo-block-tabs">
   {% for item in data.items|default([]) %}
   <input class="thallo-block-tabs__radio" type="radio" name="tabs-{{ block.id }}" id="tabs-{{ block.id }}-{{ loop.index }}"{% if loop.first %} checked{% endif %}>
   {% endfor %}
-  <div class="thallo-block-tabs__list" role="tablist">
+  <div class="thallo-block-tabs__list">
     {% for item in data.items|default([]) %}
     <label class="thallo-block-tabs__label" for="tabs-{{ block.id }}-{{ loop.index }}">{{ item.data.label|default('') }}</label>
     {% endfor %}
