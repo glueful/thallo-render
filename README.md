@@ -74,6 +74,29 @@ Twig compiles to `storage/cache/twig/{theme}` with `auto_reload` (recompiles on 
 change). **The active theme is resolved at boot (v1):** changing `render.theme`
 requires an app restart / extension-cache rebuild.
 
+## Theme runtime
+
+Behavioral JS is **package-owned**, not theme-owned: one `runtime.js`
+(`packages/thallo-render/runtime/`) carries the `ThalloRuntime` module registry
+(color-mode, forms, carousel, navigation, tabs) and is served at
+`/_thallo/runtime/runtime.js` — a stable, uncached logical alias that 302s to the
+current content-fingerprinted `runtime-<fp>.js`, served with
+`Cache-Control: public, max-age=31536000, immutable` (unknown or stale fingerprints
+404, so one immutable URL always identifies one byte sequence). The default
+`layout.twig` loads it via the `runtime_script()` Twig function; themes own
+presentation (CSS) only. The default theme's `assets/blocks.js` is a temporary
+behavior-free compatibility loader for already-cached HTML that still references
+`asset('blocks.js')`; `ThemeCloner` deliberately never seeds it into clones of the
+pack default.
+
+**Custom-theme migration (theme-runtime spec §2.4):** a theme that copied the whole
+assets directory keeps working unchanged — a copied `layout.twig` keeps loading the
+copied `blocks.js` (old behavior, frozen at copy time), and a theme that does NOT
+override `layout.twig` picks up the package runtime automatically through the
+default layout fallback. To adopt the runtime in a copied theme, delete the copied
+`blocks.js` and drop its `<script>` tag from the copied `layout.twig` (load
+`{{ runtime_script() }}` there instead).
+
 ## Homepage
 
 `GET /` always renders `index.twig`. Set `render.homepage_entry` (env
