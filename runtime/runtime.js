@@ -131,7 +131,7 @@ window.ThalloRuntime.register('color-mode', {
   var mql = window.matchMedia('(prefers-color-scheme: dark)');
 
   function stored() {
-    try { return localStorage.getItem(KEY) || 'system'; } catch (e) { return 'system'; }
+    try { return localStorage.getItem(KEY) || 'system'; } catch { return 'system'; }
   }
   function resolve(mode) {
     return mode === 'dark' || (mode !== 'light' && mql.matches) ? 'dark' : 'light';
@@ -150,7 +150,7 @@ window.ThalloRuntime.register('color-mode', {
   }
   function setMode(mode) {
     if (mode !== 'light' && mode !== 'dark' && mode !== 'system') return; // ignore junk
-    try { localStorage.setItem(KEY, mode); } catch (e) {}
+    try { localStorage.setItem(KEY, mode); } catch {}
     apply(mode);
     reflect();
     root.dispatchEvent(new CustomEvent(EVENT, {
