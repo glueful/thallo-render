@@ -73,7 +73,7 @@
          wrapper is chrome-less (hamburger hidden, list always visible). The
          runtime's navigation module enhances via data-thallo-enhance. #}
       <details class="thallo-block-navigation__mobile" data-thallo-enhance="navigation">
-        <summary class="thallo-block-navigation__hamburger"><span class="thallo-block-navigation__hamburger-icon" aria-hidden="true"></span>Menu</summary>
+        <summary class="thallo-block-navigation__hamburger"><span class="thallo-block-navigation__hamburger-icon" aria-hidden="true"></span><span class="thallo-block-navigation__hamburger-label">Menu</span></summary>
         <ul class="thallo-block-navigation__list">
           {% for item in items %}
             {% set hasKids = item.children|default([]) is not empty %}

@@ -120,7 +120,7 @@
          runtime's navigation module and the 48rem mobile CSS govern both. #}
       <nav class="site-nav" aria-label="Main navigation">
         <details class="site-nav__mobile thallo-block-navigation__mobile" data-thallo-enhance="navigation">
-          <summary class="thallo-block-navigation__hamburger"><span class="thallo-block-navigation__hamburger-icon" aria-hidden="true"></span>Menu</summary>
+          <summary class="thallo-block-navigation__hamburger"><span class="thallo-block-navigation__hamburger-icon" aria-hidden="true"></span><span class="thallo-block-navigation__hamburger-label">Menu</span></summary>
           <ul class="site-nav__list">
             {% for item in menu('main') %}
               {% set p = '/' ~ (item.url|default('')|split('://')|last|split('/', 2)|last) %}

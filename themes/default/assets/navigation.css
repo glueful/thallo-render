@@ -144,15 +144,81 @@
    48rem: the navigation component's named v1 breakpoint (theme-runtime spec §3.2) */
 .thallo-block-navigation__hamburger {
   display: none; cursor: pointer; list-style: none;
-  min-height: 44px; align-items: center; gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  min-height: 44px; min-width: 44px; align-items: center; justify-content: center;
+  gap: var(--space-2); padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line); border-radius: 0.5rem; color: var(--ink);
 }
+.thallo-block-navigation__hamburger:hover { border-color: var(--muted); }
 .thallo-block-navigation__hamburger::-webkit-details-marker { display: none; }
+/* The hamburger glyph: three CSS bars morphing to an X while open. Accessible
+   name comes from the visually hidden "Menu" label beside it. */
+.thallo-block-navigation__hamburger-icon {
+  position: relative; display: inline-block;
+  width: 1.125rem; height: 2px; border-radius: 1px; background: currentColor;
+}
+.thallo-block-navigation__hamburger-icon::before,
+.thallo-block-navigation__hamburger-icon::after {
+  content: ""; position: absolute; left: 0; width: 100%; height: 2px;
+  border-radius: 1px; background: currentColor;
+}
+.thallo-block-navigation__hamburger-icon::before { top: -5px; }
+.thallo-block-navigation__hamburger-icon::after { top: 5px; }
+details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__hamburger-icon { background: transparent; }
+details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__hamburger-icon::before { top: 0; transform: rotate(45deg); }
+details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__hamburger-icon::after { top: 0; transform: rotate(-45deg); }
+@media (prefers-reduced-motion: no-preference) {
+  /* Micro-feedback on the glyph only — menu expansion animation stays runtime-owned. */
+  .thallo-block-navigation__hamburger-icon,
+  .thallo-block-navigation__hamburger-icon::before,
+  .thallo-block-navigation__hamburger-icon::after {
+    transition: transform 0.15s ease, top 0.15s ease, background-color 0.15s ease;
+  }
+}
+/* Visually hidden label: keeps the summary's accessible name "Menu" with an
+   icon-only visual (theme-runtime spec §7). */
+.thallo-block-navigation__hamburger-label {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
 @media (max-width: 48rem) {
   .thallo-block-navigation__hamburger { display: flex; }
   .thallo-block-navigation__mobile:not([open]) > .thallo-block-navigation__list,
   .site-nav__mobile:not([open]) > .site-nav__list { display: none; }
-  .thallo-block-navigation__list { flex-direction: column; align-items: stretch; }
+  /* Header placement: the hamburger sits at the far right of the header row;
+     while open, the nav container claims the full row so the list stacks
+     beneath the header line (in flow — content is pushed, never overlaid).
+     Browsers without :has() keep the in-row expansion — degraded, not broken. */
+  .site-header__inner { flex-wrap: wrap; }
+  .site-header__inner .thallo-block-navigation,
+  .site-header__inner > .site-nav { margin-left: auto; }
+  .site-header__inner .thallo-block-navigation:has(.thallo-block-navigation__mobile[open]),
+  .site-header__inner > .site-nav:has(.site-nav__mobile[open]) { flex-basis: 100%; }
+  .thallo-block-navigation__hamburger { margin-left: auto; width: max-content; }
+  /* Open list: a full-width stacked menu with touch-sized, separated rows. */
+  .thallo-block-navigation__list { flex-direction: column; align-items: stretch; gap: 0; }
+  .site-nav__mobile > .site-nav__list {
+    flex-direction: column; align-items: stretch; gap: 0;
+    padding: var(--space-2) 0 var(--space-3);
+  }
+  .site-nav__mobile > .site-nav__list a {
+    display: flex; min-height: 44px; align-items: center;
+    padding: var(--space-2) var(--space-3); border-radius: 0.375rem;
+  }
+  .site-nav__mobile > .site-nav__list li + li { border-top: 1px solid var(--line); }
+  .thallo-block-navigation__mobile > .thallo-block-navigation__list {
+    padding: var(--space-2) 0 var(--space-3);
+  }
+  .thallo-block-navigation__mobile .thallo-block-navigation__item + .thallo-block-navigation__item {
+    border-top: 1px solid var(--line);
+  }
+  .thallo-block-navigation__mobile .thallo-block-navigation__link {
+    width: 100%; min-height: 44px;
+  }
+  .site-nav__mobile > .site-nav__list a[aria-current="page"],
+  .thallo-block-navigation__mobile .thallo-block-navigation__link[aria-current="page"] {
+    color: var(--accent); font-weight: 600;
+  }
   .thallo-block-navigation__submenu,
   .thallo-block-navigation__submenu--columns {
     position: static; min-width: 0; box-shadow: none; border: 0;
