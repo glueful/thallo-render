@@ -141,6 +141,10 @@ final class RenderController
                 $typeSlug !== '' ? $typeSlug : null,
                 $result['presentation'] ?? null,
             );
+            // The entry-backed homepage renders index.twig directly (never through
+            // renderEntry), so it threads its own seo context — headFor() gives the
+            // homepage shape: canonical '/', og:type website (seo-head spec §2).
+            $extra['seo'] = $this->seoHead($homepageEntry, $locale);
         }
 
         // Homepage ALWAYS renders index.twig (spec §4) — the entry, when configured,
