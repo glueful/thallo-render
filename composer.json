@@ -1,7 +1,7 @@
 {
   "name": "glueful/thallo-render",
   "description": "Rendered delivery for Thallo: server-rendered pages from published content via filesystem Twig themes, as a removable capability pack.",
-  "type": "glueful-extension",
+  "type": "library",
   "license": "MIT",
   "authors": [
     { "name": "Michael Tawiah Sowah", "email": "michael@glueful.dev" }
