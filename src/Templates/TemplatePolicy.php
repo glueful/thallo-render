@@ -30,7 +30,8 @@ final class TemplatePolicy
      */
     // bumped: form_render joined the function allowlist (form-block spec §4)
     // bumped: runtime_script joined the function allowlist (theme-runtime spec §2.3)
-    public const CACHE_VERSION = 12;
+    // bumped: seo_head joined the function allowlist (seo-head spec §3)
+    public const CACHE_VERSION = 13;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim'];
 
@@ -45,7 +46,7 @@ final class TemplatePolicy
     public const FUNCTIONS = [
         'menu', 'path', 'asset', 'facets', 'blocks', 'media', 'site_logo', 'video_embed', 'icon',
         'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
-        'runtime_script',
+        'runtime_script', 'seo_head',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'range',
     ];
 

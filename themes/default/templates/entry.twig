@@ -1,5 +1,5 @@
 {% extends 'layout.twig' %}
-{% block title %}{{ entry.fields.title ?? site.name }}{% endblock %}
+{% block title %}{{ seo.title|default(entry.fields.title|default(site.name)) }}{% endblock %}
 {% block content %}
   <article>
     {# show_title from the COMPOSED presentation context (spec §5a) —

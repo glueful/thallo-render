@@ -196,6 +196,12 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('shop_product_url', $this->shopProductUrl(...)),
             new TwigFunction('shop_category_url', $this->shopCategoryUrl(...)),
             new TwigFunction('shop_index_url', $this->shopIndexUrl(...)),
+            // is_safe html: every attribute value is ENT_QUOTES-escaped and every URL
+            // passes safeUrl() inside seoHead() itself (seo-head spec §3).
+            new TwigFunction('seo_head', $this->seoHead(...), [
+                'is_safe' => ['html'],
+                'needs_context' => true,
+            ]),
         ];
     }
 
@@ -554,6 +560,70 @@ final class RenderContextExtension extends AbstractExtension
             return $url;
         }
         return preg_match('#\A(?:https://|http://|mailto:)#i', $url) === 1 ? $url : null;
+    }
+
+    /**
+     * The SEO head tag block (seo-head spec §3): consumes the `seo` CONTEXT variable
+     * (one source of truth) + the preview state. Preview emits ONLY noindex —
+     * draft titles must never be canonicalized or socially scrapeable (spec §4).
+     *
+     * @param array<string,mixed> $context
+     */
+    public function seoHead(array $context): string
+    {
+        if ($this->isPreview()) {
+            return '<meta name="robots" content="noindex, nofollow">';
+        }
+        $seo = $context['seo'] ?? null;
+        if (!is_array($seo)) {
+            return '';
+        }
+        $e = static fn (?string $v): string => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+        // Spec §3 URL safety: every URL attribute passes the SAME discipline the
+        // safe_url template filter enforces — this class's own safeUrl(). A URL that
+        // fails it is OMITTED, never emitted raw.
+        $u = fn (mixed $v): ?string => $this->safeUrl($v);
+        $lines = [];
+        if (is_string($seo['description'] ?? null) && $seo['description'] !== '') {
+            $lines[] = '<meta name="description" content="' . $e($seo['description']) . '">';
+        }
+        if (($canonical = $u($seo['canonical'] ?? null)) !== null) {
+            $lines[] = '<link rel="canonical" href="' . $e($canonical) . '">';
+        }
+        foreach ((array) ($seo['alternates'] ?? []) as $alt) {
+            $href = $u($alt['href'] ?? null);
+            if ($href !== null && is_string($alt['locale'] ?? null)) {
+                $lines[] = '<link rel="alternate" hreflang="' . $e($alt['locale']) . '" href="' . $e($href) . '">';
+            }
+        }
+        if (($xDefault = $u($seo['x_default'] ?? null)) !== null) {
+            $lines[] = '<link rel="alternate" hreflang="x-default" href="' . $e($xDefault) . '">';
+        }
+        $og = (array) ($seo['og'] ?? []);
+        $lines[] = '<meta property="og:type" content="' . $e($og['type'] ?? 'article') . '">';
+        $lines[] = '<meta property="og:title" content="' . $e($og['title'] ?? ($seo['title'] ?? '')) . '">';
+        if (is_string($og['description'] ?? null) && $og['description'] !== '') {
+            $lines[] = '<meta property="og:description" content="' . $e($og['description']) . '">';
+        }
+        if (($image = $u($og['image'] ?? null)) !== null) {
+            $lines[] = '<meta property="og:image" content="' . $e($image) . '">';
+        }
+        if (($ogUrl = $u($og['url'] ?? null)) !== null) {
+            $lines[] = '<meta property="og:url" content="' . $e($ogUrl) . '">';
+        }
+        // og:site_name from the SAME source the templates use — the render context's
+        // site.name (needs_context makes it available; no parallel state).
+        $siteName = is_array($context['site'] ?? null) ? (string) ($context['site']['name'] ?? '') : '';
+        if ($siteName !== '') {
+            $lines[] = '<meta property="og:site_name" content="' . $e($siteName) . '">';
+        }
+        if (is_string($seo['twitter_card'] ?? null)) {
+            $lines[] = '<meta name="twitter:card" content="' . $e($seo['twitter_card']) . '">';
+        }
+        if (($seo['robots'] ?? 'index') !== 'index') {
+            $lines[] = '<meta name="robots" content="' . $e($seo['robots']) . '">';
+        }
+        return implode("\n  ", $lines);
     }
 
     /**

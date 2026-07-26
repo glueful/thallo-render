@@ -41,6 +41,7 @@ use Thallo\Render\Contribution\RenderContributionRegistry;
 use Thallo\Tenancy\Cache\TenantCacheSegment;
 use Thallo\Render\Console\ThemeCloneCommand;
 use Thallo\Contracts\Delivery\PreviewSessionVerifier;
+use Thallo\Contracts\Delivery\SeoHeadResolver;
 use Thallo\Contracts\Delivery\StorefrontLinkResolver;
 use Thallo\Render\Http\Controllers\RenderController;
 use Thallo\Render\Http\Controllers\RuntimeAssetController;
@@ -371,6 +372,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // above uses — otherwise a pack-contributed template vanishes from a
             // non-default-theme preview.
             $container->get(RenderContributionRegistry::class),
+            $container->has(SeoHeadResolver::class)
+                ? $container->get(SeoHeadResolver::class)
+                : null,
         );
     }
 

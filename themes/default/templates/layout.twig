@@ -6,7 +6,10 @@
   {# color-mode spec §3.1: no-flash resolver, verbatim from ColorMode::RESOLVER_JS,
      BEFORE any CSS so data-theme is set pre-paint. Emitted only when enabled. #}
   {{ color_mode_script() }}
-  <title>{% block title %}{{ site.name }}{% endblock %}</title>
+  <title>{% block title %}{{ seo.title|default(site.name) }}{% endblock %}</title>
+  {# SEO head (seo-head spec §3): composed entry metadata; empty on non-entry pages;
+     noindex-only in preview (spec §4). #}
+  {{ seo_head() }}
   {# Site-identity spec §3: the link renders only when the blob is anonymously
      servable (site_favicon() applies the media() predicate) — a missing icon
      beats one that 401s on the browser's anonymous fetch. #}
