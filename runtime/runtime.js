@@ -434,3 +434,142 @@ window.ThalloRuntime.register('forms', {
   });
 })();
 /* carousel:end */
+
+/* navigation:start — navigation enhancement (theme-runtime spec §3.2). The
+   <details>/<summary> floor works with no JS at all: every parent is a native
+   disclosure, and details name= exclusivity is a progressive extra in the server
+   markup only. This module layers on:
+     - the .thallo-block-navigation--js root handoff (suppresses the raw
+       closed-details hover reveal in navigation.css so hover intent governs);
+     - one-open-sibling among the parent __details, enforced HERE on toggle
+       events — never by relying on details name=;
+     - keyboard surface: Enter/Space toggle natively on <summary> (no handler
+       needed); ArrowDown on a summary opens the submenu and focuses its first
+       link; Escape inside an open submenu closes it and refocuses its summary;
+     - hover intent on --reveal-hover roots at desktop width only: mouseenter
+       opens immediately (cancelling any pending close), mouseleave closes after
+       a 180ms delay;
+     - outside-click closing any open submenu, and link clicks closing the outer
+       mobile drawer on mobile viewports only;
+     - the outer __mobile details state machine (spec §2.1 + §3.2): the desktop
+       CSS re-exposure of the closed-details list rides ::details-content, which
+       is newer than the Baseline floor — so the runtime guarantees the list is
+       visible on desktop by keeping the outer details OPEN there (its hamburger
+       chrome is display:none above 48rem anyway) and closes it when crossing to
+       mobile width;
+     - open animation via element.animate only, skipped under
+       prefers-reduced-motion.
+   Canvas: 'skip' (default) — live pages only. */
+(function () {
+  'use strict';
+
+  // 48rem: the navigation component's named v1 breakpoint (theme-runtime spec §3.2)
+  var BREAKPOINT = '(max-width: 48rem)';
+
+  window.ThalloRuntime.register('navigation', {
+    selector: '[data-thallo-enhance="navigation"]',
+    enhance: function (mobile) {
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var mq = window.matchMedia(BREAKPOINT);
+      // The layout's fallback nav (site-nav__mobile) has no block root: the
+      // details itself is the closest thing to one, and it has no __details
+      // parents, so the submenu wiring below is a harmless no-op there.
+      var root = (mobile.closest && mobile.closest('.thallo-block-navigation')) || mobile;
+      if (root.classList) { root.classList.add('thallo-block-navigation--js'); }
+      var revealHover = !!(root.classList &&
+        root.classList.contains('thallo-block-navigation--reveal-hover'));
+      var parents = mobile.querySelectorAll('.thallo-block-navigation__details');
+
+      function closeOthers(except) {
+        for (var i = 0; i < parents.length; i++) {
+          var d = parents[i];
+          if (d === except) { continue; }
+          if (except && d.contains && d.contains(except)) { continue; } // ancestors stay open
+          if (d.open) { d.open = false; }
+        }
+      }
+      function animateOpen(panel) {
+        if (reduced || !panel || !panel.animate) { return; }
+        panel.animate(
+          [{ opacity: 0, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'none' }],
+          { duration: 120, easing: 'ease-out' }
+        );
+      }
+
+      for (var i = 0; i < parents.length; i++) {
+        (function (d) {
+          var summary = d.querySelector('[data-nav-toggle]');
+          var closeTimer = null;
+
+          d.addEventListener('toggle', function () {
+            if (d.open) {
+              closeOthers(d);
+              animateOpen(d.querySelector('[data-nav-panel]'));
+            }
+          });
+
+          // Escape (bubbling from anywhere inside the open submenu) closes it
+          // and restores focus to the toggle.
+          d.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && d.open) {
+              d.open = false;
+              if (summary && summary.focus) { summary.focus(); }
+            }
+          });
+
+          if (summary) {
+            // ArrowDown opens and moves focus into the panel. Enter/Space need
+            // no handler: <summary> toggles natively.
+            summary.addEventListener('keydown', function (e) {
+              if (e.key === 'ArrowDown') {
+                if (e.preventDefault) { e.preventDefault(); }
+                d.open = true;
+                var f = d.querySelector(
+                  '.thallo-block-navigation__sublink, .thallo-block-navigation__col-title'
+                );
+                if (f && f.focus) { f.focus(); }
+              }
+            });
+          }
+
+          // Hover intent (reveal-hover roots only). The viewport check lives in
+          // the handlers so crossing the breakpoint needs no re-binding: below
+          // 48rem hover is inert and the in-flow tap disclosure governs.
+          if (revealHover && d.parentNode && d.parentNode.addEventListener) {
+            d.parentNode.addEventListener('mouseenter', function () {
+              if (mq.matches) { return; } // hover reveal is a desktop affordance
+              if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+              d.open = true;
+            });
+            d.parentNode.addEventListener('mouseleave', function () {
+              if (mq.matches) { return; }
+              closeTimer = setTimeout(function () { closeTimer = null; d.open = false; }, 180);
+            });
+          }
+        })(parents[i]);
+      }
+
+      // Outside-click closes any open submenu; a click on a link inside the menu
+      // closes the mobile drawer — on mobile viewports only (on desktop the outer
+      // details must stay open: it is what keeps the list visible).
+      document.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t || !(mobile.contains && mobile.contains(t))) {
+          closeOthers(null);
+          return;
+        }
+        if (t.closest && t.closest('a[href]') && mq.matches) {
+          mobile.open = false;
+        }
+      });
+
+      // Outer-details state machine: OPEN on desktop, closed when crossing to
+      // mobile (the drawer chrome only exists below 48rem).
+      mq.addEventListener('change', function (e) {
+        mobile.open = !e.matches;
+      });
+      if (!mq.matches) { mobile.open = true; }
+    }
+  });
+})();
+/* navigation:end */
