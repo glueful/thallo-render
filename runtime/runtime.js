@@ -573,3 +573,183 @@ window.ThalloRuntime.register('forms', {
   });
 })();
 /* navigation:end */
+
+/* tabs:start — tabs enhancement (theme-runtime spec §4). The radio floor works with
+   no JS at all and deliberately claims NO ARIA (radios+labels are not tabs
+   semantics); this module layers the REAL pattern on top: tablist/tab/tabpanel
+   roles with stable derived ids, roving tabindex, automatic activation
+   (ArrowLeft/ArrowRight with wrap, Home/End — focus and select together), label
+   clicks driving selection, and panel visibility via [hidden]. Two hard rules:
+     - RADIO SYNC: the floor's enumerated checked-pairing selector (0,6,0)
+       outranks the enhanced __panel[hidden] rule (0,4,0), so a hidden panel
+       whose radio stayed checked would remain visible. select() therefore keeps
+       radio.checked aligned with the active tab on EVERY change and dispatches
+       'change' on the newly-checked radio for anything listening to the floor.
+     - FAIL-SAFE: enhancement runs as three ordered phases (ARIA/tabindex/id
+       attributes -> event listeners -> hide radios LAST) behind a full undo
+       log. Any throw replays the log in reverse (listeners detached, attributes
+       restored) and RETHROWS, so the core's containment leaves the component
+       unmarked, the enhanced-mode CSS never engages, and the honest radio floor
+       stays byte- and behavior-intact. The core stamps data-thallo-enhanced
+       itself, immediately after enhance returns — never this module.
+   The module itself is UNBOUNDED (the 12-item cap is a Thallo authoring rule,
+   enforced server-side; custom markup with more items enhances fully).
+   Canvas: 'skip' (default) — live pages only. */
+(function () {
+  'use strict';
+
+  // Direct-children lookup: keeps a tabs block nested inside another tabs
+  // block's panel from leaking its radios/labels/panels into the outer one.
+  function childrenWithClass(parent, cls) {
+    var out = [];
+    var kids = (parent && parent.children) || [];
+    for (var i = 0; i < kids.length; i++) {
+      if (kids[i].classList && kids[i].classList.contains(cls)) { out.push(kids[i]); }
+    }
+    return out;
+  }
+
+  function enhanceTabs(root) {
+    var radios = childrenWithClass(root, 'thallo-block-tabs__radio');
+    var list = childrenWithClass(root, 'thallo-block-tabs__list')[0] || null;
+    var panelsBox = childrenWithClass(root, 'thallo-block-tabs__panels')[0] || null;
+    var labels = list ? childrenWithClass(list, 'thallo-block-tabs__label') : [];
+    var panels = panelsBox ? childrenWithClass(panelsBox, 'thallo-block-tabs__panel') : [];
+
+    if (radios.length === 0 && labels.length === 0 && panels.length === 0) {
+      return; // empty block: nothing to enhance, marking it is harmless
+    }
+    if (radios.length === 0 || labels.length !== radios.length || panels.length !== radios.length) {
+      // Unpairable structure: throw so the component stays UNMARKED and the
+      // enhanced-mode CSS (which trusts [hidden] we never got to set) stays off.
+      throw new Error('tabs: radios/labels/panels do not pair; leaving the radio floor as-is');
+    }
+
+    var undo = []; // every mutation in order; replayed in reverse on any throw
+    function setAttr(elm, name, value) {
+      undo.push({ kind: 'attr', el: elm, attr: name, prior: elm.getAttribute(name) });
+      elm.setAttribute(name, value);
+    }
+    function listen(elm, type, handler) {
+      undo.push({ kind: 'listener', el: elm, type: type, handler: handler });
+      elm.addEventListener(type, handler);
+    }
+    function rollback() {
+      for (var i = undo.length - 1; i >= 0; i--) {
+        var u = undo[i];
+        if (u.kind === 'listener') {
+          u.el.removeEventListener(u.type, u.handler);
+        } else if (u.prior === null) {
+          u.el.removeAttribute(u.attr);
+        } else {
+          u.el.setAttribute(u.attr, u.prior);
+        }
+      }
+    }
+
+    // Preselected radio (checked server-side, any index) seeds the active tab.
+    var current = 0;
+    var i;
+    for (i = 0; i < radios.length; i++) {
+      if (radios[i].checked) { current = i; }
+    }
+
+    function select(idx) {
+      if (idx === current) { return; }
+      for (var k = 0; k < labels.length; k++) {
+        labels[k].setAttribute('aria-selected', k === idx ? 'true' : 'false');
+        labels[k].setAttribute('tabindex', k === idx ? '0' : '-1');
+      }
+      // Radio sync is load-bearing: the floor's checked-pairing CSS outranks
+      // the enhanced [hidden] rule, so the old radio must never stay checked.
+      for (k = 0; k < radios.length; k++) {
+        radios[k].checked = k === idx;
+      }
+      if (radios[idx].dispatchEvent) {
+        radios[idx].dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      for (k = 0; k < panels.length; k++) {
+        if (k === idx) {
+          panels[k].removeAttribute('hidden');
+        } else {
+          panels[k].setAttribute('hidden', '');
+        }
+      }
+      current = idx;
+    }
+
+    try {
+      // Phase 1 — ARIA/tabindex/id attributes.
+      setAttr(list, 'role', 'tablist');
+      for (i = 0; i < labels.length; i++) {
+        var radioId = radios[i].getAttribute('id');
+        var m = radioId ? /^(.*)-(\d+)$/.exec(radioId) : null;
+        var base = m ? m[1] : 'thallo-tabs';
+        var nth = m ? m[2] : String(i + 1);
+        var panelId = panels[i].getAttribute('id');
+        if (!panelId) {
+          panelId = base + '-panel-' + nth; // tabs-{blockid}-panel-N from the input id
+          setAttr(panels[i], 'id', panelId);
+        }
+        var labelId = labels[i].getAttribute('id');
+        if (!labelId) {
+          labelId = base + '-tab-' + nth;
+          setAttr(labels[i], 'id', labelId);
+        }
+        setAttr(labels[i], 'role', 'tab');
+        setAttr(labels[i], 'aria-selected', i === current ? 'true' : 'false');
+        setAttr(labels[i], 'aria-controls', panelId);
+        setAttr(labels[i], 'tabindex', i === current ? '0' : '-1');
+        setAttr(panels[i], 'role', 'tabpanel');
+        setAttr(panels[i], 'aria-labelledby', labelId);
+        setAttr(panels[i], 'tabindex', '-1');
+        if (i !== current) { setAttr(panels[i], 'hidden', ''); }
+      }
+
+      // Phase 2 — event listeners (automatic activation: focus + select together).
+      listen(list, 'keydown', function (e) {
+        var next = null;
+        if (e.key === 'ArrowRight') {
+          next = (current + 1) % labels.length;
+        } else if (e.key === 'ArrowLeft') {
+          next = (current - 1 + labels.length) % labels.length;
+        } else if (e.key === 'Home') {
+          next = 0;
+        } else if (e.key === 'End') {
+          next = labels.length - 1;
+        }
+        if (next === null) { return; }
+        if (e.preventDefault) { e.preventDefault(); }
+        select(next);
+        if (labels[next].focus) { labels[next].focus(); }
+      });
+      for (i = 0; i < labels.length; i++) {
+        (function (idx) {
+          listen(labels[idx], 'click', function (e) {
+            // The module, not the label's native label->radio forwarding,
+            // drives radio state and panel visibility.
+            if (e.preventDefault) { e.preventDefault(); }
+            select(idx);
+          });
+        })(i);
+      }
+
+      // Phase 3 — hide the radios LAST; the core's marker lands immediately
+      // after this function returns, flipping the CSS to enhanced mode.
+      for (i = 0; i < radios.length; i++) {
+        setAttr(radios[i], 'hidden', '');
+        setAttr(radios[i], 'tabindex', '-1');
+        setAttr(radios[i], 'aria-hidden', 'true');
+      }
+    } catch (err) {
+      rollback();
+      throw err; // core containment leaves the component unmarked
+    }
+  }
+
+  window.ThalloRuntime.register('tabs', {
+    selector: '.thallo-block-tabs',
+    enhance: enhanceTabs
+  });
+})();
+/* tabs:end */
