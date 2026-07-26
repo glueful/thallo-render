@@ -234,3 +234,203 @@ window.ThalloRuntime.register('forms', {
   }
 });
 /* form-block:end */
+
+/* carousel:start — carousel enhancement (block-library spec §2 + theme-runtime spec §5).
+   The scroll-snap base works with no JS at all; this module adds arrows / dots /
+   autoplay where the block asked for them, plus the §5 accessibility corrections:
+     - a visible pause/play control whenever autoplay runs (aria-pressed="true" means
+       the USER paused rotation; label and state switch together in syncPause() so
+       their meaning can never invert);
+     - automatic pause while the carousel is offscreen (IntersectionObserver) or the
+       tab is hidden (visibilitychange) — temporary reasons that resume only when
+       every gate is clear;
+     - a visually-hidden 'Slide N of M' status region: aria-live="off" during
+       automatic rotation (no interruption every five seconds), switched to
+       "polite" after any user pause/interaction and for user-initiated navigation.
+   userPaused is STICKY: automatic recovery (re-intersecting, tab visible again)
+   never clears it; only the explicit Play action does — and Play itself re-checks
+   every automatic gate in startAuto() before rotating. prefers-reduced-motion
+   disables autoplay entirely: no interval ever, no pause button.
+   Canvas: 'skip' (default) — injected controls would diverge wrapper HTML from
+   fetched HTML and break the canvas patch gate. */
+(function () {
+  'use strict';
+
+  function button(className, label, text) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = className;
+    b.setAttribute('aria-label', label);
+    b.textContent = text;
+    return b;
+  }
+
+  function throttle(fn, ms) {
+    var t = 0;
+    return function () {
+      var now = Date.now();
+      if (now - t >= ms) { t = now; fn(); }
+    };
+  }
+
+  function enhanceCarousel(root) {
+    var viewport = root.querySelector('.thallo-block-carousel__viewport');
+    var track = root.querySelector('.thallo-block-carousel__track');
+    if (!viewport || !track) { return; }
+    var slides = Array.prototype.filter.call(track.children, function (el) {
+      return el.nodeType === 1;
+    });
+    if (slides.length < 2) { return; }
+
+    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var timer = null;
+    var userPaused = false; // sticky: only the explicit Play control clears it
+    var autoOffscreen = false; // automatic gate: carousel out of the viewport
+    var autoHidden = false; // automatic gate: tab hidden
+    var live = null; // 'Slide N of M' status region
+    var pauseBtn = null;
+
+    function slideStart(i) {
+      return slides[i] ? slides[i].offsetLeft - track.offsetLeft : 0;
+    }
+    function currentIndex() {
+      var x = viewport.scrollLeft;
+      var best = 0;
+      var bestDist = Infinity;
+      slides.forEach(function (s, i) {
+        var d = Math.abs(slideStart(i) - x);
+        if (d < bestDist) { bestDist = d; best = i; }
+      });
+      return best;
+    }
+    function norm(i) {
+      var n = slides.length;
+      return ((i % n) + n) % n;
+    }
+    function goTo(i) {
+      viewport.scrollTo({ left: slideStart(norm(i)), behavior: 'smooth' });
+    }
+    function announce(i) {
+      if (!live) { return; }
+      live.textContent = 'Slide ' + (i + 1) + ' of ' + slides.length;
+    }
+    function politeAfterUserAction() {
+      if (live) { live.setAttribute('aria-live', 'polite'); }
+    }
+    function syncPause() {
+      if (!pauseBtn) { return; }
+      pauseBtn.setAttribute('aria-pressed', userPaused ? 'true' : 'false');
+      pauseBtn.setAttribute('aria-label', userPaused ? 'Play slides' : 'Pause slides');
+      pauseBtn.textContent = userPaused ? '▶' : '⏸';
+    }
+    function startAuto() {
+      // Every automatic gate re-checked on every start attempt (incl. explicit Play).
+      if (userPaused || autoOffscreen || autoHidden || reducedMotion || timer) { return; }
+      timer = setInterval(function () {
+        var n = currentIndex() + 1;
+        goTo(n);
+        announce(norm(n)); // aria-live=off while automatic: no interruption
+      }, 5000);
+      syncPause();
+    }
+    function stopAuto() {
+      if (timer) { clearInterval(timer); timer = null; }
+      syncPause();
+    }
+    function userInteracted() {
+      userPaused = true; // sticky until explicit Play
+      stopAuto();
+      politeAfterUserAction();
+    }
+
+    if (root.dataset.arrows === '1') {
+      var prev = button('thallo-block-carousel__prev', 'Previous slide', '‹');
+      var next = button('thallo-block-carousel__next', 'Next slide', '›');
+      prev.addEventListener('click', function () {
+        var n = currentIndex() - 1;
+        userInteracted();
+        goTo(n);
+        announce(norm(n));
+      });
+      next.addEventListener('click', function () {
+        var n = currentIndex() + 1;
+        userInteracted();
+        goTo(n);
+        announce(norm(n));
+      });
+      root.appendChild(prev);
+      root.appendChild(next);
+    }
+
+    var dots = [];
+    if (root.dataset.dots === '1') {
+      var wrap = document.createElement('div');
+      wrap.className = 'thallo-block-carousel__dots';
+      slides.forEach(function (_, i) {
+        var dot = button('thallo-block-carousel__dot', 'Go to slide ' + (i + 1), '');
+        dot.addEventListener('click', function () {
+          userInteracted();
+          goTo(i);
+          announce(i);
+        });
+        dots.push(dot);
+        wrap.appendChild(dot);
+      });
+      root.appendChild(wrap);
+      var syncDots = function () {
+        var active = currentIndex();
+        dots.forEach(function (d, i) {
+          d.setAttribute('aria-current', i === active ? 'true' : 'false');
+        });
+      };
+      viewport.addEventListener('scroll', throttle(syncDots, 100), { passive: true });
+      syncDots();
+    }
+
+    if (root.dataset.autoplay === '1' && !reducedMotion) {
+      live = document.createElement('span');
+      live.className = 'thallo-block-carousel__status';
+      live.setAttribute('aria-live', 'off'); // silent while rotation is automatic
+      root.appendChild(live);
+      announce(currentIndex());
+
+      pauseBtn = button('thallo-block-carousel__pause', 'Pause slides', '⏸');
+      pauseBtn.addEventListener('click', function () {
+        userPaused = !userPaused;
+        if (userPaused) { stopAuto(); } else { startAuto(); }
+        syncPause(); // startAuto may have declined (gates); label/state stay in sync
+        politeAfterUserAction();
+      });
+      root.appendChild(pauseBtn);
+      syncPause();
+
+      // Any direct interaction with the slides pauses rotation until explicit Play.
+      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+        viewport.addEventListener(ev, userInteracted, { passive: true });
+      });
+
+      if (typeof IntersectionObserver === 'function') {
+        new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            autoOffscreen = !entries[i].isIntersecting;
+          }
+          if (autoOffscreen) { stopAuto(); } else { startAuto(); }
+        }).observe(root);
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        autoHidden = !!document.hidden;
+        if (autoHidden) { stopAuto(); } else { startAuto(); }
+      });
+
+      autoHidden = !!document.hidden;
+      startAuto();
+    }
+  }
+
+  window.ThalloRuntime.register('carousel', {
+    selector: '.thallo-block-carousel',
+    enhance: enhanceCarousel
+  });
+})();
+/* carousel:end */

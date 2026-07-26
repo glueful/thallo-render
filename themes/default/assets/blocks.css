@@ -586,6 +586,8 @@
   padding: 0;
 }
 .thallo-block-carousel__dot[aria-current="true"] { background: var(--accent); }
+/* visually-hidden 'Slide N of M' status region injected by the runtime carousel module */
+.thallo-block-carousel__status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 
 /* logo — the site logo (setting-backed) */
 .thallo-block-logo { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
