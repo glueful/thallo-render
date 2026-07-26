@@ -31,6 +31,9 @@
   <script defer src="{{ runtime_script() }}"></script>
 </head>
 <body>
+  {# Skip link (theme-runtime spec §7): FIRST focusable element in the body —
+     keyboard users bypass the chrome straight to the main landmark. #}
+  <a class="skip-link" href="#main">Skip to content</a>
   {% if preview|default(false) %}
     {# Above the sticky header on purpose: blur/stickiness must never hide it. #}
     {% set bar = preview_bar|default(null) %}
@@ -112,10 +115,19 @@
           {{ site.name }}
         {%- endif -%}
       </a>
-      <nav class="site-nav">
-        {% for item in menu('main') %}
-          <a href="{{ item.url }}">{{ item.label }}</a>
-        {% endfor %}
+      {# Fallback nav (theme-runtime spec §7): a labelled landmark wrapped in
+         the SAME details disclosure pattern the navigation block uses, so the
+         runtime's navigation module and the 48rem mobile CSS govern both. #}
+      <nav class="site-nav" aria-label="Main navigation">
+        <details class="site-nav__mobile thallo-block-navigation__mobile" data-thallo-enhance="navigation">
+          <summary class="thallo-block-navigation__hamburger"><span class="thallo-block-navigation__hamburger-icon" aria-hidden="true"></span>Menu</summary>
+          <ul class="site-nav__list">
+            {% for item in menu('main') %}
+              {% set p = '/' ~ (item.url|default('')|split('://')|last|split('/', 2)|last) %}
+              <li><a href="{{ item.url }}"{% if current_path is defined and p == current_path %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+            {% endfor %}
+          </ul>
+        </details>
       </nav>
     </div>
   </header>
@@ -124,7 +136,7 @@
      -> theme.json per-type -> theme.json default -> built-ins. Templates never
      read _presentation directly. #}
   {% set layoutClass = {centered: 'layout--centered', full: 'layout--full'}[presentation.layout ?? 'centered'] ?? 'layout--centered' %}
-  <main class="{{ layoutClass }}">
+  <main id="main" tabindex="-1" class="{{ layoutClass }}">
     {% block content %}{% endblock %}
   </main>
   {% set footerHidden = (presentation.footer|default('default')) == 'hidden' %}

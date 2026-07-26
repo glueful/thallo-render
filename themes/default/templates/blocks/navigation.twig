@@ -7,16 +7,17 @@
 {% macro sublink(node, current_path) %}
 {%- set p = '/' ~ (node.url|default('')|split('://')|last|split('/', 2)|last) -%}
 <li class="thallo-block-navigation__subitem{% if current_path is defined and p == current_path %} thallo-block-navigation__subitem--active{% endif %}">
-  <a class="thallo-block-navigation__sublink" href="{{ node.url }}">{% if node.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(node.icon) }}</span>{% endif %}<span class="thallo-block-navigation__subtext"><span class="thallo-block-navigation__sublabel">{{ node.label }}</span>{% if node.description|default('') %}<span class="thallo-block-navigation__subdesc">{{ node.description }}</span>{% endif %}</span></a>
+  <a class="thallo-block-navigation__sublink" href="{{ node.url }}"{% if current_path is defined and p == current_path %} aria-current="page"{% endif %}>{% if node.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(node.icon) }}</span>{% endif %}<span class="thallo-block-navigation__subtext"><span class="thallo-block-navigation__sublabel">{{ node.label }}</span>{% if node.description|default('') %}<span class="thallo-block-navigation__subdesc">{{ node.description }}</span>{% endif %}</span></a>
 </li>
 {% endmacro %}
 {#
   The submenu panel, shared by hover and click reveals. layout=dropdown flattens
   one level (child + grandchildren) into a single list; layout=columns lays each
-  child out as a megamenu column of its own children. repeatParent prepends the
-  parent's own url as the first link — click mode only (the summary swallows it).
+  child out as a megamenu column of its own children. The parent's own url is
+  ALWAYS prepended as the first link (unified tree, theme-runtime spec §3.2):
+  the summary toggle swallows the URL in every mode.
 #}
-{% macro panel(item, layout, current_path, repeatParent) %}
+{% macro panel(item, layout, current_path) %}
 {%- import _self as nav -%}
 {% if layout == 'columns' %}
 <div class="thallo-block-navigation__submenu thallo-block-navigation__submenu--columns" data-nav-panel>
@@ -38,7 +39,7 @@
 </div>
 {% else %}
 <ul class="thallo-block-navigation__submenu" data-nav-panel>
-  {% if repeatParent and item.url|default('') %}{{ nav.sublink(item, current_path) }}{% endif %}
+  {% if item.url|default('') %}{{ nav.sublink(item, current_path) }}{% endif %}
   {% for child in item.children|default([]) %}
     {{ nav.sublink(child, current_path) }}
     {% for g in child.children|default([]) %}{{ nav.sublink(g, current_path) }}{% endfor %}
@@ -66,38 +67,38 @@
 ]|join(' ')|trim %}
 <div class="{{ rootClass }}">
   {% if items %}
-    <nav class="thallo-block-navigation__nav">
-      <ul class="thallo-block-navigation__list">
-        {% for item in items %}
-          {% set hasKids = item.children|default([]) is not empty %}
-          {% set itemPath = '/' ~ (item.url|default('')|split('://')|last|split('/', 2)|last) %}
-          {% set active = current_path is defined and itemPath == current_path %}
-          {% if not hasKids %}
-            <li class="thallo-block-navigation__item{% if active %} thallo-block-navigation__item--active{% endif %}">
-              <a class="thallo-block-navigation__link" href="{{ item.url }}">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span></a>
-            </li>
-          {% elseif reveal == 'click' %}
-            {# details-name exclusivity is progressive enhancement (nav-v2 spec P2):
-               unsupported browsers may keep several open — acceptable v1. JS layer
-               adds outside-click / Escape close + arrow-key focus on top. #}
-            <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
-              <details class="thallo-block-navigation__details" name="nav-{{ block.id }}">
-                <summary class="thallo-block-navigation__link" data-nav-toggle aria-haspopup="true">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</summary>
-                {{ nav.panel(item, sublayout, current_path, true) }}
-              </details>
-            </li>
-          {% else %}
-            <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
-              {% if item.url|default('') %}
-                <a class="thallo-block-navigation__link" href="{{ item.url }}" data-nav-toggle aria-haspopup="true" aria-expanded="false">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</a>
-              {% else %}
-                <span class="thallo-block-navigation__link" tabindex="0" data-nav-toggle aria-haspopup="true" aria-expanded="false">{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</span>
-              {% endif %}
-              {{ nav.panel(item, sublayout, current_path, false) }}
-            </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
+    <nav class="thallo-block-navigation__nav" aria-label="{{ data.aria_label|default('Navigation') }}">
+      {# Mobile disclosure (theme-runtime spec §3.2): the whole list sits inside
+         a details the hamburger summary toggles under 48rem; on desktop the
+         wrapper is chrome-less (hamburger hidden, list always visible). The
+         runtime's navigation module enhances via data-thallo-enhance. #}
+      <details class="thallo-block-navigation__mobile" data-thallo-enhance="navigation">
+        <summary class="thallo-block-navigation__hamburger"><span class="thallo-block-navigation__hamburger-icon" aria-hidden="true"></span>Menu</summary>
+        <ul class="thallo-block-navigation__list">
+          {% for item in items %}
+            {% set hasKids = item.children|default([]) is not empty %}
+            {% set itemPath = '/' ~ (item.url|default('')|split('://')|last|split('/', 2)|last) %}
+            {% set active = current_path is defined and itemPath == current_path %}
+            {% if not hasKids %}
+              <li class="thallo-block-navigation__item{% if active %} thallo-block-navigation__item--active{% endif %}">
+                <a class="thallo-block-navigation__link" href="{{ item.url }}"{% if active %} aria-current="page"{% endif %}>{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span></a>
+              </li>
+            {% else %}
+              {# ONE parent form for BOTH reveal modes (unified tree): a summary
+                 toggle over the shared panel. details-name exclusivity is
+                 progressive enhancement (nav-v2 spec P2): unsupported browsers
+                 may keep several open — the runtime guarantees one-open-sibling.
+                 Hover reveal stays a --reveal-hover CSS concern on top. #}
+              <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
+                <details class="thallo-block-navigation__details" name="nav-{{ block.id }}">
+                  <summary class="thallo-block-navigation__link" data-nav-toggle>{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</summary>
+                  {{ nav.panel(item, sublayout, current_path) }}
+                </details>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </details>
     </nav>
   {% endif %}
 </div>

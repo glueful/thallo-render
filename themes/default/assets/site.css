@@ -56,6 +56,15 @@ html[data-theme="dark"] {
 }
 
 * { box-sizing: border-box; }
+
+/* Skip link (theme-runtime spec §7): visually hidden until keyboard focus. */
+.skip-link {
+  position: absolute; left: var(--space-3); top: var(--space-3); z-index: 100;
+  padding: var(--space-2) var(--space-3); background: var(--surface); color: var(--ink);
+  border-radius: 0.375rem; transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
@@ -105,6 +114,13 @@ html[data-theme="dark"] .site-name--has-dark .site-logo--dark { display: block; 
 .thallo-region .site-header__inner,
 .thallo-region .site-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 .site-nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+/* The fallback nav is now a list inside the shared mobile disclosure
+   (theme-runtime spec §7) — bare list reset; navigation.css owns the 48rem
+   show/hide behavior via .site-nav__mobile / .site-nav__list. */
+.site-nav__list {
+  display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center;
+  list-style: none; margin: 0; padding: 0;
+}
 .site-nav a {
   color: var(--muted);
   text-decoration: none;

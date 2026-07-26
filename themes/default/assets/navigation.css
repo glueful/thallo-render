@@ -4,13 +4,15 @@
    theme's tokens and a static, CSS-only submenu mechanism).
 
    Two layers:
-   1. FLOOR (no JS): submenus reveal on :hover / :focus-within (hover mode) or
-      via <details>[open] (click mode). Works in the preview canvas and for
-      no-JS clients / SEO.
-   2. ENHANCEMENT (blocks.js nav module, live pages only): adds .is-open with
-      hover-intent + keyboard/outside-click close. When present the script sets
-      .thallo-block-navigation--js on the root, which suppresses the raw :hover
-      reveal so the delayed .is-open state governs instead.
+   1. FLOOR (no JS): EVERY parent is a native <details>/<summary> disclosure
+      (unified tree, theme-runtime spec §3.2) — click toggles work everywhere;
+      hover mode ADDS a desktop-only :hover/:focus-within reveal on top of the
+      same markup. Works in the preview canvas and for no-JS clients / SEO.
+   2. ENHANCEMENT (runtime.js navigation module, live pages only): animation,
+      Escape/outside-click close, one-open-sibling, hover intent. When present
+      the script sets .thallo-block-navigation--js on the root, which
+      suppresses the raw closed-details hover reveal so the delayed open
+      state governs instead.
 
    Accent is funnelled through --nav-accent so `color` swaps one variable:
    primary → brand --accent, neutral → monochrome --ink.
@@ -103,30 +105,89 @@
   background: var(--bg); border: 1px solid var(--line);
   border-radius: var(--radius); box-shadow: var(--shadow-lg);
 }
-.thallo-block-navigation--horizontal .thallo-block-navigation__item--parent > .thallo-block-navigation__submenu,
-.thallo-block-navigation--horizontal .thallo-block-navigation__details > .thallo-block-navigation__submenu {
-  position: absolute; top: 100%; inset-inline-start: 0; margin-top: var(--space-1);
+/* Floating dropdown panels are desktop-only — under the breakpoint panels
+   expand in flow (mobile pinned rules, theme-runtime spec §3.2).
+   48rem: the navigation component's named v1 breakpoint (theme-runtime spec §3.2) */
+@media (min-width: 48.01rem) {
+  .thallo-block-navigation--horizontal .thallo-block-navigation__details > .thallo-block-navigation__submenu {
+    position: absolute; top: 100%; inset-inline-start: 0; margin-top: var(--space-1);
+  }
 }
 
 /* Floor reveals ---------------------------------------------------------- */
-.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__submenu,
-.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__submenu { display: block; }
 .thallo-block-navigation__details > summary { list-style: none; }
 .thallo-block-navigation__details > summary::-webkit-details-marker { display: none; }
-.thallo-block-navigation__details[open] > .thallo-block-navigation__submenu { display: block; }
+.thallo-block-navigation__details[open] > [data-nav-panel] { display: block; }
+/* …but a megamenu panel opens as the grid it lays out with, not a block. */
+.thallo-block-navigation__details[open] > .thallo-block-navigation__submenu--columns { display: grid; }
+/* Visible focus on the disclosure controls (theme-runtime spec §3.2). */
+.thallo-block-navigation__hamburger:focus-visible,
+.thallo-block-navigation__details > summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
 
 /* Enhanced state: script drives .is-open (both modes) ------------------- */
-.thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__submenu { display: block; }
-/* With JS active, suppress the raw hover reveal so hover-intent (delay) wins. */
-.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__submenu,
-.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__submenu { display: none; }
-.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__submenu { display: block; }
+.thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__details > [data-nav-panel] { display: block; }
+.thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__details > .thallo-block-navigation__submenu--columns { display: grid; }
+/* With JS active, suppress the raw closed-details hover reveal so hover-intent
+   (delay) wins; a natively [open] details always keeps its panel visible. */
+.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__details:not([open]) > [data-nav-panel],
+.thallo-block-navigation--js.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__details:not([open]) > [data-nav-panel] { display: none; }
 
 /* chevron rotates when the panel is open (floor + enhanced) */
-.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__link .thallo-block-navigation__chevron,
-.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__link .thallo-block-navigation__chevron,
+.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__details > summary .thallo-block-navigation__chevron,
+.thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__details > summary .thallo-block-navigation__chevron,
 .thallo-block-navigation__details[open] > summary .thallo-block-navigation__chevron,
-.thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__link .thallo-block-navigation__chevron { transform: rotate(180deg); }
+.thallo-block-navigation__item--parent.is-open > .thallo-block-navigation__details > summary .thallo-block-navigation__chevron { transform: rotate(180deg); }
+
+/* ── Mobile disclosure stack ─────────────────────────────────────────────────
+   48rem: the navigation component's named v1 breakpoint (theme-runtime spec §3.2) */
+.thallo-block-navigation__hamburger {
+  display: none; cursor: pointer; list-style: none;
+  min-height: 44px; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+.thallo-block-navigation__hamburger::-webkit-details-marker { display: none; }
+@media (max-width: 48rem) {
+  .thallo-block-navigation__hamburger { display: flex; }
+  .thallo-block-navigation__mobile:not([open]) > .thallo-block-navigation__list,
+  .site-nav__mobile:not([open]) > .site-nav__list { display: none; }
+  .thallo-block-navigation__list { flex-direction: column; align-items: stretch; }
+  .thallo-block-navigation__submenu,
+  .thallo-block-navigation__submenu--columns {
+    position: static; min-width: 0; box-shadow: none; border: 0;
+  }
+  .thallo-block-navigation__details > summary { min-height: 44px; }
+}
+@media (min-width: 48.01rem) {
+  /* Desktop: the outer mobile details is chrome-less — list always visible. */
+  .thallo-block-navigation__mobile > .thallo-block-navigation__list,
+  .site-nav__mobile > .site-nav__list { display: flex; }
+  /* A closed <details> hides its slotted content through the ::details-content
+     pseudo (content-visibility) — display rules on the light-DOM children
+     alone cannot reveal it. Surface the content so the always-visible desktop
+     list and the closed-details hover reveal below actually show; browsers
+     without ::details-content ignore these rules (the runtime opens the
+     details there). Kept as standalone rules: an unknown pseudo-element would
+     invalidate any selector list it is grouped into. */
+  .thallo-block-navigation__mobile::details-content { content-visibility: visible; }
+  .site-nav__mobile::details-content { content-visibility: visible; }
+  .thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__details::details-content { content-visibility: visible; }
+  .thallo-block-navigation--reveal-hover .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__details::details-content { content-visibility: visible; }
+  /* Hover mode: reveal on hover/focus-within even while the details is closed. */
+  .thallo-block-navigation--reveal-hover
+    .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__details > [data-nav-panel],
+  .thallo-block-navigation--reveal-hover
+    .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__details > [data-nav-panel] {
+    display: block;
+  }
+  .thallo-block-navigation--reveal-hover
+    .thallo-block-navigation__item--parent:hover > .thallo-block-navigation__details > .thallo-block-navigation__submenu--columns,
+  .thallo-block-navigation--reveal-hover
+    .thallo-block-navigation__item--parent:focus-within > .thallo-block-navigation__details > .thallo-block-navigation__submenu--columns {
+    display: grid;
+  }
+}
 
 /* Vertical submenu = inline disclosure (no floating panel) */
 .thallo-block-navigation--vertical .thallo-block-navigation__submenu {
@@ -157,7 +218,9 @@
 /* ── Megamenu columns ────────────────────────────────────────────────────── */
 .thallo-block-navigation__submenu--columns {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  gap: var(--space-3); padding: var(--space-3); min-width: 28rem;
+  gap: var(--space-3); padding: var(--space-3);
+  /* Clamp the megamenu to the viewport (theme-runtime spec §3.2). */
+  min-width: min(28rem, calc(100vw - 2 * var(--space-4)));
 }
 .thallo-block-navigation--vertical .thallo-block-navigation__submenu--columns {
   min-width: 0; grid-template-columns: 1fr; gap: var(--space-2);
