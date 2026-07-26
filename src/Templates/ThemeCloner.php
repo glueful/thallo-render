@@ -15,7 +15,10 @@ use Thallo\Contracts\Delivery\PreviewThemeValidator;
  *   - refuses to overwrite: an existing themes/{name}/ is a hard error;
  *   - writability failures are LOUD RuntimeExceptions with the path in the
  *     message (read-only production containers surface a clear 4xx/CLI error,
- *     never a partial copy);
+ *     never a partial copy). Exception (theme-runtime spec §2.4): the pack
+ *     default's blocks.js is a temporary compatibility loader, not theme
+ *     content — cloning the pack default excludes it; cloning any custom
+ *     theme still copies byte-exactly;
  *   - theme.json's "name" is rewritten to the new theme name.
  *
  * Trust tier: templates.manage — the same operator surface as template
@@ -55,7 +58,7 @@ final class ThemeCloner
             throw new \RuntimeException("The themes directory ({$themesDir}) is not writable by the server.");
         }
 
-        $this->copyDir($source, $dest);
+        $this->copyDir($source, $dest, excludeCompatLoader: $from === 'default');
         $this->rewriteThemeName($dest . '/theme.json', $newName);
 
         return ['name' => $newName, 'path' => $dest];
@@ -72,7 +75,7 @@ final class ThemeCloner
         return rtrim($this->appThemesDir, '/') . '/' . $from;
     }
 
-    private function copyDir(string $src, string $dest): void
+    private function copyDir(string $src, string $dest, bool $excludeCompatLoader = false): void
     {
         if (!@mkdir($dest, 0755, true)) {
             throw new \RuntimeException("Cannot create {$dest}.");
@@ -82,7 +85,13 @@ final class ThemeCloner
             \RecursiveIteratorIterator::SELF_FIRST,
         );
         foreach ($iterator as $item) {
-            $target = $dest . '/' . ltrim(str_replace('\\', '/', substr($item->getPathname(), strlen($src))), '/');
+            $relative = ltrim(str_replace('\\', '/', substr($item->getPathname(), strlen($src))), '/');
+            // theme-runtime spec §2.4: the pack default's blocks.js is a temporary
+            // compatibility loader, not theme content — never seed it into clones.
+            if ($excludeCompatLoader && $relative === 'assets/blocks.js') {
+                continue;
+            }
+            $target = $dest . '/' . $relative;
             if ($item->isDir()) {
                 if (!is_dir($target) && !@mkdir($target, 0755, true)) {
                     throw new \RuntimeException("Cannot create {$target}.");

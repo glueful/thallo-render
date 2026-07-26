@@ -181,6 +181,7 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('site_favicon', $this->siteFavicon(...)),
             new TwigFunction('custom_css', $this->customCss(...)),
             new TwigFunction('color_mode_enabled', $this->colorModeEnabled(...)),
+            new TwigFunction('runtime_script', $this->runtimeScript(...)),
             // is_safe html: trusted, static, theme-owned resolver (mirrors icon()).
             new TwigFunction('color_mode_script', $this->colorModeScript(...), ['is_safe' => ['html']]),
             // is_safe html: generated purely from the closed accent/neutral enums.
@@ -240,6 +241,12 @@ final class RenderContextExtension extends AbstractExtension
     public function colorModeEnabled(): bool
     {
         return $this->colorModeEnabled;
+    }
+
+    /** Stable logical URL of the package theme runtime (theme-runtime spec §2.3). */
+    public function runtimeScript(): string
+    {
+        return '/_thallo/runtime/runtime.js';
     }
 
     /** The verbatim no-flash resolver (color-mode spec §3.1), or empty markup when disabled. */

@@ -14,6 +14,7 @@ use Thallo\Render\Templates\CustomCssUrl;
 use Thallo\Render\Templates\DatabaseTemplateLoader;
 use Thallo\Render\Templates\IconSet;
 use Thallo\Render\Templates\IconInventory;
+use Thallo\Render\Templates\RuntimeAssetMap;
 use Thallo\Render\Templates\TemplateLinter;
 use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Contracts\Capability\Capability;
@@ -42,6 +43,7 @@ use Thallo\Render\Console\ThemeCloneCommand;
 use Thallo\Contracts\Delivery\PreviewSessionVerifier;
 use Thallo\Contracts\Delivery\StorefrontLinkResolver;
 use Thallo\Render\Http\Controllers\RenderController;
+use Thallo\Render\Http\Controllers\RuntimeAssetController;
 use Thallo\Render\Http\Controllers\TemplatesAdminController;
 use Thallo\Render\Templates\TemplateCatalog;
 use Thallo\Render\Http\Middleware\PreviewSessionMiddleware;
@@ -131,6 +133,17 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             RenderController::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeRenderController'],
+            ],
+            // Theme runtime delivery (theme-runtime spec §2.3): the map is path-derived
+            // from the pack's own runtime/ dir; the controller autowires against it.
+            RuntimeAssetMap::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeRuntimeAssetMap'],
+            ],
+            RuntimeAssetController::class => [
+                'class' => RuntimeAssetController::class,
+                'shared' => true,
+                'autowire' => true,
             ],
             RenderPageCache::class => [
                 'shared' => true,
@@ -283,6 +296,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     public static function makeIconInventory(ContainerInterface $container): IconInventory
     {
         return new IconInventory(dirname(__DIR__) . '/resources/icons');
+    }
+
+    public static function makeRuntimeAssetMap(ContainerInterface $container): RuntimeAssetMap
+    {
+        return new RuntimeAssetMap(dirname(__DIR__) . '/runtime');
     }
 
     public static function makeRenderErrorCache(ContainerInterface $container): RenderErrorCache

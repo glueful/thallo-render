@@ -29,7 +29,8 @@ final class TemplatePolicy
      * linter rules); the next render then recompiles — and re-lints — everything.
      */
     // bumped: form_render joined the function allowlist (form-block spec §4)
-    public const CACHE_VERSION = 11;
+    // bumped: runtime_script joined the function allowlist (theme-runtime spec §2.3)
+    public const CACHE_VERSION = 12;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim'];
 
@@ -44,6 +45,7 @@ final class TemplatePolicy
     public const FUNCTIONS = [
         'menu', 'path', 'asset', 'facets', 'blocks', 'media', 'site_logo', 'video_embed', 'icon',
         'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
+        'runtime_script',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'range',
     ];
 

@@ -25,9 +25,10 @@
      rules win the cascade; null (absent/empty) emits nothing. #}
   {% set customCss = custom_css() %}
   {% if customCss %}<link rel="stylesheet" href="{{ customCss }}">{% endif %}
-  {# Progressive enhancement (block-library spec §2): carousel controls only;
-     loaded ONCE here, never from block templates; no-ops in the canvas stage. #}
-  <script defer src="{{ asset('blocks.js') }}"></script>
+  {# Package theme runtime (theme-runtime spec §2): behavior is package-owned and
+     fingerprinted — themes ship presentation (CSS) only. Loaded ONCE here; canvas-aware
+     (modules no-op in the canvas stage). #}
+  <script defer src="{{ runtime_script() }}"></script>
 </head>
 <body>
   {% if preview|default(false) %}

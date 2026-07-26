@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Thallo\Render\Http\Controllers\RenderController;
+use Thallo\Render\Http\Controllers\RuntimeAssetController;
 use Thallo\Render\Http\Middleware\PreviewSessionMiddleware;
 use Thallo\Render\Http\Middleware\RenderPageCache;
 use Glueful\Routing\Router;
@@ -51,6 +52,13 @@ $router->get('/_preview-bridge.js', [RenderController::class, 'previewBridgeJs']
 // the layout links it with ?v={version_uuid}, so every save changes the URL.
 // Static route: wins over the '*' page catch-all by router bucketing.
 $router->get('/custom.css', [RenderController::class, 'customCss'])
+    ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
+
+// Theme runtime (theme-runtime spec §2.3): the package-owned behavior runtime,
+// content-fingerprinted. `runtime.js` is the stable alias templates emit (302 to the
+// current fingerprint, never cached); only the exact current fingerprint serves bytes
+// (immutable). Static first segment wins over the '*' catch-all.
+$router->get('/_thallo/runtime/{file}', [RuntimeAssetController::class, 'serve'])
     ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
 
 // Live theme assets (theme-setting spec §3): served from the ACTIVE theme per
