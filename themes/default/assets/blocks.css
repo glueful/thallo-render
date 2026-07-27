@@ -83,8 +83,12 @@
 }
 .thallo-block-hero__media img {
   display: block;
+  /* Layout reservation (storefront-performance spec §5): explicit width + ratio
+     reserve the media box before the image loads — no CLS on the hero. */
+  width: 100%;
   max-width: min(100%, 40rem);
   max-height: 26rem;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   box-shadow: var(--shadow);
 }

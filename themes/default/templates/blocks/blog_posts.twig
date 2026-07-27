@@ -20,18 +20,27 @@
 <div class="{{ rootClass }}">
   {% if posts is not empty %}
     <div class="thallo-block-blog_posts__grid">
-      {% for post in posts %}{{ bp.card(post) }}{% endfor %}
+      {# region_slug is threaded as an ARGUMENT: Twig macros have isolated context,
+         so the needs_context claim helper inside card() would otherwise lose the
+         region ancestry and claim priority inside a region render (spec §4). #}
+      {% for post in posts %}{{ bp.card(post, region_slug|default(null)) }}{% endfor %}
     </div>
   {% elseif is_preview() %}
     <div class="thallo-block-blog_posts__empty">No posts found.</div>
   {% endif %}
 </div>
-{% macro card(post) %}
+{% macro card(post, region_slug) %}
 {% set f = post.fields|default({}) %}
 {% set cover = f.cover|default(null) %}
 {% set url = post.href|default(null) %}
+{% set coverImg = cover ? media_image(cover, [320, 640]) : null %}
 <article class="thallo-block-blog_posts__card">
-  {% if cover %}<a class="thallo-block-blog_posts__image" href="{{ url|default('#') }}"><img src="{{ media(cover) }}" alt="" loading="lazy"></a>{% endif %}
+  {% if coverImg %}
+    {% set priority = claim_priority_image() %}
+    <a class="thallo-block-blog_posts__image" href="{{ url|default('#') }}"><img src="{{ coverImg.src }}"
+      {%- if coverImg.srcset %} srcset="{{ coverImg.srcset }}" sizes="(max-width: 48rem) 100vw, 20rem"{% endif %}
+      alt=""{% if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}></a>
+  {% endif %}
   <div class="thallo-block-blog_posts__body">
     {% if f.categories is defined and f.categories is not empty %}
     <div class="thallo-block-blog_posts__meta">

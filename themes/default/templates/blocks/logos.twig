@@ -21,7 +21,7 @@
         {% set src = media(uuid) %}
         {% if src %}{# skip nulls: private / unresolvable blobs #}
           <div class="thallo-block-logos__item">
-            <img class="thallo-block-logos__image" src="{{ src }}" alt="">
+            <img class="thallo-block-logos__image" src="{{ src }}" alt="" loading="lazy" decoding="async">
           </div>
         {% endif %}
       {% endfor %}
@@ -31,7 +31,7 @@
           {% set src = media(uuid) %}
           {% if src %}
             <div class="thallo-block-logos__item" aria-hidden="true">
-              <img class="thallo-block-logos__image" src="{{ src }}" alt="">
+              <img class="thallo-block-logos__image" src="{{ src }}" alt="" loading="lazy" decoding="async">
             </div>
           {% endif %}
         {% endfor %}

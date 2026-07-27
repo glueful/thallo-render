@@ -110,10 +110,12 @@
          markup stays byte-identical. #}
       <a href="/" class="site-name{% if logo and logoDark %} site-name--has-dark{% endif %}">
         {%- if logo and logoDark -%}
-          <img class="site-logo site-logo--light" src="{{ logo }}" alt="{{ site.name }}">
-          <img class="site-logo site-logo--dark" src="{{ logoDark }}" alt="{{ site.name }}">
+          {# Header chrome loads eagerly; brand imagery never claims fetchpriority
+             (storefront-performance spec §4). #}
+          <img class="site-logo site-logo--light" src="{{ logo }}" alt="{{ site.name }}" loading="eager">
+          <img class="site-logo site-logo--dark" src="{{ logoDark }}" alt="{{ site.name }}" loading="eager">
         {%- elseif logo -%}
-          <img class="site-logo" src="{{ logo }}" alt="{{ site.name }}">
+          <img class="site-logo" src="{{ logo }}" alt="{{ site.name }}" loading="eager">
         {%- else -%}
           {{ site.name }}
         {%- endif -%}

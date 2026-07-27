@@ -4,8 +4,10 @@
    enum guarded with ?? so an unknown stored value degrades to the default
    modifier instead of emitting a class no CSS matches.
    Fields: headline, title, description, links (nested button blocks), image
-   (asset → media()), orientation (vertical|horizontal), reverse. #}
-{% set img = data.image ? media(data.image) : null %}
+   (asset → media_image()), orientation (vertical|horizontal), reverse.
+   Image discipline (storefront-performance spec §4): resolve FIRST, claim the
+   at-most-one priority slot only on a non-null resolve, attributes from the claim. #}
+{% set img = data.image ? media_image(data.image, [640, 960, 1280, 1920]) : null %}
 {% set orientation = data.orientation|default('vertical') %}
 {% set reverse = data.reverse|default(false) %}
 {% set rootClass = [
@@ -21,6 +23,14 @@
       {% if data.description %}<p class="thallo-block-hero__description">{{ data.description|editable_text('description') }}</p>{% endif %}
       {% if data.links|default([]) is not empty %}<div class="thallo-block-hero__links">{{ blocks(data.links) }}</div>{% endif %}
     </div>
-    {% if img %}<div class="thallo-block-hero__media"><img src="{{ img }}" alt=""></div>{% endif %}
+    {% if img %}
+      {% set priority = claim_priority_image() %}
+      <div class="thallo-block-hero__media">
+        <img src="{{ img.src }}"
+             {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="(max-width: 48rem) 100vw, 40rem"{% endif %}
+             alt=""
+             {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
+      </div>
+    {% endif %}
   </div>
 </header>
