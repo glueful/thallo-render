@@ -12,6 +12,7 @@ use Thallo\Contracts\Delivery\EntryTargetResolver;
 use Thallo\Contracts\Delivery\EntryListReader;
 use Thallo\Contracts\Delivery\FacetCountsReader;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
+use Thallo\Contracts\Delivery\MediaVariantUrlResolver;
 use Thallo\Contracts\Delivery\StorefrontLinkResolver;
 use Thallo\Contracts\Settings\SiteFaviconProvider;
 use Thallo\Contracts\Settings\SiteLogoProvider;
@@ -61,6 +62,9 @@ final class RenderContextExtension extends AbstractExtension
 
     /** Render-scoped nesting depth (see resetBlockDepth). */
     private int $blockDepth = 0;
+
+    /** Render-scoped priority-image claim (see claimPriorityImage/resetPriorityImageClaim). */
+    private bool $priorityImageClaimed = false;
 
     /**
      * Preview-only block annotation (visual-canvas spec §2): when on, blocks()
@@ -142,6 +146,11 @@ final class RenderContextExtension extends AbstractExtension
          * instead of a link — never a fatal error when commerce isn't installed/active.
          */
         private readonly ?StorefrontLinkResolver $storefrontLinks = null,
+        /**
+         * Soft-bound (storefront-performance spec §3): null → media_image() has no MIME
+         * knowledge and degrades to media()'s plain URL with srcset null.
+         */
+        private readonly ?MediaVariantUrlResolver $mediaVariants = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -167,6 +176,8 @@ final class RenderContextExtension extends AbstractExtension
                 'is_safe' => ['html'],
             ]),
             new TwigFunction('media', $this->media(...)),
+            new TwigFunction('media_image', $this->mediaImage(...)),
+            new TwigFunction('claim_priority_image', $this->claimPriorityImage(...), ['needs_context' => true]),
             new TwigFunction('site_logo', $this->siteLogo(...)),
             new TwigFunction('video_embed', $this->videoEmbed(...)),
             new TwigFunction('icon', $this->icon(...)), // NO is_safe — safety travels in the Markup value
@@ -523,6 +534,24 @@ final class RenderContextExtension extends AbstractExtension
         return $this->mediaUrls?->url($uuid);
     }
 
+    /**
+     * The ONE image-slot helper (spec §3). Resolver absent → media()'s plain URL (no MIME
+     * knowledge; today's behavior). Resolver present → its three pinned outcomes verbatim,
+     * including NULL for non-image blobs (never a media() fallback that would emit
+     * <img src="…pdf">).
+     *
+     * @param list<int> $widths
+     * @return array{src: string, srcset: ?string}|null
+     */
+    public function mediaImage(string $uuid, array $widths): ?array
+    {
+        if ($this->mediaVariants === null) {
+            $src = $this->media($uuid);
+            return $src === null ? null : ['src' => $src, 'srcset' => null];
+        }
+        return $this->mediaVariants->variants($uuid, $widths);
+    }
+
     /** @return list<TwigFilter> */
     public function getFilters(): array
     {
@@ -800,6 +829,40 @@ final class RenderContextExtension extends AbstractExtension
     public function resetBlockFrames(): void
     {
         $this->blockFrames = [];
+    }
+
+    /** Spec §4: the at-most-one LCP claim; reset at every render boundary. */
+    public function resetPriorityImageClaim(): void
+    {
+        $this->priorityImageClaimed = false;
+    }
+
+    /**
+     * The single per-render reset list (spec §4): the verbs EVERY render boundary shares.
+     * Site-specific resets (tags, asset base, locale, appearance) stay at their call sites —
+     * they genuinely differ per boundary and folding them would change behavior.
+     */
+    public function resetPerRenderState(): void
+    {
+        $this->resetBlockDepth();
+        $this->resetBlockFrames();
+        $this->resetPriorityImageClaim();
+    }
+
+    /**
+     * needs_context (spec §4): region-rendered blocks never claim (region_slug non-null in
+     * the block context); the first body caller wins, everyone after gets false. Templates
+     * call this ONLY after media_image() resolved non-null.
+     *
+     * @param array<string,mixed> $context
+     */
+    public function claimPriorityImage(array $context): bool
+    {
+        if (($context['region_slug'] ?? null) !== null || $this->priorityImageClaimed) {
+            return false;
+        }
+        $this->priorityImageClaimed = true;
+        return true;
     }
 
     /** Reset-family (see $annotateBlocks): the controller assigns per render. */

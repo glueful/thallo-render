@@ -24,6 +24,7 @@ use Thallo\Contracts\Content\FormSealer;
 use Thallo\Contracts\Content\RegionReader;
 use Thallo\Contracts\Content\RichHtmlSanitizer;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
+use Thallo\Contracts\Delivery\MediaVariantUrlResolver;
 use Thallo\Contracts\Settings\SiteFaviconProvider;
 use Thallo\Contracts\Settings\SiteLogoProvider;
 use Thallo\Contracts\Settings\ThemeAppearanceChanged;
@@ -506,6 +507,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // soft-bound; null = every helper returns null, blocks degrade to plain text.
             storefrontLinks: $container->has(StorefrontLinkResolver::class)
                 ? $container->get(StorefrontLinkResolver::class)
+                : null,
+            // media_image() (storefront-performance spec §3): soft-bound; null = plain
+            // media() URL with srcset null (no MIME knowledge).
+            mediaVariants: $container->has(MediaVariantUrlResolver::class)
+                ? $container->get(MediaVariantUrlResolver::class)
                 : null,
         );
     }

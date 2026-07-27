@@ -798,8 +798,7 @@ final class RenderController
         }
         $this->extension->resetTags();
         $this->extension->setAssetBase($assetBase);
-        $this->extension->resetBlockDepth();
-        $this->extension->resetBlockFrames();
+        $this->extension->resetPerRenderState();
         // theme-color-config spec §6: a verified preview session's signed appearance
         // overrides the saved/default pair for THIS render only; null clears it so a
         // normal render falls back to the source. Reset-before-render discipline.

@@ -65,8 +65,7 @@ final class EntryBlocksRenderer
         // render()'s identical discipline): the extension is a process-shared singleton, so
         // every render through it — including this one — must not inherit a previous render's
         // state.
-        $this->extension->resetBlockDepth();
-        $this->extension->resetBlockFrames();
+        $this->extension->resetPerRenderState();
         $this->extension->setAssetBase(null);
         $this->extension->setBlockAnnotations(false);
         $this->extension->setThemeAppearanceOverride(null, null);
