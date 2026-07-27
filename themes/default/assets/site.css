@@ -266,3 +266,46 @@ main { min-height: 60vh; padding-block: var(--space-5) var(--space-7); }
 .error-page__btn--primary:hover {
   background: color-mix(in srgb, var(--accent) 88%, #000);
 }
+
+/* ── Editorial listing rows (storefront-performance spec §8) ─────────────── */
+.listing-rows { margin: 0; padding: 0; list-style: none; }
+.listing-row {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 110px;
+}
+.listing-row__media { flex: 0 0 auto; }
+.listing-row__media img {
+  width: 160px;
+  aspect-ratio: 160 / 110;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  display: block;
+}
+.listing-row__content { min-width: 0; display: grid; gap: 0.25rem; align-content: start; }
+.listing-row__title { font-weight: 650; color: var(--ink); text-decoration: none; }
+.listing-row__date, .listing-row__meta { font-size: 0.85rem; color: var(--muted); }
+.listing-row__excerpt {
+  margin: 0;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Whole-row affordance ONLY for linked rows (spec §8): stretched link keeps the
+   semantic title anchor; routeless rows get no hover/focus treatment. */
+.listing-row--linked .listing-row__title::after { content: ""; position: absolute; inset: 0; }
+.listing-row--linked:hover .listing-row__title { text-decoration: underline; }
+.listing-row--linked:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 48rem) {
+  .listing-row { gap: 0.875rem; }
+  .listing-row__media img { width: 96px; aspect-ratio: 96 / 72; }
+}
+@media (max-width: 20rem) {
+  .listing-row { flex-direction: column; }
+}

@@ -2,18 +2,17 @@
 {% block title %}{{ field }} — {{ site.name }}{% endblock %}
 {% block content %}
   <h1>{{ field }}</h1>
-  <ul class="terms">
+  <ul class="listing-rows listing-rows--terms">
     {% for term in terms %}
-      <li>
-        {% if term.href %}
-          <a href="{{ term.href }}">{{ term.slug ?? term.uuid }}</a>
-        {% else %}
-          {{ term.slug ?? term.uuid }}
-        {% endif %}
-        <span class="count">({{ term.count }})</span>
+      <li class="listing-row{% if term.href %} listing-row--linked{% endif %}">
+        <div class="listing-row__content">
+          {% if term.href %}<a class="listing-row__title" href="{{ term.href }}">{{ term.slug ?? term.uuid }}</a>
+          {% else %}<span class="listing-row__title">{{ term.slug ?? term.uuid }}</span>{% endif %}
+          <span class="listing-row__meta">({{ term.count }})</span>
+        </div>
       </li>
     {% else %}
-      <li class="empty">No terms yet.</li>
+      <li class="listing-rows__empty">No terms yet.</li>
     {% endfor %}
   </ul>
 {% endblock %}

@@ -1,0 +1,36 @@
+{# _listing_rows.twig — editorial listing rows (storefront-performance spec §8).
+   Context: `items` (delivery-shaped). All degradation is server-side: resolved-media
+   gates the column (unresolvable cover == absent cover, never a placeholder), missing
+   excerpt is omitted, routeless rows get NO link affordance, thumbs are alt="" because
+   the adjacent title carries the accessible identity. #}
+<ul class="listing-rows">
+  {% for item in items %}
+    {% set thumb = item.fields.cover|default(null) ? media_image(item.fields.cover, [160, 320]) : null %}
+    <li class="listing-row{% if item.href %} listing-row--linked{% endif %}">
+      {% if thumb %}
+        {% set priority = claim_priority_image() %}
+        <div class="listing-row__media">
+          <img src="{{ thumb.src }}"
+               {%- if thumb.srcset %} srcset="{{ thumb.srcset }}" sizes="(max-width: 48rem) 96px, 160px"{% endif %}
+               alt=""
+               {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
+        </div>
+      {% endif %}
+      <div class="listing-row__content">
+        {% if item.href %}
+          <a class="listing-row__title" href="{{ item.href }}">{{ item.fields.title|default(item.uuid) }}</a>
+        {% else %}
+          <span class="listing-row__title">{{ item.fields.title|default(item.uuid) }}</span>
+        {% endif %}
+        {% if item.published_at|default(null) %}
+          <time class="listing-row__date" datetime="{{ item.published_at|date('Y-m-d') }}">{{ item.published_at|date('M j, Y') }}</time>
+        {% endif %}
+        {% if item.fields.excerpt|default('') != '' %}
+          <p class="listing-row__excerpt">{{ item.fields.excerpt }}</p>
+        {% endif %}
+      </div>
+    </li>
+  {% else %}
+    <li class="listing-rows__empty">Nothing here yet.</li>
+  {% endfor %}
+</ul>
