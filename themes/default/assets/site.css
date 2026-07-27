@@ -309,3 +309,24 @@ main { min-height: 60vh; padding-block: var(--space-5) var(--space-7); }
 @media (max-width: 20rem) {
   .listing-row { flex-direction: column; }
 }
+
+/* ── Cross-document view transitions (storefront-performance spec §7): root crossfade
+   only — no named elements, no morphs, no JS. The opt-in itself sits inside the
+   reduced-motion guard so `reduce` users get instant navigation, not a shorter fade.
+   Unsupported browsers ignore the whole rule. Custom themes remove or override this in
+   their own CSS. ── */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 150ms;
+  }
+}
+
+/* Below-the-fold relief (spec §6): the footer is the ONLY other content-visibility
+   surface (listing rows carry their own). 300px ≈ the default footer's scale; `auto`
+   retains the learned size after first paint. */
+.site-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
