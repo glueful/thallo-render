@@ -1,6 +1,6 @@
 {# color_mode — a 3-way light / system / dark switch (color-mode spec §3.5). The server
-   renders all three options with stable data-color-mode-set hooks; the global blocks.js
-   runtime reflects the stored preference (aria-checked) and wires the clicks. Renders
+   renders all three options with stable data-color-mode-set hooks; the package theme
+   runtime (runtime.js) reflects the stored preference (aria-checked) and wires the clicks. Renders
    NOTHING when color mode is disabled — the whole feature is off, so a dead control
    would only confuse. #}
 {% if color_mode_enabled() %}
