@@ -51,8 +51,9 @@ final class RenderContextExtension extends AbstractExtension
     /** @var array<string,string> render-scoped surrogate tags (see resetTags/drainTags) */
     private array $collectedTags = [];
 
-    /** Render-scoped asset-base override (see setAssetBase). */
+    /** Render-scoped asset-context override (font spec §3): [base, assetsDir]. */
     private ?string $assetBase = null;
+    private ?string $assetContextDir = null;
 
     /**
      * Nesting amendment §A2: mirrors the app-side BlockDepth::MAX (packs cannot
@@ -817,7 +818,7 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
-     * Reset-before-every-render family (with resetTags/setAssetBase): an exception
+     * Reset-before-every-render family (with resetTags/setAssetContext): an exception
      * that escapes a render entirely must not leak depth into the next response.
      */
     public function resetBlockDepth(): void
@@ -838,15 +839,18 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
-     * The single per-render reset list (spec §4): the verbs EVERY render boundary shares.
-     * Site-specific resets (tags, asset base, locale, appearance) stay at their call sites —
-     * they genuinely differ per boundary and folding them would change behavior.
+     * The single per-render reset list (spec §4): the verbs EVERY render boundary shares —
+     * including the asset context (font spec §3), so a mid-render exception can never leak
+     * a preview base/dir onward. Boundaries therefore RESET FIRST, THEN setAssetContext().
+     * Site-specific resets (tags, locale, appearance) stay at their call sites — they
+     * genuinely differ per boundary and folding them would change behavior.
      */
     public function resetPerRenderState(): void
     {
         $this->resetBlockDepth();
         $this->resetBlockFrames();
         $this->resetPriorityImageClaim();
+        $this->setAssetContext(null, null);
     }
 
     /**
@@ -942,14 +946,22 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
-     * Per-render asset-base override (preview-sessions spec §5): themed previews emit
-     * /_preview-assets/{token}/… so theme B's markup never loads theme A's assets.
-     * Same reset discipline as the tag collector — the controller nulls it BEFORE
-     * every render, so a mid-render exception cannot leak preview URLs onward.
+     * Render-scoped asset context (default-theme-font spec §3). (null, null) restores
+     * constructor-backed live-theme behavior: '/theme-assets' base with ?t/&v busters and
+     * the boot theme's assets dir. A themed preview passes ITS base AND ITS dir so URL
+     * emission and existence checks can never disagree on which theme is being served.
+     * Cleared inside resetPerRenderState() — boundaries RESET FIRST, THEN set.
      */
-    public function setAssetBase(?string $base): void
+    public function setAssetContext(?string $base, ?string $assetsDir): void
     {
         $this->assetBase = $base;
+        $this->assetContextDir = $assetsDir;
+    }
+
+    /** The directory asset()/font_faces_style() existence+mtime checks consult. */
+    private function effectiveAssetsDir(): ?string
+    {
+        return $this->assetContextDir ?? $this->themeAssetsDir;
     }
 
     /** @return list<string> drained (and cleared) tags collected during the render */
@@ -986,7 +998,7 @@ final class RenderContextExtension extends AbstractExtension
         }
         $url = ($this->assetBase ?? '/theme-assets') . '/' . $rel;
         // Theme cache-buster (theme-setting spec §3 P1): live base only — the
-        // preview pipeline's setAssetBase override is already theme-pinned and
+        // preview pipeline's setAssetContext override is already theme-pinned and
         // must not be rewritten. Browser caches don't see page-cache purges;
         // the ?t= makes a theme switch re-fetch every asset immediately.
         if ($this->assetBase === null && $this->themeSource !== null) {
@@ -995,8 +1007,9 @@ final class RenderContextExtension extends AbstractExtension
             // on a theme SWITCH; append the file's mtime so an EDIT to a theme asset
             // re-fetches immediately instead of waiting out the 24h max-age. A missing
             // file gets no `&v=` (its 404 was never cacheable-stale to begin with).
-            if ($this->themeAssetsDir !== null) {
-                $mtime = @filemtime($this->themeAssetsDir . '/' . $rel);
+            $dir = $this->effectiveAssetsDir();
+            if ($dir !== null) {
+                $mtime = @filemtime($dir . '/' . $rel);
                 if ($mtime !== false) {
                     $url .= '&v=' . $mtime;
                 }

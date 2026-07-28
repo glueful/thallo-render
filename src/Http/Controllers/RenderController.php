@@ -149,8 +149,8 @@ final class RenderController
 
         // Homepage ALWAYS renders index.twig (spec §4) — the entry, when configured,
         // arrives as context; routed pages use the entry hierarchy instead.
-        [$env, $assetBase] = $this->themedEnv($session);
-        $response = $this->render('index.twig', $locale, $entry, 200, $extra, $env, $assetBase);
+        [$env, $assetBase, $assetsDir] = $this->themedEnv($session);
+        $response = $this->render('index.twig', $locale, $entry, 200, $extra, $env, $assetBase, $assetsDir);
         if ($entry !== null) {
             $this->tagResponse($response, $entry, $typeSlug);
         }
@@ -170,7 +170,7 @@ final class RenderController
         $this->annotateBlocks = $session !== null;
         $this->appearanceSession = $session;
         $extra = $this->sessionExtra($session);
-        [$env, $assetBase] = $this->themedEnv($session);
+        [$env, $assetBase, $assetsDir] = $this->themedEnv($session);
         $result = $this->resolver->resolvePath('/' . ltrim($path, '/'), $session);
 
         $response = match ($result['kind']) {
@@ -180,21 +180,22 @@ final class RenderController
             // In-session 404/410 render FRESH with the chrome (preview-sessions spec
             // §3): session surfaces never read or fill the SHARED fixed bodies.
             'gone' => $session !== null
-                ? $this->render('error.twig', $this->defaultLocale(), null, 410, $extra, $env, $assetBase)
+                ? $this->render('error.twig', $this->defaultLocale(), null, 410, $extra, $env, $assetBase, $assetsDir)
                 : $this->errors->themed410(
                     fn (): Response => $this->render('error.twig', $this->defaultLocale(), null, 410),
                 ),
-            'content' => $this->renderEntry($result, $extra, $env, $assetBase),
+            'content' => $this->renderEntry($result, $extra, $env, $assetBase, $assetsDir),
             'listing', 'archive' => $this->renderCollection(
                 $result,
                 '/' . ltrim($path, '/'),
                 $extra,
                 $env,
                 $assetBase,
+                $assetsDir,
             ),
-            'terms' => $this->renderTerms($result, $extra, $env, $assetBase),
+            'terms' => $this->renderTerms($result, $extra, $env, $assetBase, $assetsDir),
             default => $session !== null
-                ? $this->render('404.twig', $this->defaultLocale(), null, 404, $extra, $env, $assetBase)
+                ? $this->render('404.twig', $this->defaultLocale(), null, 404, $extra, $env, $assetBase, $assetsDir)
                 : $this->errors->themed404(
                     fn (): Response => $this->render('404.twig', $this->defaultLocale(), null, 404),
                 ),
@@ -234,12 +235,13 @@ final class RenderController
      * assigned to the memoized boot environment. Vanished/broken themes fall back to
      * the boot theme (the content exists; a themed-preview 404 would be wrong) and log.
      *
-     * @return array{0: ?Environment, 1: ?string} [env, assetBase] — [null, null] = boot
+     * @return array{0: ?Environment, 1: ?string, 2: ?string} [env, assetBase, assetsDir]
+     *         — [null, null, null] = boot
      */
     private function themedEnv(?PreviewSession $session): array
     {
         if ($session === null || $session->theme === null) {
-            return [null, null];
+            return [null, null, null];
         }
         $base = $this->context->getBasePath();
         try {
@@ -270,13 +272,17 @@ final class RenderController
                 $base . '/storage/cache/twig',
                 $db,
             );
-            return [$factory->environment(), '/_preview-assets/' . $session->token];
+            return [
+                $factory->environment(),
+                '/_preview-assets/' . $session->token,
+                $locator->activePaths()['assets'],
+            ];
         } catch (\Throwable $e) {
             $this->logger->warning('thallo-render: preview theme unavailable, boot theme used', [
                 'theme' => $session->theme,
                 'error' => $e->getMessage(),
             ]);
-            return [null, null];
+            return [null, null, null];
         }
     }
 
@@ -306,7 +312,7 @@ final class RenderController
         // theme (spec §5) — a themed token renders through a request-local environment.
         $session = $this->sessionVerifier?->verify($token);
         $this->appearanceSession = $session;
-        [$env, $assetBase] = $this->themedEnv($session);
+        [$env, $assetBase, $assetsDir] = $this->themedEnv($session);
         $result = $this->resolver->resolvePreview($token);
 
         if ($result['kind'] !== 'content') {
@@ -318,6 +324,7 @@ final class RenderController
                 ['preview' => true],
                 $env,
                 $assetBase,
+                $assetsDir,
             );
         } else {
             $entry = $result['content'];
@@ -336,7 +343,7 @@ final class RenderController
                     $typeSlug !== '' ? $typeSlug : null,
                     $result['presentation'] ?? null,
                 ),
-            ], $env, $assetBase);
+            ], $env, $assetBase, $assetsDir);
         }
 
         $response->headers->remove('Cache-Tag'); // no-store pages carry no surrogate tags
@@ -605,6 +612,7 @@ final class RenderController
         array $extra = [],
         ?Environment $env = null,
         ?string $assetBase = null,
+        ?string $assetsDir = null,
     ): Response {
         $entry = $result['content'];
         $locale = (string) $result['locale'];
@@ -630,7 +638,7 @@ final class RenderController
         if (($extra['preview'] ?? false) === true && is_string($entry['entry_uuid'] ?? null)) {
             $extra['preview_bar'] = $this->previewBar((string) $entry['entry_uuid'], $typeSlug, $locale);
         }
-        $response = $this->render($template, $locale, $entry, 200, $extra, $env, $assetBase);
+        $response = $this->render($template, $locale, $entry, 200, $extra, $env, $assetBase, $assetsDir);
         $this->tagResponse($response, $entry ?? [], $typeSlug);
         $this->mergeCacheTags($response, array_values(array_map('strval', (array) ($result['cache_tags'] ?? []))));
         return $response;
@@ -653,6 +661,7 @@ final class RenderController
         array $sessionExtra = [],
         ?Environment $env = null,
         ?string $assetBase = null,
+        ?string $assetsDir = null,
     ): Response {
         $family = $result['kind'] === 'archive' ? 'archive' : 'listing';
         $typeSlug = (string) $result['type'];
@@ -687,7 +696,7 @@ final class RenderController
             $extra['field'] = $result['field'];
         }
 
-        $response = $this->render($template, $locale, null, 200, $extra, $env, $assetBase);
+        $response = $this->render($template, $locale, null, 200, $extra, $env, $assetBase, $assetsDir);
         $this->tagCollection($response, $result);
         $this->mergeCacheTags($response, array_values(array_map('strval', (array) ($result['cache_tags'] ?? []))));
         return $response;
@@ -745,6 +754,8 @@ final class RenderController
      *                               null = the memoized boot-theme environment
      * @param string|null $assetBase per-render asset() base (/_preview-assets/{token});
      *                               null = /theme-assets
+     * @param string|null $assetsDir the themed session's activePaths()['assets'] dir
+     *                               (font spec §3); null = the boot theme's own dir
      */
     /**
      * The composed presentation context (modern-default-theme spec §5a):
@@ -785,20 +796,23 @@ final class RenderController
         array $extra = [],
         ?Environment $twig = null,
         ?string $assetBase = null,
+        ?string $assetsDir = null,
     ): Response {
         // Reset the render-scoped state BEFORE every render (preview + DB-template
         // specs): the extension instance — and the boot environment's loader — are
         // process-shared; reset-before-render is what stops a failed render's
-        // collected tags, a themed preview's asset base, or a stale template override
-        // map leaking into the next response.
+        // collected tags, a themed preview's asset context, or a stale template
+        // override map leaking into the next response. Order is the spec pin (font
+        // spec §3): resetPerRenderState() clears the asset context, so the reset
+        // runs FIRST and THIS render's context is set after.
         $env = $twig ?? $this->twig();
         $loader = $env->getLoader();
         if ($loader instanceof RenderTemplateLoader) {
             $loader->resetForRender(); // reload the override map once per render (spec §3)
         }
         $this->extension->resetTags();
-        $this->extension->setAssetBase($assetBase);
         $this->extension->resetPerRenderState();
+        $this->extension->setAssetContext($assetBase, $assetsDir);
         // theme-color-config spec §6: a verified preview session's signed appearance
         // overrides the saved/default pair for THIS render only; null clears it so a
         // normal render falls back to the source. Reset-before-render discipline.
@@ -840,7 +854,7 @@ final class RenderController
             if ($template === 'error.twig') {
                 return new Response('Internal Server Error', 500, ['Content-Type' => 'text/plain; charset=UTF-8']);
             }
-            return $this->render('error.twig', $locale, null, 500, [], $twig, $assetBase);
+            return $this->render('error.twig', $locale, null, 500, [], $twig, $assetBase, $assetsDir);
         }
 
         $response = new Response($html, $status, ['Content-Type' => 'text/html; charset=UTF-8']);
@@ -867,6 +881,7 @@ final class RenderController
         array $sessionExtra = [],
         ?Environment $env = null,
         ?string $assetBase = null,
+        ?string $assetsDir = null,
     ): Response {
         // In-session gate failures render FRESH (spec §3) — never the shared fixed body.
         $notFound = $sessionExtra !== []
@@ -878,6 +893,7 @@ final class RenderController
                 $sessionExtra,
                 $env,
                 $assetBase,
+                $assetsDir,
             )
             : fn (): Response => $this->errors->themed404(
                 fn (): Response => $this->render('404.twig', $this->defaultLocale(), null, 404),
@@ -911,7 +927,7 @@ final class RenderController
             'terms' => $terms,
             'type' => $typeSlug,
             'field' => $field,
-        ], $env, $assetBase);
+        ], $env, $assetBase, $assetsDir);
         $this->mergeCacheTags($response, $counts['cache_tags']);
         return $response;
     }
