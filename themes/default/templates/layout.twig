@@ -15,6 +15,10 @@
      beats one that 401s on the browser's anonymous fetch. #}
   {% set favicon = site_favicon() %}
   {% if favicon %}<link rel="icon" href="{{ favicon }}">{% endif %}
+  {# Theme font (default-theme-font spec §3): existence-aware — a custom theme inheriting
+     this layout without the files emits nothing and falls through to the system stack.
+     Inline style relies on the existing style-src 'unsafe-inline' posture (spec §3). #}
+  {{ font_faces_style('Figtree', 'fonts/figtree-roman-latin.woff2', 'fonts/figtree-italic-latin.woff2') }}
   <link rel="stylesheet" href="{{ asset('site.css') }}">
   <link rel="stylesheet" href="{{ asset('blocks.css') }}">
   <link rel="stylesheet" href="{{ asset('navigation.css') }}">
