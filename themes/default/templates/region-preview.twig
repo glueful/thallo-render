@@ -10,6 +10,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>Chrome preview</title>
+  {# Font parity with layout.twig — the <base href> above anchors these root-relative URLs. #}
+  {{ font_faces_style('Figtree', 'fonts/figtree-roman-latin.woff2', 'fonts/figtree-italic-latin.woff2') }}
   <link rel="stylesheet" href="{{ asset('site.css') }}">
   <link rel="stylesheet" href="{{ asset('blocks.css') }}">
   <link rel="stylesheet" href="{{ asset('navigation.css') }}">
