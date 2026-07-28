@@ -216,6 +216,9 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('shop_product_url', $this->shopProductUrl(...)),
             new TwigFunction('shop_category_url', $this->shopCategoryUrl(...)),
             new TwigFunction('shop_index_url', $this->shopIndexUrl(...)),
+            // The fingerprinted storefront stylesheet for the theme <head> — null when
+            // commerce is off or the seam is unbound, so the theme emits no <link> at all.
+            new TwigFunction('shop_styles_url', $this->shopStylesUrl(...)),
             // Storefront-v1 spec §5: soft-bound wishlist seam (see the $wishlist constructor
             // doc). Both null-safe — capability off or seam unbound means null, never a throw.
             new TwigFunction('shop_wishlist_scope', $this->shopWishlistScope(...)),
@@ -238,6 +241,17 @@ final class RenderContextExtension extends AbstractExtension
      * installed/active) — a block template falls back to plain text on null, never a broken
      * `href=""`.
      */
+    /**
+     * The fingerprinted storefront stylesheet URL, or null when commerce is inactive/unbound.
+     * The theme links this from `<head>`: block templates emit the uncacheable
+     * `/_shop/assets/shop.css` ALIAS (which 302s) inside the body, so without this the
+     * storefront's own header chrome paints unstyled and restyles on EVERY navigation.
+     */
+    public function shopStylesUrl(): ?string
+    {
+        return $this->storefrontLinks?->stylesheetUrl();
+    }
+
     public function shopProductUrl(?string $slug): ?string
     {
         if ($this->storefrontLinks === null || $slug === null || $slug === '') {

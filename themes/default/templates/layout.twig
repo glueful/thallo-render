@@ -19,6 +19,13 @@
      this layout without the files emits nothing and falls through to the system stack.
      Inline style relies on the existing style-src 'unsafe-inline' posture (spec §3). #}
   {{ font_faces_style('Figtree', 'fonts/figtree-roman-latin.woff2', 'fonts/figtree-italic-latin.woff2') }}
+  {# Storefront styling in the HEAD (storefront-v1 follow-up): shop blocks can only emit
+     their stylesheet link inside the BODY, and that link is the uncacheable alias that 302s
+     — so the header's cart/wishlist chrome painted unstyled and restyled on every
+     navigation. This is the fingerprinted, immutably-cached file; null (commerce off or
+     unbound) emits nothing. Loaded BEFORE the theme's own sheets so theme rules still win. #}
+  {% set shopStyles = shop_styles_url() %}
+  {% if shopStyles %}<link rel="stylesheet" href="{{ shopStyles }}">{% endif %}
   <link rel="stylesheet" href="{{ asset('site.css') }}">
   <link rel="stylesheet" href="{{ asset('blocks.css') }}">
   <link rel="stylesheet" href="{{ asset('navigation.css') }}">
