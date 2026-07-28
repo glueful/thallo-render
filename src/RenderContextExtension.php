@@ -25,6 +25,7 @@ use Psr\Log\LoggerInterface;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;
+use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 
@@ -214,6 +215,9 @@ final class RenderContextExtension extends AbstractExtension
                 'is_safe' => ['html'],
                 'needs_context' => true,
             ]),
+            // is_safe html: every dynamic value is escaped for its exact sink inside
+            // fontFacesStyle() itself (default-theme-font spec §3).
+            new TwigFunction('font_faces_style', $this->fontFacesStyle(...), ['is_safe' => ['html']]),
         ];
     }
 
@@ -1016,5 +1020,59 @@ final class RenderContextExtension extends AbstractExtension
             }
         }
         return $url;
+    }
+
+    /**
+     * Preload + @font-face emission for a theme-owned webfont (default-theme-font spec §3).
+     * ONE URL derivation feeds both sinks so they are byte-identical on the wire; every
+     * dynamic value is escaped for its EXACT sink (the function is DB-template-callable):
+     * the href is HTML-attribute-escaped, CSS strings are CSS-escaped (backslash-hex for
+     * quotes, backslashes, control chars, and `<` so nothing can form `</style>`). A
+     * missing roman emits nothing — a theme without the files (custom theme inheriting the
+     * default layout) falls through to the system stack. Roman only is preloaded.
+     */
+    public function fontFacesStyle(string $family, string $romanRel, ?string $italicRel = null): Markup
+    {
+        $romanUrl = $this->assetUrlIfExists($romanRel);
+        if ($romanUrl === null) {
+            return new Markup('', 'UTF-8');
+        }
+        $italicUrl = $italicRel !== null ? $this->assetUrlIfExists($italicRel) : null;
+
+        $css = '@font-face { font-family: "' . self::cssEscape($family) . '"; '
+            . 'src: url("' . self::cssEscape($romanUrl) . '") format("woff2"); '
+            . 'font-weight: 300 900; font-style: normal; font-display: swap; }';
+        if ($italicUrl !== null) {
+            $css .= "\n@font-face { font-family: \"" . self::cssEscape($family) . '"; '
+                . 'src: url("' . self::cssEscape($italicUrl) . '") format("woff2"); '
+                . 'font-weight: 300 900; font-style: italic; font-display: swap; }';
+        }
+
+        $html = '<link rel="preload" as="font" type="font/woff2" href="'
+            . htmlspecialchars($romanUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            . '" crossorigin>' . "\n<style>\n" . $css . "\n</style>";
+
+        return new Markup($html, 'UTF-8');
+    }
+
+    /** asset() with existence gating against the effective (context ?? boot) dir. */
+    private function assetUrlIfExists(string $rel): ?string
+    {
+        $url = $this->asset($rel); // path-safety exception behavior shared verbatim
+        $dir = $this->effectiveAssetsDir();
+        if ($dir === null || !is_file($dir . '/' . $rel)) {
+            return null;
+        }
+        return $url;
+    }
+
+    /** CSS string escape: backslash-hex for quotes/backslash/control/`<` (spec §3). */
+    private static function cssEscape(string $value): string
+    {
+        return preg_replace_callback(
+            '/[\x00-\x1F\x7F"\'\\\\<>]/',
+            static fn (array $m): string => sprintf('\\%x ', ord($m[0][0])),
+            $value,
+        ) ?? '';
     }
 }
