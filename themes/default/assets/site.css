@@ -73,6 +73,10 @@ body {
   font: 17px/1.65 "Figtree", "Figtree Fallback", system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+/* Form controls don't inherit fonts by UA default — this keeps author-authored controls
+   (e.g. inside an html block) on the theme face; every theme/shop control already opts
+   in individually, so this is a guarantee, not a change. */
+button, input, select, textarea { font: inherit; }
 h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
 h1 { font-size: clamp(1.9rem, 1.4rem + 2vw, 2.75rem); }
 h2 { font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem); }
