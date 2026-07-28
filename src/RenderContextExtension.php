@@ -14,6 +14,7 @@ use Thallo\Contracts\Delivery\FacetCountsReader;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
 use Thallo\Contracts\Delivery\MediaVariantUrlResolver;
 use Thallo\Contracts\Delivery\StorefrontLinkResolver;
+use Thallo\Contracts\Delivery\StorefrontWishlistResolver;
 use Thallo\Contracts\Settings\SiteFaviconProvider;
 use Thallo\Contracts\Settings\SiteLogoProvider;
 use Thallo\Contracts\Navigation\MenuReader;
@@ -153,6 +154,12 @@ final class RenderContextExtension extends AbstractExtension
          * knowledge and degrades to media()'s plain URL with srcset null.
          */
         private readonly ?MediaVariantUrlResolver $mediaVariants = null,
+        /**
+         * Soft-bound (storefront-v1 spec §5): null → shop_wishlist_scope()/shop_wishlist_url()
+         * both return null, so wishlist affordances simply disappear when commerce isn't
+         * installed/active — never a fatal error.
+         */
+        private readonly ?StorefrontWishlistResolver $wishlist = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -209,6 +216,10 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('shop_product_url', $this->shopProductUrl(...)),
             new TwigFunction('shop_category_url', $this->shopCategoryUrl(...)),
             new TwigFunction('shop_index_url', $this->shopIndexUrl(...)),
+            // Storefront-v1 spec §5: soft-bound wishlist seam (see the $wishlist constructor
+            // doc). Both null-safe — capability off or seam unbound means null, never a throw.
+            new TwigFunction('shop_wishlist_scope', $this->shopWishlistScope(...)),
+            new TwigFunction('shop_wishlist_url', $this->shopWishlistUrl(...)),
             // is_safe html: every attribute value is ENT_QUOTES-escaped and every URL
             // passes safeUrl() inside seoHead() itself (seo-head spec §3).
             new TwigFunction('seo_head', $this->seoHead(...), [
@@ -248,6 +259,22 @@ final class RenderContextExtension extends AbstractExtension
     public function shopIndexUrl(): ?string
     {
         return $this->storefrontLinks?->shopIndexUrl();
+    }
+
+    /**
+     * The opaque wishlist device-storage scope (storefront-v1 spec §5), or null when the seam
+     * is unbound (commerce not installed/active) or the surface itself answers null (capability
+     * off) — templates emit no wishlist affordance on null.
+     */
+    public function shopWishlistScope(): ?string
+    {
+        return $this->wishlist?->storageScope();
+    }
+
+    /** The canonical wishlist page URL — same null rules as {@see self::shopWishlistScope()}. */
+    public function shopWishlistUrl(): ?string
+    {
+        return $this->wishlist?->wishlistUrl();
     }
 
     /**

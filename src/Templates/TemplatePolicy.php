@@ -32,7 +32,8 @@ final class TemplatePolicy
     // bumped: runtime_script joined the function allowlist (theme-runtime spec §2.3)
     // bumped: seo_head joined the function allowlist (seo-head spec §3)
     // bumped: font_faces_style joined the function allowlist (default-theme-font spec §3)
-    public const CACHE_VERSION = 14;
+    // bumped: shop_wishlist_scope + shop_wishlist_url joined the allowlist (storefront-v1 spec §5)
+    public const CACHE_VERSION = 15;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim'];
 
@@ -48,6 +49,7 @@ final class TemplatePolicy
         'menu', 'path', 'asset', 'facets', 'blocks', 'media', 'site_logo', 'video_embed', 'icon',
         'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
         'runtime_script', 'seo_head', 'font_faces_style',
+        'shop_wishlist_scope', 'shop_wishlist_url',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'range',
     ];
 

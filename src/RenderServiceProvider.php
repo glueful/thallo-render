@@ -44,6 +44,7 @@ use Thallo\Render\Console\ThemeCloneCommand;
 use Thallo\Contracts\Delivery\PreviewSessionVerifier;
 use Thallo\Contracts\Delivery\SeoHeadResolver;
 use Thallo\Contracts\Delivery\StorefrontLinkResolver;
+use Thallo\Contracts\Delivery\StorefrontWishlistResolver;
 use Thallo\Render\Http\Controllers\RenderController;
 use Thallo\Render\Http\Controllers\RuntimeAssetController;
 use Thallo\Render\Http\Controllers\TemplatesAdminController;
@@ -512,6 +513,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // media() URL with srcset null (no MIME knowledge).
             mediaVariants: $container->has(MediaVariantUrlResolver::class)
                 ? $container->get(MediaVariantUrlResolver::class)
+                : null,
+            // shop_wishlist_scope()/shop_wishlist_url() (storefront-v1 spec §5): soft-bound;
+            // null = both helpers return null, wishlist affordances disappear.
+            wishlist: $container->has(StorefrontWishlistResolver::class)
+                ? $container->get(StorefrontWishlistResolver::class)
                 : null,
         );
     }
