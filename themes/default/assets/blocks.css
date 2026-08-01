@@ -602,7 +602,11 @@
 .thallo-block-carousel--hero .thallo-block-hero__wrapper :is(h1, h2, h3, p) {
   color: var(--accent-ink);                                                              /* 5: on-media token */
 }
-/* 6: no-image fallback — a hero slide without media keeps the standard hero background. */
+/* 6: no-image fallback — when media exists, the media + scrim (rule 4) fully cover
+   this surface, so this background never shows through. A media-less slide has
+   neither, so it falls straight to this dark base — which is exactly what makes
+   the unconditional on-media ink (rule 5) readable instead of white-on-near-white. */
+.thallo-block-carousel--hero .thallo-block-hero { background: var(--ink); }
 
 .thallo-block-carousel__prev, .thallo-block-carousel__next {
   position: absolute;

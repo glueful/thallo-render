@@ -313,7 +313,7 @@ unpublished or gated; raw uuid only at the expansion-depth cap). Asset values st
 raw blob uuids for `media()`. Pages embedding expanded targets carry the target's
 `thallo:entry:{uuid}` cache tag, so they purge when the target republishes.
 
-`php glueful thallo:blocks:seed` (alias `blocks:seed`) seeds ten starter block types
+`php glueful thallo:blocks:seed` (alias `blocks:seed`) seeds the starter block types
 (Layout/Content/Media) with matching default-theme templates — idempotent, skips any
 existing slug, never overwrites admin edits. Media blocks render through `media(uuid)`
 (public, anonymously retrievable blobs only — set `UPLOADS_ACCESS=upload_only` or
