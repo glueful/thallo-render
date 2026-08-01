@@ -603,7 +603,15 @@ window.ThalloRuntime.register('forms', {
       // The layout's fallback nav (site-nav__mobile) has no block root: the
       // details itself is the closest thing to one, and it has no __details
       // parents, so the submenu wiring below is a harmless no-op there.
-      var root = (mobile.closest && mobile.closest('.thallo-block-navigation')) || mobile;
+      //
+      // Also match the bare `thallo-navigation` tag name: a manual same-task
+      // ThalloRuntime.enhance() can reach this drawer BEFORE the element's own
+      // connection microtask has projected `.thallo-block-navigation` onto the
+      // host (the selector `[data-thallo-enhance="navigation"]` is present on
+      // the drawer pre-projection). The tag name is a stable identifier of the
+      // host from the start, unlike the class, which arrives asynchronously —
+      // so it still resolves root to the host even before projection runs.
+      var root = (mobile.closest && mobile.closest('.thallo-block-navigation, thallo-navigation')) || mobile;
       var parents = mobile.querySelectorAll('.thallo-block-navigation__details');
 
       // Snapshot BEFORE any mutation (spec §1 teardown): cleanup restores every
@@ -626,8 +634,12 @@ window.ThalloRuntime.register('forms', {
         root.classList.add('thallo-block-navigation--js');
         undo.push(function () { root.classList.remove('thallo-block-navigation--js'); });
       }
+      // Same pre-projection race as above: the reveal-hover CLASS is projected
+      // async, but the `reveal-hover` ATTRIBUTE is present on the host from
+      // markup the whole time — honor either.
       var revealHover = !!(root.classList &&
-        root.classList.contains('thallo-block-navigation--reveal-hover'));
+        root.classList.contains('thallo-block-navigation--reveal-hover')) ||
+        !!(root.hasAttribute && root.hasAttribute('reveal-hover'));
 
       function closeOthers(except) {
         for (var i = 0; i < parents.length; i++) {
