@@ -203,4 +203,22 @@ final class TemplatePolicy
     {
         return in_array($class, self::NODE_CLASSES, true);
     }
+
+    /**
+     * CLOSED two-template policy (gate-audit ruling, admin-contributed-templates task
+     * 7c) — NOT a general exception mechanism. Both paths use vocabulary that will
+     * never pass the compile-time lint above by design (raw output, non-constant
+     * include), so instead of advertising Save in the admin editor and 422ing on
+     * every attempt, TemplatesAdminController marks exactly these two rows read-only
+     * with the reason below. Adding another entry here requires a spec amendment —
+     * this is a pin, not a pattern to extend ad hoc. The pin is by PATH: whichever
+     * origin (pack default, app theme, package contribution) resolves at that exact
+     * path, the row stays read-only.
+     *
+     * @var array<string,string> path => human-readable reason shown in the admin
+     */
+    public const DISK_ONLY_TEMPLATES = [
+        'blocks/html.twig' => 'Raw-HTML escape hatch — |raw by design; disk-only.',
+        'blocks/shortcode.twig' => 'Dynamic shortcode dispatch — non-constant include by design; disk-only.',
+    ];
 }

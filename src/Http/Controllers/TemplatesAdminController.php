@@ -11,6 +11,7 @@ use Thallo\Contracts\Delivery\PreviewThemeValidator;
 use Thallo\Render\Http\TemplateSaveBody;
 use Thallo\Render\Templates\TemplateCatalog;
 use Thallo\Render\Templates\TemplateLinter;
+use Thallo\Render\Templates\TemplatePolicy;
 use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
@@ -98,10 +99,17 @@ final class TemplatesAdminController
             static fn(array $row): array => $row + ['overridden' => false, 'updated_at' => null, 'readonly' => true],
             $this->catalog->listReadOnly($theme),
         );
+        // Disk-only templates (spec: closed two-template policy) are ordinary rows
+        // among the twig listing, just flagged readonly — same origin computation,
+        // no separate bucket, no readonly key on any other row.
+        $templates = array_map(
+            fn(array $row): array => $this->isDiskOnlyPath($row['path']) ? $row + ['readonly' => true] : $row,
+            $this->catalog->list($theme),
+        );
         return Response::success([
             'theme' => $theme,
             'themes' => $this->availableThemes(),
-            'templates' => [...$this->catalog->list($theme), ...$readonly],
+            'templates' => [...$templates, ...$readonly],
         ]);
     }
 
@@ -148,6 +156,24 @@ final class TemplatesAdminController
                 'source' => $file['source'],
                 'version_uuid' => null,
                 'readonly' => true,
+            ]);
+        }
+        // Disk-only templates (closed two-template policy): filesystem view only,
+        // NEVER the DB row even when one predates this ruling — the pin is by path,
+        // not by origin (save/delete/restore reject these below).
+        if ($this->isDiskOnlyPath($path)) {
+            $file = $this->catalog->readFile($theme, $path);
+            if ($file === null) {
+                return Response::error('Not Found', 404);
+            }
+            return Response::success([
+                'path' => $path,
+                'theme' => $theme,
+                'origin' => $file['origin'],
+                'source' => $file['source'],
+                'version_uuid' => null,
+                'readonly' => true,
+                'readonly_reason' => TemplatePolicy::DISK_ONLY_TEMPLATES[$path],
             ]);
         }
         if (!$this->pathAllowed($path)) {
@@ -201,6 +227,13 @@ final class TemplatesAdminController
         if ($theme === null) {
             return Response::error('Unknown theme.', 404);
         }
+        // Closed two-template policy: these paths ARE valid .twig grammar (unlike
+        // the read-only asset paths above, which fail pathAllowed() structurally),
+        // so they need their own guard — read-only beats lintability, even for a
+        // source with no forbidden vocabulary at all.
+        if ($this->isDiskOnlyPath($path)) {
+            return Response::error($this->diskOnlyMessage($path), 422);
+        }
         if (!$this->pathAllowed($path)) {
             return Response::error(
                 'Invalid template path (slash-separated [A-Za-z0-9._-] segments, ending .twig).',
@@ -251,7 +284,7 @@ final class TemplatesAdminController
     public function delete(Request $request, string $path): Response
     {
         $theme = $this->theme($request);
-        if ($theme === null || !$this->pathAllowed($path)) {
+        if ($theme === null || !$this->pathAllowed($path) || $this->isDiskOnlyPath($path)) {
             return Response::error('Not Found', 404);
         }
         if (!$this->templates->deactivate($theme, $path)) {
@@ -315,7 +348,7 @@ final class TemplatesAdminController
     public function restore(Request $request, string $path, string $uuid): Response
     {
         $theme = $this->theme($request);
-        if ($theme === null || !$this->pathAllowed($path)) {
+        if ($theme === null || !$this->pathAllowed($path) || $this->isDiskOnlyPath($path)) {
             return Response::error('Not Found', 404);
         }
         $version = $this->templates->findVersion($theme, $path, $uuid);
@@ -402,6 +435,22 @@ final class TemplatesAdminController
             }
         }
         return true;
+    }
+
+    /**
+     * Closed two-template policy (gate-audit ruling, admin-contributed-templates
+     * task 7c) — see TemplatePolicy::DISK_ONLY_TEMPLATES for the pinned paths and
+     * the reasoning. This is a lookup against that fixed map, never a heuristic:
+     * adding a path here means editing the const, which is a spec amendment.
+     */
+    private function isDiskOnlyPath(string $path): bool
+    {
+        return array_key_exists($path, TemplatePolicy::DISK_ONLY_TEMPLATES);
+    }
+
+    private function diskOnlyMessage(string $path): string
+    {
+        return 'Read-only template — ' . TemplatePolicy::DISK_ONLY_TEMPLATES[$path];
     }
 
     /**
