@@ -1301,8 +1301,12 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 }
 
 /* Custom-element floor (web-components spec §5): autonomous elements default to
-   display:inline; the structural elements are page sections. */
+   display:inline; the structural elements are page sections. The toggle's
+   display comes from the :where() alias above (inline-flex, for the segmented
+   control row) — a bare `thallo-color-mode-toggle { display: ... }` type
+   selector here would be 0,0,1 and beat the zero-specificity alias, breaking
+   the flex layout, so no separate display rule is added for it. */
 thallo-carousel, thallo-tabs { display: block; }
-thallo-color-mode-toggle { display: inline-block; }
-/* Feature off -> the toggle hides entirely (server stamps the flag on <html>). */
+/* Feature off -> the toggle hides entirely (server stamps the flag on <html>).
+   0,1,1 still wins over the :where() alias's 0,0,0. */
 html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: none; }
