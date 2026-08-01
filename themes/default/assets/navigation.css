@@ -17,7 +17,7 @@
    Accent is funnelled through --nav-accent so `color` swaps one variable:
    primary → brand --accent, neutral → monochrome --ink.
    ───────────────────────────────────────────────────────────────────────── */
-.thallo-block-navigation { --nav-accent: var(--accent); --nav-accent-ink: var(--accent-ink); }
+:where(.thallo-block-navigation, thallo-navigation) { --nav-accent: var(--accent); --nav-accent-ink: var(--accent-ink); }
 .thallo-block-navigation--color-neutral { --nav-accent: var(--ink); --nav-accent-ink: var(--bg); }
 
 /* ── Bar + list ──────────────────────────────────────────────────────────── */
@@ -190,9 +190,9 @@ details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__ha
      beneath the header line (in flow — content is pushed, never overlaid).
      Browsers without :has() keep the in-row expansion — degraded, not broken. */
   .site-header__inner { flex-wrap: wrap; }
-  .site-header__inner .thallo-block-navigation,
+  .site-header__inner :where(.thallo-block-navigation, thallo-navigation),
   .site-header__inner > .site-nav { margin-left: auto; }
-  .site-header__inner .thallo-block-navigation:has(.thallo-block-navigation__mobile[open]),
+  .site-header__inner :where(.thallo-block-navigation, thallo-navigation):has(.thallo-block-navigation__mobile[open]),
   .site-header__inner > .site-nav:has(.site-nav__mobile[open]) { flex-basis: 100%; }
   .thallo-block-navigation__hamburger { margin-left: auto; width: max-content; }
   /* Open list: a full-width stacked menu with touch-sized, separated rows. */
@@ -303,7 +303,7 @@ a.thallo-block-navigation__col-title:hover { color: var(--nav-accent); }
 .thallo-block-navigation__col-list { list-style: none; margin: 0; padding: 0; }
 
 /* ── In a chrome region the nav takes the free space between logo + actions ── */
-.thallo-region .thallo-block-navigation { flex: 1; min-width: 0; }
+.thallo-region :where(.thallo-block-navigation, thallo-navigation) { flex: 1; min-width: 0; }
 
 /* ── Reduced motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -311,3 +311,6 @@ a.thallo-block-navigation__col-title:hover { color: var(--nav-accent); }
   .thallo-block-navigation__link,
   .thallo-block-navigation__sublink { transition: none; }
 }
+
+/* Custom-element floor (web-components spec §5). */
+thallo-navigation { display: block; }

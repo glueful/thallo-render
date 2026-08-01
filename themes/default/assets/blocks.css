@@ -450,7 +450,7 @@
 .thallo-block-feature__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; }
 
 /* tabs — CSS-only radio tabs (Tabs pill recipe; authoring cap: 12 — theme-runtime spec §4) */
-.thallo-block-tabs { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
+:where(.thallo-block-tabs, thallo-tabs) { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
 .thallo-block-tabs__radio { position: absolute; opacity: 0; pointer-events: none; }
 .thallo-block-tabs__list {
   display: inline-flex;
@@ -568,7 +568,7 @@
 .thallo-block-button__icon svg { width: 1.15em; height: 1.15em; }
 
 /* carousel — scroll-snap base; arrows/dots/autoplay are blocks.js enhancement */
-.thallo-block-carousel { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); position: relative; }
+:where(.thallo-block-carousel, thallo-carousel) { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); position: relative; }
 .thallo-block-carousel__viewport { overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: thin; }
 .thallo-block-carousel__track { display: flex; gap: var(--space-4); align-items: stretch; }
 .thallo-block-carousel__track > * { scroll-snap-align: start; flex: 0 0 100%; min-width: 0; margin-block: 0; }
@@ -634,7 +634,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 /* color_mode — a segmented light/system/dark switch. The active option
    (aria-checked="true") is set by the blocks.js runtime from the stored
    preference; the pill re-skins automatically under html[data-theme]. */
-.thallo-block-color_mode {
+:where(.thallo-block-color_mode, thallo-color-mode-toggle) {
   display: inline-flex; gap: 2px; padding: 3px;
   background: var(--surface); border: 1px solid var(--line);
   border-radius: 999px;
@@ -738,9 +738,9 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .layout--full .thallo-block-cta__inner,
 .layout--full .thallo-block-container__inner,
 .layout--full .thallo-block-image,
-.layout--full .thallo-block-tabs,
+.layout--full :where(.thallo-block-tabs, thallo-tabs),
 .layout--full .thallo-block-button,
-.layout--full .thallo-block-carousel,
+.layout--full :where(.thallo-block-carousel, thallo-carousel),
 .layout--full .thallo-block-logo,
 .layout--full .thallo-block-icon,
 .layout--full .thallo-block-video,
@@ -1299,3 +1299,10 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .thallo-block-form--disabled {
   padding: var(--space-4); border: 1px dashed var(--line); border-radius: var(--radius); color: var(--muted);
 }
+
+/* Custom-element floor (web-components spec §5): autonomous elements default to
+   display:inline; the structural elements are page sections. */
+thallo-carousel, thallo-tabs { display: block; }
+thallo-color-mode-toggle { display: inline-block; }
+/* Feature off -> the toggle hides entirely (server stamps the flag on <html>). */
+html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: none; }
