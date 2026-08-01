@@ -926,6 +926,111 @@ window.ThalloRuntime.register('forms', {
 })();
 /* tabs:end */
 
+/* elements:start — the three module-backed v1 elements (web-components spec §4).
+   Light-DOM adapters only: same inner skeleton as the blocks, attribute sugar
+   projected into the EXISTING option vocabulary, all through registerElement's
+   transactional pipeline. */
+(function () {
+  'use strict';
+  var RT = window.ThalloRuntime;
+  if (!RT.registerElement) { return; } // no customElements: elements absent by design
+
+  // Shared projection helper: stamp a class (undo-aware) + map bare attributes to
+  // existing data-* options WITHOUT overriding explicit data-* in the markup.
+  // ATOMIC (spec §1 projectOptions contract): the bridge treats a thrown
+  // projectOptions as nothing-captured, so on ANY throw this helper rolls back the
+  // mutations it already made, then rethrows — partial projection can never leak.
+  function project(host, rootClass, attrMap) {
+    var undos = [];
+    function rollbackAndRethrow(err) {
+      for (var i = undos.length - 1; i >= 0; i--) { try { undos[i](); } catch (e) {} }
+      throw err;
+    }
+    try {
+    if (rootClass && !host.classList.contains(rootClass)) {
+      host.classList.add(rootClass);
+      undos.push(function () { host.classList.remove(rootClass); });
+    }
+    if (attrMap) {
+      Object.keys(attrMap).forEach(function (attr) {
+        var dataAttr = attrMap[attr]; // e.g. 'data-arrows'
+        if (host.hasAttribute(attr) && host.getAttribute(dataAttr) === null) {
+          host.setAttribute(dataAttr, '1');
+          if (host.dataset) { host.dataset[dataAttr.slice(5)] = '1'; }
+          undos.push(function () {
+            host.removeAttribute(dataAttr);
+            if (host.dataset) { delete host.dataset[dataAttr.slice(5)]; }
+          });
+        }
+      });
+    }
+    } catch (err) { rollbackAndRethrow(err); }
+    return function () { for (var i = undos.length - 1; i >= 0; i--) { undos[i](); } };
+  }
+
+  RT.registerElement('thallo-carousel', 'carousel', {
+    projectOptions: function (host) {
+      return project(host, 'thallo-block-carousel',
+        { arrows: 'data-arrows', dots: 'data-dots', autoplay: 'data-autoplay' });
+    }
+  });
+
+  RT.registerElement('thallo-tabs', 'tabs', {
+    projectOptions: function (host) {
+      return project(host, 'thallo-block-tabs', null);
+    }
+  });
+
+  RT.registerElement('thallo-navigation', 'navigation', {
+    // The module enhances the inner drawer details, not the block root — marker and
+    // cleanup belong to the TARGET (spec §4).
+    resolveTarget: function (host) {
+      return host.querySelector('[data-thallo-enhance="navigation"]');
+    },
+    projectOptions: function (host) {
+      var undoBase = project(host, 'thallo-block-navigation', null);
+      var addedHover = false;
+      try {
+        if (host.hasAttribute('reveal-hover') &&
+            !host.classList.contains('thallo-block-navigation--reveal-hover')) {
+          host.classList.add('thallo-block-navigation--reveal-hover');
+          addedHover = true;
+        }
+      } catch (err) { undoBase(); throw err; } // atomicity contract (spec §1)
+      return function () {
+        if (addedHover) { host.classList.remove('thallo-block-navigation--reveal-hover'); }
+        undoBase();
+      };
+    }
+  });
+})();
+/* elements:end */
+
+/* color-mode-toggle:start — the explicit pipeline EXCEPTION (spec §4): the
+   color-mode registry entry is a no-op on <html>; the real behavior is the
+   page-level delegated service. This adapter never enters registerElement — it
+   only re-syncs late-inserted toggles' aria-checked via the service. Its light DOM
+   is the server-rendered [data-color-mode-set] controls; clicks ride the existing
+   document-level delegation. */
+(function () {
+  'use strict';
+  if (typeof customElements === 'undefined' || !customElements ||
+      typeof customElements.define !== 'function' || typeof HTMLElement !== 'function') {
+    return;
+  }
+  class ThalloColorModeToggle extends HTMLElement {
+    connectedCallback() {
+      Promise.resolve().then(function () {
+        if (window.thalloColorMode && typeof window.thalloColorMode.reflect === 'function') {
+          window.thalloColorMode.reflect();
+        }
+      });
+    }
+  }
+  customElements.define('thallo-color-mode-toggle', ThalloColorModeToggle);
+})();
+/* color-mode-toggle:end */
+
 /* boot:footer */
 /* The ONE boot scheduler (spec §1 "Boot ordering is explicit").
    Runs after every module registration above AND after the element sections define
