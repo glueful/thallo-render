@@ -75,10 +75,16 @@
 
   /* Private per-component pipeline (spec §1): canvas policy -> marker check ->
      try/catch -> mark. The outcome vocabulary is internal — consumed by
-     registerElement (elements section), ignored by the scan loop. */
-  function runComponent(comp, name) {
+     registerElement (elements section), ignored by the scan loop.
+     canvasActive: the scan loop already computed isCanvas() ONCE per pass and
+     passes it through here, avoiding a redundant full-document querySelector
+     per (component, module) pair; the element bridge calls with this arg
+     omitted (it has no per-pass flag of its own), so a fresh isCanvas() check
+     is made. */
+  function runComponent(comp, name, canvasActive) {
     var mod = modules[name];
-    if (isCanvas() && mod.canvas === 'skip') { return 'canvas-skipped'; }
+    var canvas = canvasActive === undefined ? isCanvas() : canvasActive;
+    if (canvas && mod.canvas === 'skip') { return 'canvas-skipped'; }
     if (markerHas(comp, name)) { return 'already-enhanced'; }
     try {
       var result = mod.enhance(comp);
@@ -113,7 +119,7 @@
         if (canvas && modules[name].canvas === 'skip') { continue; }
         var comps = componentsIn(root, modules[name].selector);
         for (var j = 0; j < comps.length; j++) {
-          runComponent(comps[j], name);
+          runComponent(comps[j], name, canvas);
         }
       }
     }
@@ -170,6 +176,10 @@
             return;
           }
           var outcome = runComponent(target, moduleName);
+          // 'already-enhanced' means projectOptions above STILL ran (a fresh undo was
+          // captured into rec.undo) even though the module's own enhance() was skipped —
+          // intentional: projection (host attributes/classes) belongs to the element's
+          // own connect/disconnect lifecycle, independent of the shared enhance marker.
           if (outcome === 'enhanced' || outcome === 'already-enhanced') { return; }
           // Transactional rollback: structural-noop / failed / canvas-skipped
           // (including a canvas that appeared during projection) all leave NO record.
@@ -464,6 +474,10 @@ window.ThalloRuntime.register('forms', {
       politeAfterUserAction();
     }
 
+    // Click listeners on the arrows/dots/pause controls below are NOT registered
+    // through listen() (there is nothing to unbind them from separately): each
+    // control is itself an injected node captured by addNode, so removing the
+    // node on teardown drops its listeners with it.
     if (root.dataset.arrows === '1') {
       var prev = button('thallo-block-carousel__prev', 'Previous slide', '‹');
       var next = button('thallo-block-carousel__next', 'Next slide', '›');
@@ -628,6 +642,9 @@ window.ThalloRuntime.register('forms', {
         el.addEventListener(type, fn);
         undo.push(function () { el.removeEventListener(type, fn); });
       }
+      // Fired timer ids are left in this array rather than pruned as they fire:
+      // clearTimeout on an id that already fired is a harmless no-op, so it's
+      // simplest to just clear the whole array wholesale on teardown below.
       var timers = [];
 
       if (root.classList) {
@@ -959,23 +976,21 @@ window.ThalloRuntime.register('forms', {
       throw err;
     }
     try {
-    if (rootClass && !host.classList.contains(rootClass)) {
-      host.classList.add(rootClass);
-      undos.push(function () { host.classList.remove(rootClass); });
-    }
-    if (attrMap) {
-      Object.keys(attrMap).forEach(function (attr) {
-        var dataAttr = attrMap[attr]; // e.g. 'data-arrows'
-        if (host.hasAttribute(attr) && host.getAttribute(dataAttr) === null) {
-          host.setAttribute(dataAttr, '1');
-          if (host.dataset) { host.dataset[dataAttr.slice(5)] = '1'; }
-          undos.push(function () {
-            host.removeAttribute(dataAttr);
-            if (host.dataset) { delete host.dataset[dataAttr.slice(5)]; }
-          });
-        }
-      });
-    }
+      if (rootClass && !host.classList.contains(rootClass)) {
+        host.classList.add(rootClass);
+        undos.push(function () { host.classList.remove(rootClass); });
+      }
+      if (attrMap) {
+        Object.keys(attrMap).forEach(function (attr) {
+          var dataAttr = attrMap[attr]; // e.g. 'data-arrows'
+          if (host.hasAttribute(attr) && host.getAttribute(dataAttr) === null) {
+            // Real browsers reflect data-* attributes into .dataset natively —
+            // no separate dataset write needed here (or in the undo below).
+            host.setAttribute(dataAttr, '1');
+            undos.push(function () { host.removeAttribute(dataAttr); });
+          }
+        });
+      }
     } catch (err) { rollbackAndRethrow(err); }
     return function () { for (var i = undos.length - 1; i >= 0; i--) { undos[i](); } };
   }
