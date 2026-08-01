@@ -2,7 +2,7 @@
 
 **Rendered delivery** for [Thallo](https://thallo.dev) — the CMS serves real HTML pages
 from published content through filesystem **Twig themes** — packaged as a **removable
-capability pack** (V2 rendered-delivery sub-project 2; see `docs/V2_DESIGN.md`). With the
+capability pack** (V2 rendered-delivery sub-project 2; see `docs/internal/V2_DESIGN.md`). With the
 pack absent or `thallo.render` disabled, the install is exactly the headless product:
 unmatched public paths return the router's standard JSON 404.
 
