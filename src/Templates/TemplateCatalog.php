@@ -6,7 +6,7 @@ namespace Thallo\Render\Templates;
 
 /**
  * The merged template listing (spec §6): pack-default files + app-theme files + active
- * DB rows, with per-path origin (db > theme > default — loader precedence). Also reads
+ * DB rows, with per-path origin (db > theme > package > default — loader precedence). Also reads
  * a FILESYSTEM source (theme file first, pack default second) as the editor's
  * copy-from-disk starting point.
  */
@@ -16,6 +16,8 @@ final class TemplateCatalog
         private readonly TemplateRepository $repo,
         private readonly string $appThemesDir,
         private readonly string $packThemesDir,
+        /** @var list<array{contributor_id: string, dir: string}> registry order = precedence order */
+        private readonly array $contributions = [],
     ) {
     }
 
@@ -25,6 +27,11 @@ final class TemplateCatalog
         $files = [];
         foreach ($this->walk($this->packThemesDir . '/default/templates') as $p) {
             $files[$p] = 'default';
+        }
+        foreach (array_reverse($this->contributions) as $contribution) {
+            foreach ($this->walk(rtrim($contribution['dir'], '/')) as $p) {
+                $files[$p] = 'package';
+            }
         }
         if ($theme !== 'default') {
             foreach ($this->walk(rtrim($this->appThemesDir, '/') . '/' . $theme . '/templates') as $p) {
@@ -54,6 +61,12 @@ final class TemplateCatalog
             $themeFile = rtrim($this->appThemesDir, '/') . '/' . $theme . '/templates/' . $path;
             if (is_file($themeFile)) {
                 return ['source' => (string) file_get_contents($themeFile), 'origin' => 'theme'];
+            }
+        }
+        foreach ($this->contributions as $contribution) {
+            $file = rtrim($contribution['dir'], '/') . '/' . $path;
+            if (is_file($file)) {
+                return ['source' => (string) file_get_contents($file), 'origin' => 'package'];
             }
         }
         $default = $this->packThemesDir . '/default/templates/' . $path;
