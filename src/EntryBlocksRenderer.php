@@ -25,7 +25,7 @@ use function config;
  * `{{ blocks(entry.fields.body) }}` convention — called here as a plain PHP method, not via a
  * Twig template, since this seam has no template of its own; it only ever supplies ONE
  * region's markup to the CALLER's own template. The caller's own template selection is never
- * touched — this class returns a markup string, nothing that could reroute rendering.
+ * touched — this class returns a Twig\Markup value, nothing that could reroute rendering.
  *
  * Explicitly resets every render-scoped flag {@see RenderContextExtension} carries as a
  * process-shared singleton BEFORE calling blocks() (asset base, block annotation, appearance
@@ -45,14 +45,14 @@ final class EntryBlocksRenderer
      * The linked entry's rendered blocks-region HTML, or null when the entry fails closed
      * (missing, soft-deleted, cross-tenant, non-public type, or no published version in the
      * resolved locale). An entry that resolves but carries no blocks-typed `body` field (or an
-     * empty one) renders as an empty string, not null — that is a resolved-but-empty result,
-     * distinct from a fail-closed one.
+     * empty one) renders as an empty Markup value ((string) cast === ''), not null — that is a
+     * resolved-but-empty result, distinct from a fail-closed one.
      */
     public function renderPublishedBlocks(
         ApplicationContext $context,
         string $tenantUuid,
         string $entryUuid,
-    ): ?string {
+    ): ?\Twig\Markup {
         $locale = (string) config($context, 'i18n.default_locale', 'en');
         $result = $this->reader->findPublishedBlocks($entryUuid, $tenantUuid, $locale);
         if ($result === null) {
@@ -82,6 +82,12 @@ final class EntryBlocksRenderer
             'region_slug' => null,
         ];
 
-        return $this->extension->blocks($env, $blockContext, $result['fields']['body'] ?? null);
+        $html = $this->extension->blocks($env, $blockContext, $result['fields']['body'] ?? null);
+
+        // The ONE trusted wrapping point (admin-contributed-templates spec §3): blocks()
+        // output is composed of escaped/sanitized fragments, so it is safe to mark — and
+        // marking it HERE means consumer templates write {{ enrichment_html }} with no
+        // |raw, which the template policy denies.
+        return new \Twig\Markup($html, 'UTF-8');
     }
 }
