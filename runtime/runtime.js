@@ -118,6 +118,79 @@
       }
     }
   };
+
+  /* Element bridge (spec §1): the ONE public path from custom elements into the
+     private pipeline. Defines only what it is told; Task 6 registers the three
+     module-backed v1 tags. Guarded: without customElements the elements are simply
+     absent and the class-based path is untouched. */
+  var elementRecords = typeof WeakMap === 'function' ? new WeakMap() : null;
+  function abandonElementRecord(host, rec) {
+    rec.pending = false;
+    if (rec.undo) {
+      try { rec.undo(); } catch (err) { /* rollback must not strand the record */ }
+    }
+    rec.undo = null;
+    rec.target = null;
+    if (elementRecords.get(host) === rec) { elementRecords.delete(host); }
+  }
+  function defineElement(tag, moduleName, opts) {
+    var resolveTarget = (opts && opts.resolveTarget) || function (host) { return host; };
+    var projectOptions = (opts && opts.projectOptions) || null;
+
+    class ThalloElement extends HTMLElement {
+      connectedCallback() {
+        var host = this;
+        var rec = { pending: true, undo: null, target: null };
+        elementRecords.set(host, rec);
+        // One-microtask deferral (spec §1): synchronously-constructed children are
+        // complete; asynchronously-populated elements must be built before insertion.
+        Promise.resolve().then(function () {
+          if (!rec.pending || elementRecords.get(host) !== rec) { return; }
+          rec.pending = false;
+          if (host.isConnected === false) { abandonElementRecord(host, rec); return; }
+          var mod = modules[moduleName];
+          if (!mod) { abandonElementRecord(host, rec); return; }
+          // Canvas gate FIRST — before ANY mutation, including projection.
+          if (isCanvas() && mod.canvas === 'skip') {
+            abandonElementRecord(host, rec); return;
+          }
+          var target = resolveTarget(host);
+          if (!target) { abandonElementRecord(host, rec); return; }
+          rec.target = target;
+          if (projectOptions) { rec.undo = projectOptions(host, target) || null; }
+          var outcome = runComponent(target, moduleName);
+          if (outcome === 'enhanced' || outcome === 'already-enhanced') { return; }
+          // Transactional rollback: structural-noop / failed / canvas-skipped
+          // (including a canvas that appeared during projection) all leave NO record.
+          abandonElementRecord(host, rec);
+        });
+      }
+      disconnectedCallback() {
+        var rec = elementRecords.get(this);
+        if (!rec) { return; }
+        elementRecords.delete(this);
+        if (rec.pending) { // cancel pending connection work
+          abandonElementRecord(this, rec);
+          return;
+        }
+        if (rec.target) {
+          var fn = takeCleanup(rec.target, moduleName);
+          if (fn) { try { fn(); } catch (err) { /* teardown must not break disconnect */ } }
+          unmark(rec.target, moduleName); // ONLY this module's token
+        }
+        if (rec.undo) { rec.undo(); }
+      }
+    }
+    customElements.define(tag, ThalloElement);
+  }
+
+  // Attach conditionally so the whole feature is absent where custom elements are
+  // (Node harness without a stub, legacy browsers) — existing tests keep passing.
+  if (typeof customElements !== 'undefined' && customElements &&
+      typeof customElements.define === 'function' && typeof HTMLElement === 'function' &&
+      elementRecords) {
+    window.ThalloRuntime.registerElement = defineElement;
+  }
 })();
 /* modules:start */
 
