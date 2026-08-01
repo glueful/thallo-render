@@ -100,10 +100,27 @@ final class TemplatesAdminController
             $this->catalog->listReadOnly($theme),
         );
         // Disk-only templates (spec: closed two-template policy) are ordinary rows
-        // among the twig listing, just flagged readonly — same origin computation,
-        // no separate bucket, no readonly key on any other row.
+        // among the twig listing, just flagged readonly. The pin is by PATH, not by
+        // origin (matches show()'s disk-only branch): a stray/legacy DB row for one
+        // of these paths must NOT leak through index() as origin=db/overridden=true/
+        // a real updated_at — that would advertise a hidden override save()/delete()/
+        // restore() all keep unreachable. So these two rows are normalized to the
+        // filesystem baseline unconditionally, ignoring whatever catalog->list()
+        // computed from the (possibly stray) DB row.
         $templates = array_map(
-            fn(array $row): array => $this->isDiskOnlyPath($row['path']) ? $row + ['readonly' => true] : $row,
+            function (array $row) use ($theme): array {
+                if (!$this->isDiskOnlyPath($row['path'])) {
+                    return $row;
+                }
+                $file = $this->catalog->readFile($theme, $row['path']);
+                return [
+                    'path' => $row['path'],
+                    'origin' => $file['origin'] ?? $row['origin'],
+                    'overridden' => false,
+                    'updated_at' => null,
+                    'readonly' => true,
+                ];
+            },
             $this->catalog->list($theme),
         );
         return Response::success([
@@ -303,7 +320,7 @@ final class TemplatesAdminController
     public function versions(Request $request, string $path): Response
     {
         $theme = $this->theme($request);
-        if ($theme === null || !$this->pathAllowed($path)) {
+        if ($theme === null || !$this->pathAllowed($path) || $this->isDiskOnlyPath($path)) {
             return Response::error('Not Found', 404);
         }
         if ($this->templates->find($theme, $path) === null) {
@@ -325,7 +342,7 @@ final class TemplatesAdminController
     public function showVersion(Request $request, string $path, string $uuid): Response
     {
         $theme = $this->theme($request);
-        if ($theme === null || !$this->pathAllowed($path)) {
+        if ($theme === null || !$this->pathAllowed($path) || $this->isDiskOnlyPath($path)) {
             return Response::error('Not Found', 404);
         }
         $version = $this->templates->findVersion($theme, $path, $uuid);
@@ -442,6 +459,12 @@ final class TemplatesAdminController
      * task 7c) — see TemplatePolicy::DISK_ONLY_TEMPLATES for the pinned paths and
      * the reasoning. This is a lookup against that fixed map, never a heuristic:
      * adding a path here means editing the const, which is a spec amendment.
+     *
+     * Consulted by index() (normalize to the filesystem baseline), show() (serve
+     * filesystem only), save() (422 before the linter runs), and delete()/versions()/
+     * showVersion()/restore() (404, same shape as an unknown path) — a DB override
+     * at one of these paths, however it got there, must be completely unreachable
+     * through every one of these endpoints, not just the obvious write ones.
      */
     private function isDiskOnlyPath(string $path): bool
     {
