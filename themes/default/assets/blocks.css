@@ -1346,6 +1346,10 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 /* animated_text (modern-blocks spec §3): static floor is fully visible. Reveal CSS
    engages ONLY under --prepared (JS adds it after IO is confirmed usable); the word
    stack reserves true max width via same-cell grid. */
+/* visually-hidden stable-phrase span (mirrors .thallo-block-carousel__status): carries
+   prefix + first alternative + suffix for assistive tech, since `tag: 'p'` (and other
+   roles that ignore aria-label) would otherwise drop the rotating word entirely. */
+.thallo-block-animated_text__sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 :where(.thallo-block-animated_text__rotate) { display: inline-grid; vertical-align: baseline; }
 .thallo-block-animated_text__word { grid-area: 1 / 1; visibility: hidden; }
 .thallo-block-animated_text__word--active { visibility: visible; }
