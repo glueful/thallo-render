@@ -19,7 +19,11 @@
   <div class="thallo-block-hero__inner">
     <div class="thallo-block-hero__wrapper">
       {% if data.headline %}<p class="thallo-block-hero__headline">{{ data.headline|editable_text('headline') }}</p>{% endif %}
-      <h1 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h1>
+      {% set headingLevel = data.heading_level|default('h1') %}
+      {% if headingLevel == 'h2' %}<h2 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h2>
+      {% elseif headingLevel == 'h3' %}<h3 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h3>
+      {% else %}<h1 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h1>
+      {% endif %}
       {% if data.description %}<p class="thallo-block-hero__description">{{ data.description|editable_text('description') }}</p>{% endif %}
       {% if data.links|default([]) is not empty %}<div class="thallo-block-hero__links">{{ blocks(data.links) }}</div>{% endif %}
     </div>

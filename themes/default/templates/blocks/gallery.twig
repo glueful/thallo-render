@@ -1,0 +1,19 @@
+{# gallery — responsive image grid; anchors to full-size blobs ARE the no-JS floor
+   (modern-blocks spec §4). Lightbox is progressive (block-gallery.js). Resolve-first:
+   unresolved/non-image items are omitted entirely — no dead anchors. #}
+{% set items = data.items|default([]) %}
+{% set resolved = [] %}
+{% for item in items %}
+  {% set uuid = item.data.image|default('') %}
+  {% set image = uuid ? media_image(uuid, []) : null %}
+  {% if image %}
+    {% set resolved = resolved|merge([{item: item, full: image.src, alt: item.data.alt|default('')}]) %}
+  {% endif %}
+{% endfor %}
+{% set lightbox = data.lightbox ?? true %}
+<div class="thallo-block thallo-block-gallery thallo-block-gallery--cols-{{ data.columns|default('3') }} thallo-block-gallery--{{ data.aspect|default('natural') }}" data-lightbox="{{ lightbox ? '1' : '0' }}">
+  {%- for image in resolved %}
+  <a class="thallo-block-gallery__item" href="{{ image.full }}" aria-label="{{ image.alt ?: 'Image ' ~ loop.index ~ ' of ' ~ loop.length }}">{{ blocks([image.item]) }}</a>
+  {%- endfor %}
+</div>
+{{ block_script('gallery') }}

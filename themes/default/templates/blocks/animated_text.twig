@@ -1,0 +1,30 @@
+{# animated_text — reveal + finite word rotation (modern-blocks spec §3). Static floor:
+   everything visible; JS (block-animated-text.js) adds --prepared/--in-view and rotates.
+   Width reservation: ALL alternatives stacked in one grid cell; inactive ones
+   visibility:hidden (CSS); the browser reserves the true max rendered width. #}
+{% set words = data.rotate_words|default('')|replace({"\r\n": "\n", "\r": "\n"})|split("\n") %}
+{% set clean = [] %}
+{% for w in words %}{% if w|trim != '' %}{% set clean = clean|merge([w|trim]) %}{% endif %}{% endfor %}
+{% set tag = data.tag|default('h2') %}
+{% set prefix = data.prefix|default('') %}
+{% set suffix = data.suffix|default('') %}
+{% set label = ((data.prefix|default('')) ~ ' ' ~ (clean|first|default('')) ~ ' ' ~ (data.suffix|default('')))|trim %}
+{% set inner %}
+  {%- if prefix != '' %}{{ prefix|editable_text('prefix') }}{% endif -%}
+  {%- if prefix != '' and clean is not empty %}{{ ' ' }}{% endif -%}
+  {%- if clean is not empty %}
+  <span class="thallo-block-animated_text__rotate" aria-hidden="true">
+    {%- for w in clean %}
+    <span class="thallo-block-animated_text__word{% if loop.first %} thallo-block-animated_text__word--active{% endif %}">{{ w }}</span>
+    {%- endfor %}
+  </span>
+  {%- endif %}
+  {%- if suffix != '' and (prefix != '' or clean is not empty) %}{{ ' ' }}{% endif -%}
+  {%- if suffix != '' %}{{ suffix|editable_text('suffix') }}{% endif -%}
+{% endset %}
+{% if tag == 'h1' %}<h1 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" aria-label="{{ label }}">{{ inner }}</h1>
+{% elseif tag == 'h3' %}<h3 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" aria-label="{{ label }}">{{ inner }}</h3>
+{% elseif tag == 'p' %}<p class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" aria-label="{{ label }}">{{ inner }}</p>
+{% else %}<h2 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" aria-label="{{ label }}">{{ inner }}</h2>
+{% endif %}
+{{ block_script('animated-text') }}

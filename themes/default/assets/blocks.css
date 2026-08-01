@@ -576,6 +576,34 @@
   .thallo-block-carousel--per-2 .thallo-block-carousel__track > * { flex-basis: calc(50% - var(--space-4) / 2); }
   .thallo-block-carousel--per-3 .thallo-block-carousel__track > * { flex-basis: calc(33.333% - var(--space-4) * 2 / 3); }
 }
+
+/* Hero slider preset (modern-blocks spec §2): presentation only — mechanics inherit. */
+.thallo-block-carousel--hero { max-width: none; padding-inline: 0; }                       /* 1: full-bleed */
+.thallo-block-carousel--hero .thallo-block-carousel__track > * { flex: 0 0 100%; }         /* 2: one per view (after --per-N) */
+.thallo-block-carousel--hero .thallo-block-hero { min-height: 60vh; padding-block: 0; }    /* 3: stacked grid */
+.thallo-block-carousel--hero .thallo-block-hero__inner {
+  display: grid; min-height: inherit; max-width: none; margin: 0; padding: 0;
+}
+.thallo-block-carousel--hero .thallo-block-hero__wrapper,
+.thallo-block-carousel--hero .thallo-block-hero__media { grid-area: 1 / 1; }
+.thallo-block-carousel--hero .thallo-block-hero__media { z-index: 0; align-self: stretch; }
+.thallo-block-carousel--hero .thallo-block-hero__media img {
+  width: 100%; height: 100%; max-width: none; max-height: none; margin: 0;
+  aspect-ratio: auto; object-fit: cover; box-shadow: none;
+}
+.thallo-block-carousel--hero .thallo-block-hero__wrapper {
+  z-index: 2; align-self: end; padding: var(--space-6);
+}
+.thallo-block-carousel--hero .thallo-block-hero__inner::after {                           /* 4: scrim between media and text */
+  content: ''; grid-area: 1 / 1; z-index: 1; align-self: stretch;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.65), transparent 55%);
+}
+.thallo-block-carousel--hero .thallo-block-hero__wrapper,
+.thallo-block-carousel--hero .thallo-block-hero__wrapper :is(h1, h2, h3, p) {
+  color: var(--accent-ink);                                                              /* 5: on-media token */
+}
+/* 6: no-image fallback — a hero slide without media keeps the standard hero background. */
+
 .thallo-block-carousel__prev, .thallo-block-carousel__next {
   position: absolute;
   top: 50%;
@@ -1310,3 +1338,53 @@ thallo-carousel, thallo-tabs { display: block; }
 /* Feature off -> the toggle hides entirely (server stamps the flag on <html>).
    0,1,1 still wins over the :where() alias's 0,0,0. */
 html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: none; }
+
+/* animated_text (modern-blocks spec §3): static floor is fully visible. Reveal CSS
+   engages ONLY under --prepared (JS adds it after IO is confirmed usable); the word
+   stack reserves true max width via same-cell grid. */
+:where(.thallo-block-animated_text__rotate) { display: inline-grid; vertical-align: baseline; }
+.thallo-block-animated_text__word { grid-area: 1 / 1; visibility: hidden; }
+.thallo-block-animated_text__word--active { visibility: visible; }
+.thallo-block-animated_text--prepared:not(.thallo-block-animated_text--in-view) { opacity: 0; }
+.thallo-block-animated_text--prepared.thallo-block-animated_text--in-view { animation: thallo-at-fade 500ms ease-out both; }
+.thallo-block-animated_text--prepared.thallo-block-animated_text--slide-up.thallo-block-animated_text--in-view { animation-name: thallo-at-slide-up; }
+.thallo-block-animated_text--prepared.thallo-block-animated_text--blur.thallo-block-animated_text--in-view { animation-name: thallo-at-blur; }
+@keyframes thallo-at-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes thallo-at-slide-up { from { opacity: 0; transform: translateY(0.6em); } to { opacity: 1; transform: none; } }
+@keyframes thallo-at-blur { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-animated_text--prepared { opacity: 1 !important; animation: none !important; }
+}
+
+/* gallery (modern-blocks spec §4): the grid + real anchors are the no-JS floor. */
+.thallo-block-gallery { display: grid; gap: var(--space-2); max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
+.thallo-block-gallery--cols-2 { grid-template-columns: repeat(2, 1fr); }
+.thallo-block-gallery--cols-3 { grid-template-columns: repeat(3, 1fr); }
+.thallo-block-gallery--cols-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 40rem) { .thallo-block-gallery { grid-template-columns: repeat(2, 1fr); } }
+.thallo-block-gallery__item { display: block; min-width: 0; color: inherit; overflow: hidden; }
+/* An item is a nested image block, not a bare img: neutralize its standalone
+   container before applying gallery geometry. Natural mode keeps its authored
+   ratio/caption; fixed crops make the figure the containing block and overlay the
+   caption so it cannot break the tile's aspect ratio. */
+.thallo-block-gallery__item .thallo-block-image {
+  max-width: none; height: 100%; margin: 0; padding: 0; position: relative;
+}
+.thallo-block-gallery__item .thallo-block-image img {
+  display: block; width: 100%; max-width: none; height: auto; box-shadow: none;
+}
+.thallo-block-gallery--square .thallo-block-gallery__item { aspect-ratio: 1; }
+.thallo-block-gallery--landscape .thallo-block-gallery__item { aspect-ratio: 3 / 2; }
+.thallo-block-gallery--square .thallo-block-image img,
+.thallo-block-gallery--landscape .thallo-block-image img { height: 100%; object-fit: cover; }
+.thallo-block-gallery--square .thallo-block-image figcaption,
+.thallo-block-gallery--landscape .thallo-block-image figcaption {
+  position: absolute; inset: auto 0 0; margin: 0; padding: var(--space-2);
+  color: var(--accent-ink); background: rgb(0 0 0 / 0.62);
+}
+.thallo-block-gallery__dialog { border: 0; padding: 0; background: transparent; max-width: min(92vw, 70rem); }
+.thallo-block-gallery__dialog::backdrop { background: rgb(0 0 0 / 0.8); }
+.thallo-block-gallery__dialog img { max-width: 100%; max-height: 85vh; display: block; margin-inline: auto; }
+@media (prefers-reduced-motion: no-preference) {
+  .thallo-block-gallery__dialog[open] { animation: thallo-at-fade 150ms ease-out; }
+}

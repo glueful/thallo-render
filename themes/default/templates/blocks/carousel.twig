@@ -1,4 +1,4 @@
-<div class="thallo-block thallo-block-carousel thallo-block-carousel--per-{{ data.slides_per_view|default('1') }}" data-arrows="{{ data.arrows|default(false) ? '1' : '0' }}" data-dots="{{ data.dots|default(false) ? '1' : '0' }}" data-autoplay="{{ data.autoplay|default(false) ? '1' : '0' }}">
+<div class="thallo-block thallo-block-carousel thallo-block-carousel--per-{{ data.slides_per_view|default('1') }}{% if data.style|default('default') == 'hero' %} thallo-block-carousel--hero{% endif %}" data-arrows="{{ data.arrows|default(false) ? '1' : '0' }}" data-dots="{{ data.dots|default(false) ? '1' : '0' }}" data-autoplay="{{ data.autoplay|default(false) ? '1' : '0' }}">
   <div class="thallo-block-carousel__viewport">
     <div class="thallo-block-carousel__track">{{ blocks(data.slides) }}</div>
   </div>
