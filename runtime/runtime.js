@@ -47,6 +47,53 @@
     return found;
   }
 
+  function unmark(elm, name) {
+    var v = elm.getAttribute('data-thallo-enhanced');
+    if (v === null) { return; }
+    var parts = v.split(' ').filter(function (t) { return t && t !== name; });
+    if (parts.length) { elm.setAttribute('data-thallo-enhanced', parts.join(' ')); }
+    else { elm.removeAttribute('data-thallo-enhanced'); }
+  }
+
+  // Cleanup storage keyed by (component, module) — a per-element single slot would
+  // let one module's cleanup overwrite another's (spec §1).
+  var cleanups = typeof WeakMap === 'function' ? new WeakMap() : null;
+  function storeCleanup(comp, name, fn) {
+    if (!cleanups || typeof fn !== 'function') { return; }
+    var perModule = cleanups.get(comp);
+    if (!perModule) { perModule = new Map(); cleanups.set(comp, perModule); }
+    perModule.set(name, fn);
+  }
+  function takeCleanup(comp, name) {
+    var perModule = cleanups ? cleanups.get(comp) : null;
+    if (!perModule || !perModule.has(name)) { return null; }
+    var fn = perModule.get(name);
+    perModule.delete(name);
+    if (perModule.size === 0) { cleanups.delete(comp); }
+    return fn;
+  }
+
+  /* Private per-component pipeline (spec §1): canvas policy -> marker check ->
+     try/catch -> mark. The outcome vocabulary is internal — consumed by
+     registerElement (elements section), ignored by the scan loop. */
+  function runComponent(comp, name) {
+    var mod = modules[name];
+    if (isCanvas() && mod.canvas === 'skip') { return 'canvas-skipped'; }
+    if (markerHas(comp, name)) { return 'already-enhanced'; }
+    try {
+      var result = mod.enhance(comp);
+      if (result === false) { return 'structural-noop'; } // never marked
+      if (typeof result === 'function') { storeCleanup(comp, name, result); }
+      mark(comp, name);
+      return 'enhanced';
+    } catch (err) {
+      if (window.console && console.error) {
+        console.error('ThalloRuntime: module "' + name + '" failed', err);
+      }
+      return 'failed';
+    }
+  }
+
   window.ThalloRuntime = {
     register: function (name, def) {
       if (modules[name]) {
@@ -63,41 +110,14 @@
       var canvas = isCanvas();
       for (var i = 0; i < order.length; i++) {
         var name = order[i];
-        var mod = modules[name];
-        if (canvas && mod.canvas === 'skip') {
-          continue;
-        }
-        var comps = componentsIn(root, mod.selector);
+        if (canvas && modules[name].canvas === 'skip') { continue; }
+        var comps = componentsIn(root, modules[name].selector);
         for (var j = 0; j < comps.length; j++) {
-          if (markerHas(comps[j], name)) {
-            continue;
-          }
-          // A throwing module must not break the rest of the pass: the component stays
-          // UNMARKED (its module made no completed enhancement) and every other
-          // component and module still runs.
-          try {
-            mod.enhance(comps[j]);
-            mark(comps[j], name);
-          } catch (err) {
-            if (window.console && console.error) {
-              console.error('ThalloRuntime: module "' + name + '" failed', err);
-            }
-          }
+          runComponent(comps[j], name);
         }
       }
     }
   };
-
-  function boot() {
-    window.ThalloRuntime.enhance(document.documentElement);
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    // Deferred so module IIFEs appended below /* modules:start */ in this same file
-    // have registered before the boot pass runs, regardless of position.
-    Promise.resolve().then(boot);
-  }
 })();
 /* modules:start */
 
@@ -753,3 +773,21 @@ window.ThalloRuntime.register('forms', {
   });
 })();
 /* tabs:end */
+
+/* boot:footer */
+/* The ONE boot scheduler (spec §1 "Boot ordering is explicit").
+   Runs after every module registration above AND after the element sections define
+   their tags: customElements.define() upgrades already-parsed hosts synchronously,
+   queuing their connection microtasks — so scheduling the whole-document scan on a
+   LATER microtask (or on DOMContentLoaded, whose dispatch flushes those microtasks
+   first) guarantees element projection wins before the legacy scan, which then
+   no-ops on the shared marker. No public start() API. */
+(function () {
+  'use strict';
+  function boot() { window.ThalloRuntime.enhance(document.documentElement); }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    Promise.resolve().then(boot);
+  }
+})();
