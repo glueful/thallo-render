@@ -218,6 +218,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->get(TemplateRepository::class),
             $context->getBasePath() . '/themes',
             dirname(__DIR__) . '/themes',
+            // The SAME frozen snapshot ThemeLocator consumes (spec §1) — catalog and
+            // runtime can never disagree about what is contributed.
+            $container->get(RenderContributionRegistry::class)->frozenTemplateContributions(),
         );
     }
 

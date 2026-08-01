@@ -85,7 +85,7 @@ final class TemplatesAdminController
      * @queryParam theme:string="Theme name; defaults to the active theme."
      */
     #[ApiOperation(summary: 'List resolvable templates (filesystem + DB) for a theme', tags: ['Thallo Templates'])]
-    #[ApiResponse(200, description: 'Merged listing with per-path origin (db|theme|default).')]
+    #[ApiResponse(200, description: 'Merged listing with per-path origin (db|theme|package|default).')]
     public function index(Request $request): Response
     {
         $theme = $this->theme($request);
