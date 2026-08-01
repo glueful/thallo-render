@@ -50,7 +50,8 @@ final class TemplatePolicy
     //         template source. This widens v17's own vocabulary to match what already shipped; it
     //         does not loosen anything previously enforced, so compiled caches keyed on v17 are
     //         still valid — no recompile is required.
-    public const CACHE_VERSION = 17;
+    // bumped: block_script joined the allowlist (modern-blocks spec §1 — closed-catalog per-block asset emission)
+    public const CACHE_VERSION = 18;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -67,7 +68,7 @@ final class TemplatePolicy
         'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
         'runtime_script', 'seo_head', 'font_faces_style',
         'shop_wishlist_scope', 'shop_wishlist_url', 'shop_styles_url',
-        'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script',
+        'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script',
         'entries', 'is_preview', 'media_image', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max',
