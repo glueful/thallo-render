@@ -97,6 +97,102 @@ default layout fallback. To adopt the runtime in a copied theme, delete the copi
 `blocks.js` and drop its `<script>` tag from the copied `layout.twig` (load
 `{{ runtime_script() }}` there instead).
 
+### Theme runtime elements
+
+Four custom elements — `thallo-carousel`, `thallo-tabs`, `thallo-navigation`,
+`thallo-color-mode-toggle` — wrap the same runtime modules the starter blocks
+use. Contract:
+
+1. Elements are light-DOM adapters — the inner skeleton is the same one the
+   starter blocks use and IS the no-JS fallback.
+2. Custom themes that copied `blocks.css`/`navigation.css` must re-copy (or
+   port) the alias rules for element support.
+3. Asynchronously-populated elements must be fully built before insertion.
+
+Attribute sugar (e.g. `arrows`/`dots`/`autoplay` on `thallo-carousel`,
+`reveal-hover` on `thallo-navigation`) maps to the existing `data-*` options
+and never overrides an explicit `data-*` already present in the markup. The
+color-mode toggle is hidden (`display: none`) whenever the color-mode
+feature is off. As elsewhere in this section: behavior JS is package-owned
+(`runtime.js`), themes own CSS only.
+
+**`thallo-carousel`** — viewport/track/slides is the real no-JS floor
+(scroll-snap); `arrows`/`dots`/`autoplay` sugar to `data-arrows`/`data-dots`/
+`data-autoplay`:
+
+```html
+<thallo-carousel arrows dots>
+  <div class="thallo-block-carousel__viewport">
+    <div class="thallo-block-carousel__track">
+      <div>Slide one</div>
+      <div>Slide two</div>
+      <div>Slide three</div>
+    </div>
+  </div>
+</thallo-carousel>
+```
+
+**`thallo-tabs`** — radios + labels + panels is the real no-JS floor
+(checked-sibling CSS); ids follow the `tabs-{id}-N` pattern the starter
+block emits (`tabs-{{ block.id }}-{{ loop.index }}`) and `name` scopes each
+instance so multiple tab groups on one page stay independent — reuse any
+stable string for `{id}`:
+
+```html
+<thallo-tabs>
+  <input class="thallo-block-tabs__radio" type="radio" name="tabs-demo" id="tabs-demo-1" checked>
+  <input class="thallo-block-tabs__radio" type="radio" name="tabs-demo" id="tabs-demo-2">
+  <div class="thallo-block-tabs__list">
+    <label class="thallo-block-tabs__label" for="tabs-demo-1">One</label>
+    <label class="thallo-block-tabs__label" for="tabs-demo-2">Two</label>
+  </div>
+  <div class="thallo-block-tabs__panels">
+    <div class="thallo-block-tabs__panel">Panel one content.</div>
+    <div class="thallo-block-tabs__panel">Panel two content.</div>
+  </div>
+</thallo-tabs>
+```
+
+**`thallo-navigation`** — the drawer `<details data-thallo-enhance="navigation">`
+is the real no-JS floor (native disclosure); the module enhances that inner
+details, not the element root:
+
+```html
+<thallo-navigation>
+  <nav class="thallo-block-navigation__nav" aria-label="Navigation">
+    <details class="thallo-block-navigation__mobile" data-thallo-enhance="navigation">
+      <summary class="thallo-block-navigation__hamburger">
+        <span class="thallo-block-navigation__hamburger-icon" aria-hidden="true"></span>
+        <span class="thallo-block-navigation__hamburger-label">Menu</span>
+      </summary>
+      <ul class="thallo-block-navigation__list">
+        <li class="thallo-block-navigation__item">
+          <a class="thallo-block-navigation__link" href="/">Home</a>
+        </li>
+        <li class="thallo-block-navigation__item">
+          <a class="thallo-block-navigation__link" href="/about">About</a>
+        </li>
+      </ul>
+    </details>
+  </nav>
+</thallo-navigation>
+```
+
+**`thallo-color-mode-toggle`** — server-rendered `[data-color-mode-set]`
+buttons are the real no-JS floor (they render nothing until JS wires the
+click, so JS-off leaves inert buttons rather than broken markup); this
+element is the one pipeline exception (no `registerElement` entry) — clicks
+already ride the page-level delegated handler, so it only re-syncs
+late-inserted toggles' `aria-checked` on connect:
+
+```html
+<thallo-color-mode-toggle role="radiogroup" aria-label="Color mode">
+  <button type="button" class="thallo-block-color_mode__option" data-color-mode-set="light" role="radio" aria-checked="false" aria-label="Light">☀</button>
+  <button type="button" class="thallo-block-color_mode__option" data-color-mode-set="system" role="radio" aria-checked="false" aria-label="System">◻</button>
+  <button type="button" class="thallo-block-color_mode__option" data-color-mode-set="dark" role="radio" aria-checked="false" aria-label="Dark">☾</button>
+</thallo-color-mode-toggle>
+```
+
 ## Homepage
 
 `GET /` always renders `index.twig`. Set `render.homepage_entry` (env
