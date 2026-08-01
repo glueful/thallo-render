@@ -47,7 +47,7 @@
     function discardDialog() {
       if (!dialog) { return; }
       if (dialog.open && dialog.close) { try { dialog.close(); } catch (closeErr) {} }
-      if (dialog.parentNode) { dialog.parentNode.removeChild(dialog); }
+      if (dialog.parentNode) { try { dialog.parentNode.removeChild(dialog); } catch (removeErr) {} }
       dialog = null;
     }
     function show(n) {
