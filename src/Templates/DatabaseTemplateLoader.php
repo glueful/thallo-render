@@ -40,10 +40,22 @@ final class DatabaseTemplateLoader implements LoaderInterface
         $this->map = null;
     }
 
-    /** @return array<string,string> */
+    /**
+     * @return array<string,string> path => current_version_uuid, with the
+     *     TemplatePolicy::DISK_ONLY_TEMPLATES pins stripped out. Those two paths are a
+     *     CLOSED policy pin (spec: admin-contributed-templates, disk-only pins) — a row
+     *     for either path must stay invisible at render even if it was written straight
+     *     to the DB (SQL, migration) bypassing the admin API's read-only gate. Filtering
+     *     here — before exists()/getSourceContext()/getCacheKey() all consult the same
+     *     map — makes the composite loader (RenderTemplateLoader) fall through to the
+     *     filesystem for these two names exactly as if no override existed.
+     */
     private function map(): array
     {
-        return $this->map ??= $this->repo->overrideMap($this->theme);
+        return $this->map ??= array_diff_key(
+            $this->repo->overrideMap($this->theme),
+            TemplatePolicy::DISK_ONLY_TEMPLATES,
+        );
     }
 
     public function exists(string $name): bool
