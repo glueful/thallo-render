@@ -166,6 +166,16 @@ no runtime sandbox — enforcement is the AST scan plus the arrays-only render c
 routes off). Active-theme saves purge the page cache; per-preview themed sessions see
 that theme's overrides, so you can author against an inactive theme and preview it.
 
+Contributed pack templates (`thallo-account`, `thallo-commerce`) appear in the admin
+Templates screen alongside theme templates, with origin `package`, and override
+exactly the same way — the resolution order is `db → theme → package → default`.
+Disabling a pack removes its baselines from the catalog while any existing DB
+overrides of those paths stay listed and live; deleting such an override then falls
+back to nothing (no filesystem baseline exists once the pack is disabled). Two
+templates — `blocks/html.twig` and `blocks/shortcode.twig` — are permanently
+disk-only: the admin renders them read-only with an explanatory reason, per the
+closed allowlist in `TemplatePolicy::DISK_ONLY_TEMPLATES`.
+
 ## Blocks in templates
 
 `blocks(entry.fields.body)` renders an ordered blocks-field value through the template
