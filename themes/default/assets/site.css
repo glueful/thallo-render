@@ -15,6 +15,9 @@
   --line: #e2e8f0;
   --accent: #2563eb;
   --accent-ink: #ffffff;
+  /* media-less --hero slide base (modern-blocks): ALWAYS dark — the overlay
+     ink is white in both modes; no dark-mode override on purpose. */
+  --hero-fallback-bg: #0f172a;
   /* Elevation scale (Tailwind-derived). Each token composes its color from
      --shadow-color and its opacity from calc(<base>% * --shadow-strength), so an
      element can retint (colored shadow) or restrength (opacity modifier) its shadow. */

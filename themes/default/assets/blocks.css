@@ -605,8 +605,10 @@
 /* 6: no-image fallback — when media exists, the media + scrim (rule 4) fully cover
    this surface, so this background never shows through. A media-less slide has
    neither, so it falls straight to this dark base — which is exactly what makes
-   the unconditional on-media ink (rule 5) readable instead of white-on-near-white. */
-.thallo-block-carousel--hero .thallo-block-hero { background: var(--ink); }
+   the unconditional on-media ink (rule 5) readable instead of white-on-near-white.
+   Uses the theme-invariant --hero-fallback-bg (NOT --ink, which flips light in dark
+   mode) because --accent-ink stays white in both modes. */
+.thallo-block-carousel--hero .thallo-block-hero { background: var(--hero-fallback-bg); }
 
 .thallo-block-carousel__prev, .thallo-block-carousel__next {
   position: absolute;
