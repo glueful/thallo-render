@@ -107,11 +107,13 @@ pointing at an arbitrary path. Emission dedupes once per render per name, but th
 dedupe is a bandwidth optimization only, not the correctness mechanism: the real
 guard is each asset's own IIFE (a `window.__thalloBlock*` flag) that registers with
 the runtime exactly once and tolerates re-execution. That distinction matters because
-fragment renders (e.g. an admin region preview) reset `block_script()`'s per-render
-state independently of the enclosing full-page render, so a single page CAN
-legitimately end up with the same `<script>` tag more than once in its final HTML —
-each execution after the first is a cheap guard check, never a duplicate
-registration.
+fragment renders — e.g. `EntryBlocksRenderer::renderPublishedBlocks()`, the route-less
+seam that lets a pack embed one entry's blocks region inside its OWN page render (the
+shop product-detail page's enrichment is the first caller) — reset `block_script()`'s
+per-render state independently before rendering the fragment, and the fragment's HTML
+is then spliced into the enclosing page. So a single delivered page CAN legitimately
+end up with the same `<script>` tag more than once in its final HTML — each execution
+after the first is a cheap guard check, never a duplicate registration.
 
 ### Theme runtime elements
 
@@ -333,6 +335,9 @@ presentation only: one full-bleed slide per view, the slide's `__wrapper`/`__med
 stacked into the same grid cell with a scrim between them, on-media text tokens, and a
 background fallback on any slide with no image; mechanics (drag, dots, arrows,
 autoplay, the scroll-snap no-JS floor) are unchanged, inherited from `thallo-carousel`.
+Known limitation (fix tracked): a slide with no media currently renders the overlay
+ink over the light standard hero background — keep an image on every slide until the
+no-media fallback ships.
 
 **animated_text authoring.** `rotate_words` is newline-delimited — one alternative per
 line, blank lines dropped, CRLF/CR normalized to LF (the exact contract implemented by
