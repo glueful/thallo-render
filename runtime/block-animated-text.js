@@ -85,7 +85,10 @@
   try {
     RT.register('animated-text', { selector: '.thallo-block-animated_text', enhance: enhance });
   } catch (err) {
-    return; // duplicate registration (another execution won) — its guard is set
+    // register() threw (name already taken — e.g. guard was externally cleared while
+    // the registry kept the module): stay unguarded, mutate nothing; the winning
+    // execution's registration stands.
+    return;
   }
   window.__thalloBlockAnimatedText = true;
   RT.enhance(document.documentElement); // late-registration correctness authority
