@@ -216,6 +216,7 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('shop_product_url', $this->shopProductUrl(...)),
             new TwigFunction('shop_category_url', $this->shopCategoryUrl(...)),
             new TwigFunction('shop_index_url', $this->shopIndexUrl(...)),
+            new TwigFunction('json_script', $this->jsonScript(...)),
             // The fingerprinted storefront stylesheet for the theme <head> — null when
             // commerce is off or the seam is unbound, so the theme emits no <link> at all.
             new TwigFunction('shop_styles_url', $this->shopStylesUrl(...)),
@@ -289,6 +290,25 @@ final class RenderContextExtension extends AbstractExtension
     public function shopWishlistUrl(): ?string
     {
         return $this->wishlist?->wishlistUrl();
+    }
+
+    /**
+     * Safe JSON-for-<script> emitter (admin-contributed-templates spec §3): the ONE
+     * sanctioned way to put structured data inside a script element. JSON_HEX_TAG makes
+     * a literal "</script>" unrepresentable in the output — breakout is impossible —
+     * and hex-encoded quotes/ampersands keep the payload inert. Fail-closed: an
+     * unencodable value throws (JsonException) into the render error ladder; this never
+     * emits partial or unsafe output. Returns Markup — safety travels in the value, so
+     * templates write {{ json_script(data) }} with no |raw.
+     */
+    public function jsonScript(mixed $value): Markup
+    {
+        $json = json_encode(
+            $value,
+            JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+            | JSON_UNESCAPED_SLASHES,
+        );
+        return new Markup($json, 'UTF-8');
     }
 
     /**
