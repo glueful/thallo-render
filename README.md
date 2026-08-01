@@ -108,6 +108,10 @@ use. Contract:
 2. Custom themes that copied `blocks.css`/`navigation.css` must re-copy (or
    port) the alias rules for element support.
 3. Asynchronously-populated elements must be fully built before insertion.
+4. The runtime must be loaded with `defer` (or otherwise after parse) — a
+   synchronous head-script `<script>` connects elements before their children
+   exist in the DOM, the element's structural check (e.g. the navigation
+   element's drawer lookup) fails, and the element stays un-enhanced.
 
 Attribute sugar (e.g. `arrows`/`dots`/`autoplay` on `thallo-carousel`,
 `reveal-hover` on `thallo-navigation`) maps to the existing `data-*` options
@@ -179,8 +183,8 @@ details, not the element root:
 ```
 
 **`thallo-color-mode-toggle`** — server-rendered `[data-color-mode-set]`
-buttons are the real no-JS floor (they render nothing until JS wires the
-click, so JS-off leaves inert buttons rather than broken markup); this
+buttons are the real no-JS floor (they render, but do nothing until JS wires
+the click, so JS-off leaves inert buttons rather than broken markup); this
 element is the one pipeline exception (no `registerElement` entry) — clicks
 already ride the page-level delegated handler, so it only re-syncs
 late-inserted toggles' `aria-checked` on connect:
