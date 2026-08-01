@@ -154,10 +154,21 @@
           if (isCanvas() && mod.canvas === 'skip') {
             abandonElementRecord(host, rec); return;
           }
-          var target = resolveTarget(host);
-          if (!target) { abandonElementRecord(host, rec); return; }
-          rec.target = target;
-          if (projectOptions) { rec.undo = projectOptions(host, target) || null; }
+          var target;
+          try {
+            target = resolveTarget(host);
+            if (!target) { abandonElementRecord(host, rec); return; }
+            rec.target = target;
+            if (projectOptions) { rec.undo = projectOptions(host, target) || null; }
+          } catch (err) {
+            // resolveTarget/projectOptions are caller-supplied adapters — a throw from
+            // either must not become an unhandled rejection nor strand the record.
+            if (window.console && console.error) {
+              console.error('ThalloRuntime: element "' + tag + '" adapter failed', err);
+            }
+            abandonElementRecord(host, rec);
+            return;
+          }
           var outcome = runComponent(target, moduleName);
           if (outcome === 'enhanced' || outcome === 'already-enhanced') { return; }
           // Transactional rollback: structural-noop / failed / canvas-skipped
@@ -178,7 +189,9 @@
           if (fn) { try { fn(); } catch (err) { /* teardown must not break disconnect */ } }
           unmark(rec.target, moduleName); // ONLY this module's token
         }
-        if (rec.undo) { rec.undo(); }
+        if (rec.undo) {
+          try { rec.undo(); } catch (err) { /* teardown must not break disconnect */ }
+        }
       }
     }
     customElements.define(tag, ThalloElement);
