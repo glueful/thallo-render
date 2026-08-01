@@ -223,6 +223,12 @@ per-site re-skinning surface): `--accent`, `--ink`, `--muted`, `--surface`,
 `--surface-2`, `--line`, `--bg`, `--accent-ink`, `--shadow`, `--radius`,
 `--radius-lg`, `--container`, `--content`, `--space-1` … `--space-7`.
 
+One token is deliberately NOT re-skinnable: `--hero-fallback-bg` (the media-less
+hero-slider slide base) is theme-invariant dark in both color modes because the
+hero-carousel overlay ink is white in both — a custom theme that copies the hero
+slider rules must carry this token (with no dark-mode override) or the no-image
+slide loses its contrast guarantee.
+
 ---
 
 ## 6. Examples
