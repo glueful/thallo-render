@@ -382,11 +382,25 @@ window.ThalloRuntime.register('forms', {
   function enhanceCarousel(root) {
     var viewport = root.querySelector('.thallo-block-carousel__viewport');
     var track = root.querySelector('.thallo-block-carousel__track');
-    if (!viewport || !track) { return; }
+    if (!viewport || !track) { return false; }
     var slides = Array.prototype.filter.call(track.children, function (el) {
       return el.nodeType === 1;
     });
-    if (slides.length < 2) { return; }
+    if (slides.length < 2) { return false; }
+
+    // Teardown accounting: every injected node / listener the module adds is
+    // captured here, undone in reverse on the returned cleanup (spec §1).
+    var undo = [];
+    function addNode(parent, node) {
+      parent.appendChild(node);
+      undo.push(function () {
+        if (node.parentNode) { node.parentNode.removeChild(node); }
+      });
+    }
+    function listen(targetEl, type, fn, opts) {
+      targetEl.addEventListener(type, fn, opts);
+      undo.push(function () { targetEl.removeEventListener(type, fn, opts); });
+    }
 
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var timer = null;
@@ -395,6 +409,7 @@ window.ThalloRuntime.register('forms', {
     var autoHidden = false; // automatic gate: tab hidden
     var live = null; // 'Slide N of M' status region
     var pauseBtn = null;
+    var io = null;
 
     function slideStart(i) {
       return slides[i] ? slides[i].offsetLeft - track.offsetLeft : 0;
@@ -464,8 +479,8 @@ window.ThalloRuntime.register('forms', {
         goTo(n);
         announce(norm(n));
       });
-      root.appendChild(prev);
-      root.appendChild(next);
+      addNode(root, prev);
+      addNode(root, next);
     }
 
     var dots = [];
@@ -482,14 +497,14 @@ window.ThalloRuntime.register('forms', {
         dots.push(dot);
         wrap.appendChild(dot);
       });
-      root.appendChild(wrap);
+      addNode(root, wrap);
       var syncDots = function () {
         var active = currentIndex();
         dots.forEach(function (d, i) {
           d.setAttribute('aria-current', i === active ? 'true' : 'false');
         });
       };
-      viewport.addEventListener('scroll', throttle(syncDots, 100), { passive: true });
+      listen(viewport, 'scroll', throttle(syncDots, 100), { passive: true });
       syncDots();
     }
 
@@ -497,7 +512,7 @@ window.ThalloRuntime.register('forms', {
       live = document.createElement('span');
       live.className = 'thallo-block-carousel__status';
       live.setAttribute('aria-live', 'off'); // silent while rotation is automatic
-      root.appendChild(live);
+      addNode(root, live);
       announce(currentIndex());
 
       pauseBtn = button('thallo-block-carousel__pause', 'Pause slides', '⏸');
@@ -507,31 +522,39 @@ window.ThalloRuntime.register('forms', {
         syncPause(); // startAuto may have declined (gates); label/state stay in sync
         politeAfterUserAction();
       });
-      root.appendChild(pauseBtn);
+      addNode(root, pauseBtn);
       syncPause();
 
       // Any direct interaction with the slides pauses rotation until explicit Play.
       ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
-        viewport.addEventListener(ev, userInteracted, { passive: true });
+        listen(viewport, ev, userInteracted, { passive: true });
       });
 
       if (typeof IntersectionObserver === 'function') {
-        new IntersectionObserver(function (entries) {
+        io = new IntersectionObserver(function (entries) {
           for (var i = 0; i < entries.length; i++) {
             autoOffscreen = !entries[i].isIntersecting;
           }
           if (autoOffscreen) { stopAuto(); } else { startAuto(); }
-        }).observe(root);
+        });
+        io.observe(root);
+        undo.push(function () { if (io) { io.disconnect(); } });
       }
 
-      document.addEventListener('visibilitychange', function () {
+      var onVisibilityChange = function () {
         autoHidden = !!document.hidden;
         if (autoHidden) { stopAuto(); } else { startAuto(); }
-      });
+      };
+      listen(document, 'visibilitychange', onVisibilityChange);
 
       autoHidden = !!document.hidden;
       startAuto();
+      undo.push(function () { stopAuto(); });
     }
+
+    return function () {
+      for (var i = undo.length - 1; i >= 0; i--) { undo[i](); }
+    };
   }
 
   window.ThalloRuntime.register('carousel', {
