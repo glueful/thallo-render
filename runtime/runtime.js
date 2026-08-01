@@ -774,13 +774,19 @@ window.ThalloRuntime.register('forms', {
     var panels = panelsBox ? childrenWithClass(panelsBox, 'thallo-block-tabs__panel') : [];
 
     if (radios.length === 0 && labels.length === 0 && panels.length === 0) {
-      return; // empty block: nothing to enhance, marking it is harmless
+      return false; // empty block: structural no-op, never marked
     }
     if (radios.length === 0 || labels.length !== radios.length || panels.length !== radios.length) {
       // Unpairable structure: throw so the component stays UNMARKED and the
       // enhanced-mode CSS (which trusts [hidden] we never got to set) stays off.
       throw new Error('tabs: radios/labels/panels do not pair; leaving the radio floor as-is');
     }
+
+    // Baseline snapshot BEFORE any mutation: select() (below) mutates radio.checked
+    // and panel[hidden] directly, bypassing the undo log — so on teardown the log
+    // alone can't restore the served floor after an interaction. This is that floor.
+    var baselineChecked = radios.map(function (r) { return !!r.checked; });
+    var baselineHidden = panels.map(function (p) { return p.getAttribute('hidden') !== null; });
 
     var undo = []; // every mutation in order; replayed in reverse on any throw
     function setAttr(elm, name, value) {
@@ -902,6 +908,15 @@ window.ThalloRuntime.register('forms', {
       rollback();
       throw err; // core containment leaves the component unmarked
     }
+
+    return function () {
+      rollback(); // the existing undo log, reversed: attributes + listeners
+      for (var k = 0; k < radios.length; k++) { radios[k].checked = baselineChecked[k]; }
+      for (k = 0; k < panels.length; k++) {
+        if (baselineHidden[k]) { panels[k].setAttribute('hidden', ''); }
+        else { panels[k].removeAttribute('hidden'); }
+      }
+    };
   }
 
   window.ThalloRuntime.register('tabs', {
