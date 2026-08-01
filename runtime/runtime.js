@@ -604,10 +604,30 @@ window.ThalloRuntime.register('forms', {
       // details itself is the closest thing to one, and it has no __details
       // parents, so the submenu wiring below is a harmless no-op there.
       var root = (mobile.closest && mobile.closest('.thallo-block-navigation')) || mobile;
-      if (root.classList) { root.classList.add('thallo-block-navigation--js'); }
+      var parents = mobile.querySelectorAll('.thallo-block-navigation__details');
+
+      // Snapshot BEFORE any mutation (spec §1 teardown): cleanup restores every
+      // managed <details> to the open state it had when enhance() started.
+      var initialOpen = [];
+      for (var i = 0; i < parents.length; i++) { initialOpen.push(!!parents[i].open); }
+      var mobileInitialOpen = !!mobile.open;
+
+      // Teardown accounting, same idiom as the carousel module: every listener
+      // added goes through listen() and is undone in reverse on cleanup; pending
+      // hover-close timeouts are collected separately so cleanup can clear them.
+      var undo = [];
+      function listen(el, type, fn) {
+        el.addEventListener(type, fn);
+        undo.push(function () { el.removeEventListener(type, fn); });
+      }
+      var timers = [];
+
+      if (root.classList) {
+        root.classList.add('thallo-block-navigation--js');
+        undo.push(function () { root.classList.remove('thallo-block-navigation--js'); });
+      }
       var revealHover = !!(root.classList &&
         root.classList.contains('thallo-block-navigation--reveal-hover'));
-      var parents = mobile.querySelectorAll('.thallo-block-navigation__details');
 
       function closeOthers(except) {
         for (var i = 0; i < parents.length; i++) {
@@ -625,12 +645,12 @@ window.ThalloRuntime.register('forms', {
         );
       }
 
-      for (var i = 0; i < parents.length; i++) {
+      for (i = 0; i < parents.length; i++) {
         (function (d) {
           var summary = d.querySelector('[data-nav-toggle]');
           var closeTimer = null;
 
-          d.addEventListener('toggle', function () {
+          listen(d, 'toggle', function () {
             if (d.open) {
               closeOthers(d);
               animateOpen(d.querySelector('[data-nav-panel]'));
@@ -639,7 +659,7 @@ window.ThalloRuntime.register('forms', {
 
           // Escape (bubbling from anywhere inside the open submenu) closes it
           // and restores focus to the toggle.
-          d.addEventListener('keydown', function (e) {
+          listen(d, 'keydown', function (e) {
             if (e.key === 'Escape' && d.open) {
               d.open = false;
               if (summary && summary.focus) { summary.focus(); }
@@ -649,7 +669,7 @@ window.ThalloRuntime.register('forms', {
           if (summary) {
             // ArrowDown opens and moves focus into the panel. Enter/Space need
             // no handler: <summary> toggles natively.
-            summary.addEventListener('keydown', function (e) {
+            listen(summary, 'keydown', function (e) {
               if (e.key === 'ArrowDown') {
                 if (e.preventDefault) { e.preventDefault(); }
                 d.open = true;
@@ -665,14 +685,15 @@ window.ThalloRuntime.register('forms', {
           // the handlers so crossing the breakpoint needs no re-binding: below
           // 48rem hover is inert and the in-flow tap disclosure governs.
           if (revealHover && d.parentNode && d.parentNode.addEventListener) {
-            d.parentNode.addEventListener('mouseenter', function () {
+            listen(d.parentNode, 'mouseenter', function () {
               if (mq.matches) { return; } // hover reveal is a desktop affordance
               if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
               d.open = true;
             });
-            d.parentNode.addEventListener('mouseleave', function () {
+            listen(d.parentNode, 'mouseleave', function () {
               if (mq.matches) { return; }
               closeTimer = setTimeout(function () { closeTimer = null; d.open = false; }, 180);
+              timers.push(closeTimer);
             });
           }
         })(parents[i]);
@@ -681,7 +702,7 @@ window.ThalloRuntime.register('forms', {
       // Outside-click closes any open submenu; a click on a link inside the menu
       // closes the mobile drawer — on mobile viewports only (on desktop the outer
       // details must stay open: it is what keeps the list visible).
-      document.addEventListener('click', function (e) {
+      listen(document, 'click', function (e) {
         var t = e.target;
         if (!t || !(mobile.contains && mobile.contains(t))) {
           closeOthers(null);
@@ -694,10 +715,17 @@ window.ThalloRuntime.register('forms', {
 
       // Outer-details state machine: OPEN on desktop, closed when crossing to
       // mobile (the drawer chrome only exists below 48rem).
-      mq.addEventListener('change', function (e) {
+      listen(mq, 'change', function (e) {
         mobile.open = !e.matches;
       });
       if (!mq.matches) { mobile.open = true; }
+
+      return function () {
+        for (var u = undo.length - 1; u >= 0; u--) { undo[u](); }
+        for (var t = 0; t < timers.length; t++) { clearTimeout(timers[t]); }
+        for (var p = 0; p < parents.length; p++) { parents[p].open = initialOpen[p]; }
+        mobile.open = mobileInitialOpen;
+      };
     }
   });
 })();
