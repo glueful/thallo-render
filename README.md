@@ -197,6 +197,12 @@ late-inserted toggles' `aria-checked` on connect:
 </thallo-color-mode-toggle>
 ```
 
+A real-Chromium smoke gate for these four elements (upgrade, option
+projection with native `.dataset` reflection, marker ownership,
+disconnect/reconnect, boot ordering, and computed no-JS `display`) lives in
+`tools/runtime-browser` — run `cd tools/runtime-browser && npm install &&
+npx playwright install chromium && npm test`; see that package's README.md.
+
 ## Homepage
 
 `GET /` always renders `index.twig`. Set `render.homepage_entry` (env
