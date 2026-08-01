@@ -29,7 +29,7 @@ final class RenderContributionRegistry
     /** @var array{prefixes: list<string>, exacts: list<string>}|null */
     private ?array $frozenReservedSnapshot = null;
 
-    /** @var list<string>|null */
+    /** @var list<array{contributor_id: string, dir: string}>|null */
     private ?array $frozenTemplateSnapshot = null;
 
     public function registerReservedPaths(ReservedPathContributor $contributor): void
@@ -64,8 +64,20 @@ final class RenderContributionRegistry
     /** @return list<string> */
     public function frozenTemplatePaths(): array
     {
+        return array_column($this->frozenTemplateContributions(), 'dir');
+    }
+
+    /**
+     * The same frozen snapshot as {@see frozenTemplatePaths()}, with contributor ids
+     * (admin-contributed-templates spec §1) — ids are for deterministic resolution and
+     * diagnostics only, never for public API responses.
+     *
+     * @return list<array{contributor_id: string, dir: string}>
+     */
+    public function frozenTemplateContributions(): array
+    {
         $this->freeze();
-        /** @var list<string> $snapshot */
+        /** @var list<array{contributor_id: string, dir: string}> $snapshot */
         $snapshot = $this->frozenTemplateSnapshot;
         return $snapshot;
     }
@@ -123,10 +135,10 @@ final class RenderContributionRegistry
         return ['prefixes' => $prefixes, 'exacts' => $exacts];
     }
 
-    /** @return list<string> */
+    /** @return list<array{contributor_id: string, dir: string}> */
     private function buildTemplateSnapshot(): array
     {
-        $dirs = [];
+        $rows = [];
         $seen = [];
         foreach ($this->ordered($this->templates) as $contributor) {
             foreach ($contributor->templatePaths() as $dir) {
@@ -134,10 +146,10 @@ final class RenderContributionRegistry
                     throw new \LogicException("Duplicate contributed template path '{$dir}'.");
                 }
                 $seen[$dir] = true;
-                $dirs[] = $dir;
+                $rows[] = ['contributor_id' => $contributor->contributorId(), 'dir' => $dir];
             }
         }
-        return $dirs;
+        return $rows;
     }
 
     /**
