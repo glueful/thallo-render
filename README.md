@@ -335,9 +335,6 @@ presentation only: one full-bleed slide per view, the slide's `__wrapper`/`__med
 stacked into the same grid cell with a scrim between them, on-media text tokens, and a
 background fallback on any slide with no image; mechanics (drag, dots, arrows,
 autoplay, the scroll-snap no-JS floor) are unchanged, inherited from `thallo-carousel`.
-Known limitation (fix tracked): a slide with no media currently renders the overlay
-ink over the light standard hero background — keep an image on every slide until the
-no-media fallback ships.
 
 **animated_text authoring.** `rotate_words` is newline-delimited — one alternative per
 line, blank lines dropped, CRLF/CR normalized to LF (the exact contract implemented by
