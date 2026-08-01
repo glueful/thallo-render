@@ -34,7 +34,12 @@ final class TemplatePolicy
     // bumped: font_faces_style joined the function allowlist (default-theme-font spec §3)
     // bumped: shop_wishlist_scope + shop_wishlist_url joined the allowlist (storefront-v1 spec §5)
     // bumped: shop_styles_url joined the function allowlist (head stylesheet link)
-    public const CACHE_VERSION = 16;
+    // bumped: admin-contributed-templates spec §3 — shop URL trio + json_script + the eight
+    //         render functions the shipped default theme uses (individually reviewed;
+    //         media_image gated behind normalizeWidths()), while range()/RangeBinary are denied
+    //         to prevent pre-call unbounded allocation. Every shipped template round-trips through the
+    //         editor (exception-free lint gate).
+    public const CACHE_VERSION = 17;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim'];
 
@@ -51,11 +56,14 @@ final class TemplatePolicy
         'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
         'runtime_script', 'seo_head', 'font_faces_style',
         'shop_wishlist_scope', 'shop_wishlist_url', 'shop_styles_url',
-        'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'range',
+        'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script',
+        'entries', 'is_preview', 'media_image', 'claim_priority_image',
+        'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',
+        'include', 'parent', 'block', 'cycle', 'date', 'min', 'max',
     ];
 
     public const TESTS = [
-        'defined', 'empty', 'even', 'iterable', 'null', 'odd',
+        'defined', 'empty', 'even', 'iterable', 'null', 'odd', 'true',
         'same as', 'divisible by', 'sequence', 'mapping',
     ];
 
@@ -143,7 +151,6 @@ final class TemplatePolicy
         \Twig\Node\Expression\Binary\NullCoalesceBinary::class,
         \Twig\Node\Expression\Binary\OrBinary::class,
         \Twig\Node\Expression\Binary\PowerBinary::class,
-        \Twig\Node\Expression\Binary\RangeBinary::class,
         \Twig\Node\Expression\Binary\SameAsBinary::class,
         \Twig\Node\Expression\Binary\SpaceshipBinary::class,
         \Twig\Node\Expression\Binary\StartsWithBinary::class,
@@ -156,6 +163,12 @@ final class TemplatePolicy
         \Twig\Node\Expression\Test\NullTest::class,
         \Twig\Node\Expression\Test\OddTest::class,
         \Twig\Node\Expression\Test\SameasTest::class,
+        // Twig core implicitly wraps any `{% if expr %}` / `expr ? a : b` condition that
+        // isn't already statically known boolean (e.g. a bare function call) in this node
+        // (admin-contributed-templates spec §3 — is_preview()/color_mode_enabled()/
+        // claim_priority_image() used as bare conditions by the shipped default theme).
+        // Pure boolean coercion (with a Markup->string cast) — no code execution, no I/O.
+        \Twig\Node\Expression\Test\TrueTest::class,
         // Filters (NO RawFilter)
         \Twig\Node\Expression\Filter\DefaultFilter::class,
         // Ternary

@@ -611,11 +611,36 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function mediaImage(string $uuid, array $widths): ?array
     {
+        $widths = self::normalizeWidths($widths);
         if ($this->mediaVariants === null) {
             $src = $this->media($uuid);
             return $src === null ? null : ['src' => $src, 'srcset' => null];
         }
         return $this->mediaVariants->variants($uuid, $widths);
+    }
+
+    /**
+     * Defensive width normalization (admin-contributed-templates spec §3): media_image is
+     * DB-template-callable, so the width list is attacker-shaped — positive ints only,
+     * deduplicated, at most 8 candidates BEFORE any resolver work. TemplatePolicy separately
+     * denies both range() and RangeBinary, which could allocate an unbounded array before this
+     * method is entered.
+     *
+     * @param array<mixed> $widths
+     * @return list<int>
+     */
+    public static function normalizeWidths(array $widths): array
+    {
+        $clean = [];
+        foreach ($widths as $w) {
+            if (is_int($w) && $w > 0 && !in_array($w, $clean, true)) {
+                $clean[] = $w;
+                if (count($clean) === 8) {
+                    break;
+                }
+            }
+        }
+        return $clean;
     }
 
     /** @return list<TwigFilter> */
