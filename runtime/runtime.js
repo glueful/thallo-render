@@ -1049,8 +1049,9 @@ window.ThalloRuntime.register('forms', {
    their tags: customElements.define() upgrades already-parsed hosts synchronously,
    queuing their connection microtasks — so scheduling the whole-document scan on a
    LATER microtask (or on DOMContentLoaded, whose dispatch flushes those microtasks
-   first) guarantees element projection wins before the legacy scan, which then
-   no-ops on the shared marker. No public start() API. */
+   first) guarantees element projection wins before the class-based document scan (fully
+   supported, not deprecated), which then no-ops on the shared marker. No public
+   start() API. */
 (function () {
   'use strict';
   function boot() { window.ThalloRuntime.enhance(document.documentElement); }
