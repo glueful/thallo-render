@@ -97,6 +97,22 @@ default layout fallback. To adopt the runtime in a copied theme, delete the copi
 `blocks.js` and drop its `<script>` tag from the copied `layout.twig` (load
 `{{ runtime_script() }}` there instead).
 
+**Per-block runtime assets.** `block_script(name)` is a second, block-scoped lazy-load
+channel alongside `runtime_script()`: a block template calls it to emit
+`<script defer src="/_thallo/runtime/block-{name}.js"></script>` for exactly the two
+names in the closed catalog (`RenderContextExtension::BLOCK_SCRIPT_ASSETS` —
+`animated-text`, `gallery`); any other name — including path-traversal shapes or an
+empty string — resolves to empty markup, so `block_script()` can never be coerced into
+pointing at an arbitrary path. Emission dedupes once per render per name, but that
+dedupe is a bandwidth optimization only, not the correctness mechanism: the real
+guard is each asset's own IIFE (a `window.__thalloBlock*` flag) that registers with
+the runtime exactly once and tolerates re-execution. That distinction matters because
+fragment renders (e.g. an admin region preview) reset `block_script()`'s per-render
+state independently of the enclosing full-page render, so a single page CAN
+legitimately end up with the same `<script>` tag more than once in its final HTML —
+each execution after the first is a cheap guard check, never a duplicate
+registration.
+
 ### Theme runtime elements
 
 Four custom elements — `thallo-carousel`, `thallo-tabs`, `thallo-navigation`,
@@ -305,6 +321,41 @@ existing slug, never overwrites admin edits. Media blocks render through `media(
 starter styling ships standalone as `assets/blocks.css`: block TEMPLATES fall back
 to the pack default per-template, but assets don't — a custom theme adopts the
 starter blocks by copying (or rewriting) that one file.
+
+**Hero slider.** A `carousel` block with `style: hero` and one or more `hero` blocks
+as its `slides` is a recipe, not an enforced pairing — the carousel's `slides` field
+places no type restriction on its children. Each slide's heading level comes from that
+slide's own `hero.heading_level` (`h1`/`h2`/`h3`) exactly as it would standalone; author
+every slide as `h2` — a page should carry exactly one `<h1>` — unless the slider is the
+page's sole hero (nothing else on the page renders or contains an `<h1>`), in which case
+the FIRST slide alone may use `h1`. The `thallo-block-carousel--hero` modifier is
+presentation only: one full-bleed slide per view, the slide's `__wrapper`/`__media`
+stacked into the same grid cell with a scrim between them, on-media text tokens, and a
+background fallback on any slide with no image; mechanics (drag, dots, arrows,
+autoplay, the scroll-snap no-JS floor) are unchanged, inherited from `thallo-carousel`.
+
+**animated_text authoring.** `rotate_words` is newline-delimited — one alternative per
+line, blank lines dropped, CRLF/CR normalized to LF (the exact contract implemented by
+`FieldValidator::normalizeRotateWords()` and consumed identically by the template) —
+and capped at 5 normalized alternatives, enforced at save: a 6th alternative is
+rejected with an error on `{path}.rotate_words`, never silently truncated. Once
+revealed, `block-animated-text.js` runs ONE finite rotation cycle (1s per step) and
+settles on the LAST alternative — it never loops. The static floor — server output
+with no JS, `prefers-reduced-motion: reduce`, or an environment lacking
+`IntersectionObserver` — renders `prefix` + the FIRST alternative + `suffix` as plain
+visible text; CSS reserves width for the widest alternative via a same-cell grid
+stack, but only the active one is ever visible.
+
+**Gallery.** `items` is a `blocks` field hard-restricted to `image` children
+(`enforce_block_types: true` — anything else is rejected at save, never silently
+dropped). At render, each item resolves through `media_image()` before an anchor is
+built, so unresolved or non-image assets are omitted from the grid entirely — no dead
+anchors. `lightbox` defaults to on (`data-lightbox="1"`); set it to `false` to opt out
+(`data-lightbox="0"`). The no-JS floor — and the fallback under any lightbox failure
+(unsupported `<dialog>`, or a construction/`showModal` throw) — is real anchors
+pointing straight at the full-size image blob: `block-gallery.js` only ever intercepts
+a click to show that same image in a `<dialog>`, and lets the click fall through to
+normal navigation whenever it can't.
 
 **Canvas annotation (preview only):** every preview-session render wraps each
 `blocks()` instance in a layout-inert `<div class="thallo-preview-block"
