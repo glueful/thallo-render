@@ -13,6 +13,8 @@ use Twig\Node\Expression\FilterExpression;
 use Twig\Node\Expression\FunctionExpression;
 use Twig\Node\Expression\GetAttrExpression;
 use Twig\Node\Expression\TestExpression;
+use Twig\Node\Expression\Variable\ContextVariable;
+use Twig\Node\ImportNode;
 use Twig\Node\IncludeNode;
 use Twig\Node\Node;
 use Twig\Source;
@@ -140,6 +142,20 @@ final class TemplateLinter
 
         if ($node instanceof IncludeNode && !$node->getNode('expr') instanceof ConstantExpression) {
             $deny('include target must be a constant string.');
+        }
+
+        // Import target: ONLY the self-import shape (spec §4, gate-audit amendment —
+        // task 7). Twig itself special-cases this exact shape at compile time
+        // (ImportNode::compile(): ContextVariable named "_self" compiles to `$this`
+        // instead of a `$this->load(...)` call) — matching that check means an import
+        // of anything else always resolves through the loader, i.e. an arbitrary
+        // template path. `{% import 'layout.twig' as x %}` denied; `{% import _self as
+        // x %}` allowed — every shipped macro user already uses only the latter.
+        if ($node instanceof ImportNode) {
+            $expr = $node->getNode('expr');
+            if (!($expr instanceof ContextVariable && $expr->getAttribute('name') === '_self')) {
+                $deny('import target must be "_self" (e.g. {% import _self as x %}).');
+            }
         }
     }
 }

@@ -39,16 +39,27 @@ final class TemplatePolicy
     //         media_image gated behind normalizeWidths()), while range()/RangeBinary are denied
     //         to prevent pre-call unbounded allocation. Every shipped template round-trips through the
     //         editor (exception-free lint gate).
+    // NOT bumped — vocabulary alignment (admin-contributed-templates task 7, gate-audit
+    //         amendment): the exception-free lint gate's dry run (33 failures) found sanctioned
+    //         template vocabulary the v17 policy never listed — editable_text/style_hook (already
+    //         wired as filters, just missing from FILTERS), and macro/import (constrained below to
+    //         the self-import shape by TemplateLinter; every shipped macro user already conforms).
+    //         hex_color/numeric_clamp are NEW bounded PHP helpers that replace the two |matches
+    //         regex checks blocks/style.twig used directly — MatchesBinary/`matches` stays DENIED
+    //         (ReDoS posture); the patterns now live in PHP, bound to one call site each, never in
+    //         template source. This widens v17's own vocabulary to match what already shipped; it
+    //         does not loosen anything previously enforced, so compiled caches keyed on v17 are
+    //         still valid — no recompile is required.
     public const CACHE_VERSION = 17;
 
-    public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim'];
+    public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
     public const FILTERS = [
         'abs', 'batch', 'capitalize', 'column', 'date', 'date_modify', 'default',
-        'escape', 'e', 'first', 'format', 'join', 'json_encode', 'keys', 'last',
-        'length', 'lower', 'merge', 'nl2br', 'number_format', 'replace', 'reverse',
-        'round', 'safe_html', 'safe_url', 'slice', 'sort', 'split', 'striptags', 'title', 'trim',
-        'upper', 'url_encode',
+        'editable_text', 'escape', 'e', 'first', 'format', 'hex_color', 'join', 'json_encode',
+        'keys', 'last', 'length', 'lower', 'merge', 'nl2br', 'number_format', 'numeric_clamp',
+        'replace', 'reverse', 'round', 'safe_html', 'safe_url', 'slice', 'sort', 'split',
+        'striptags', 'style_hook', 'title', 'trim', 'upper', 'url_encode',
     ];
 
     public const FUNCTIONS = [
@@ -77,8 +88,15 @@ final class TemplatePolicy
      *   - Expression\Binary\HasEveryBinary/HasSomeBinary — arrow-function carriers
      *   - Expression\Binary\SetBinary + *DestructuringSetBinary — set internals beyond plain assignment
      *   - Expression\ArrowFunctionExpression      — how map/filter/reduce stay out
-     *   - Expression\MacroReferenceExpression, MethodCallExpression, InlinePrint,
-     *     VariadicExpression, ListExpression, Test\ConstantTest, Filter\RawFilter
+     *   - MethodCallExpression, InlinePrint, VariadicExpression, ListExpression,
+     *     Test\ConstantTest, Filter\RawFilter
+     *
+     * Gate-audit amendment (admin-contributed-templates task 7): ForElseNode (`{% for %}
+     * … {% else %}`), ImportNode, MacroNode and Expression\MacroReferenceExpression joined
+     * the allowlist — all pure control-flow/declaration, no code execution, no I/O, no
+     * object reach. ImportNode is further constrained by TemplateLinter to the self-import
+     * shape (`{% import _self as x %}`) only; every shipped macro user (navigation.twig,
+     * blog_posts.twig, pricing_table.twig, container.twig) already conforms.
      *
      * @var list<class-string|string>
      */
@@ -87,9 +105,9 @@ final class TemplatePolicy
         \Twig\Node\BodyNode::class,
         \Twig\Node\Node::class,
         // Twig 3.28: a childless, attributeless structural marker ("has global
-        // side effects but does not generate template code") — reviewed; the
-        // constructs it carries (e.g. macro declarations) are still denied by
-        // their own nodes/tags.
+        // side effects but does not generate template code") — reviewed. The
+        // constructs it carries are policed individually by their own nodes/tags
+        // (most remain denied; macro/import are now sanctioned — see above).
         \Twig\Node\ConfigNode::class,
         \Twig\Node\Nodes::class,
         \Twig\Node\TextNode::class,
@@ -98,11 +116,14 @@ final class TemplatePolicy
         \Twig\Node\IfNode::class,
         \Twig\Node\ForNode::class,
         \Twig\Node\ForLoopNode::class,
+        \Twig\Node\ForElseNode::class,
         \Twig\Node\BlockNode::class,
         \Twig\Node\BlockReferenceNode::class,
         \Twig\Node\IncludeNode::class,
         \Twig\Node\EmptyNode::class,
         \Twig\Node\CaptureNode::class,
+        \Twig\Node\ImportNode::class,
+        \Twig\Node\MacroNode::class,
         // Expressions (top level)
         \Twig\Node\Expression\ConstantExpression::class,
         \Twig\Node\Expression\ArrayExpression::class,
@@ -115,6 +136,9 @@ final class TemplatePolicy
         \Twig\Node\Expression\ParentExpression::class,
         \Twig\Node\Expression\BlockReferenceExpression::class,
         \Twig\Node\Expression\EmptyExpression::class,
+        // Macro call (m.foo(...) after {% import _self as m %}) — TemplateLinter pins
+        // the ONLY sanctioned import shape, so 'template' is always a self-reference.
+        \Twig\Node\Expression\MacroReferenceExpression::class,
         // Variables
         \Twig\Node\Expression\Variable\ContextVariable::class,
         \Twig\Node\Expression\Variable\AssignContextVariable::class,

@@ -396,6 +396,37 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
+     * Bounded hex-color helper (gate-audit amendment, admin-contributed-templates task 7):
+     * replaces the |matches "/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/" check blocks/style.twig
+     * used directly — |matches/MatchesBinary stays denied by TemplatePolicy (ReDoS
+     * posture: preg_match on a template-supplied pattern). The SAME pattern now lives
+     * here, in PHP, bound to this one call site — never in template source.
+     */
+    public function hexColor(mixed $value): string
+    {
+        if (!is_string($value)) {
+            return '';
+        }
+        $trimmed = trim($value);
+        return preg_match('/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/', $trimmed) === 1 ? $trimmed : '';
+    }
+
+    /**
+     * Bounded numeric-clamp helper (gate-audit amendment, admin-contributed-templates
+     * task 7): replaces the |matches "/^[0-9]+(\.[0-9]+)?$/" + max()/min() pair
+     * blocks/style.twig used directly for the shadow-opacity CSS variable. Null (not 0)
+     * on a non-numeric value — the caller distinguishes "no value" from "clamped to the
+     * floor" the same way the removed matches check did.
+     */
+    public function numericClamp(mixed $value, float $min, float $max): ?float
+    {
+        if (!is_numeric($value)) {
+            return null;
+        }
+        return max($min, min($max, (float) $value));
+    }
+
+    /**
      * Pure sanitizer for the class hook (pin 7). Keeps only tokens matching
      * ^[A-Za-z_-][A-Za-z0-9_-]*$, strips any existing thallo-style- prefix
      * (idempotent), then namespaces each under thallo-style-. Returns a
@@ -658,6 +689,10 @@ final class RenderContextExtension extends AbstractExtension
             // No is_safe: sanitized output is autoescape-safe (a deliberate second
             // layer over the sanitizer, since the input is operator-derived).
             new TwigFilter('style_hook', $this->styleHook(...)),
+            // Bounded PHP helpers replacing the two |matches regex checks
+            // blocks/style.twig used to run directly (gate-audit amendment, task 7).
+            new TwigFilter('hex_color', $this->hexColor(...)),
+            new TwigFilter('numeric_clamp', $this->numericClamp(...)),
         ];
     }
 
