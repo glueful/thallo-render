@@ -575,9 +575,13 @@
    display: contents): the carrier's box doesn't exist, so `> *` alone would size
    the carrier (ignored) while the REAL slide — its child — became an auto-sized
    flex item. Every rule therefore pairs the direct-child selector with a
-   carrier-piercing variant; :where() keeps both at identical specificity. */
+   carrier-piercing variant; :where() keeps both at identical specificity.
+   max-width/margin-inline resets: many blocks carry standalone page-layout
+   sizing (e.g. .thallo-block-image's max-width: var(--container) + auto
+   margins) — as a slide, that cap silently overrides flex-basis: 100% and a
+   wider carousel shows the next slide poking in. Slides fill their basis. */
 .thallo-block-carousel__track > *,
-.thallo-block-carousel__track > :where(.thallo-preview-block) > * { scroll-snap-align: start; flex: 0 0 100%; min-width: 0; margin-block: 0; }
+.thallo-block-carousel__track > :where(.thallo-preview-block) > * { scroll-snap-align: start; flex: 0 0 100%; min-width: 0; max-width: none; margin-block: 0; margin-inline: 0; }
 @media (min-width: 40rem) {
   .thallo-block-carousel--per-2 .thallo-block-carousel__track > *,
   .thallo-block-carousel--per-2 .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex-basis: calc(50% - var(--space-4) / 2); }
@@ -589,6 +593,13 @@
 .thallo-block-carousel--hero { max-width: none; padding-inline: 0; }                       /* 1: full-bleed */
 .thallo-block-carousel--hero .thallo-block-carousel__track > *,
 .thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex: 0 0 100%; } /* 2: one per view (after --per-N) */
+/* 2b: a BARE image block as a slide (no hero wrapper) keeps its standalone
+   card styling — side padding, natural-width img, shadow. In a full-bleed
+   hero slider it must read as a slide: edge-to-edge cover image. */
+.thallo-block-carousel--hero .thallo-block-carousel__track > .thallo-block-image,
+.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image { padding-inline: 0; }
+.thallo-block-carousel--hero .thallo-block-carousel__track > .thallo-block-image img,
+.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image img { width: 100%; max-height: 80vh; object-fit: cover; border-radius: 0; box-shadow: none; display: block; }
 .thallo-block-carousel--hero .thallo-block-hero { min-height: 60vh; padding-block: 0; }    /* 3: stacked grid */
 .thallo-block-carousel--hero .thallo-block-hero__inner {
   display: grid; min-height: inherit; max-width: none; margin: 0; padding: 0;
