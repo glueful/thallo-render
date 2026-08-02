@@ -589,17 +589,31 @@
   .thallo-block-carousel--per-3 .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex-basis: calc(33.333% - var(--space-4) * 2 / 3); }
 }
 
+/* Once the runtime has taken over (arrows/dots/keyboard), the raw scroll-snap
+   scrollbar is redundant plumbing; without JS it stays as the visible scroll
+   affordance (no-JS floor). Hero sliders hide it unconditionally — their
+   full-bleed image surface reads as broken with a scrollbar strip across it. */
+.thallo-block-carousel--hero .thallo-block-carousel__viewport,
+.thallo-block-carousel[data-thallo-enhanced="carousel"] .thallo-block-carousel__viewport { scrollbar-width: none; }
+.thallo-block-carousel--hero .thallo-block-carousel__viewport::-webkit-scrollbar,
+.thallo-block-carousel[data-thallo-enhanced="carousel"] .thallo-block-carousel__viewport::-webkit-scrollbar { display: none; }
+
 /* Hero slider preset (modern-blocks spec §2): presentation only — mechanics inherit. */
 .thallo-block-carousel--hero { max-width: none; padding-inline: 0; }                       /* 1: full-bleed */
+.thallo-block-carousel--hero .thallo-block-carousel__track { gap: 0; }                     /* 1b: slides sit flush — no page-background stripe between full-bleed slides */
 .thallo-block-carousel--hero .thallo-block-carousel__track > *,
 .thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex: 0 0 100%; } /* 2: one per view (after --per-N) */
 /* 2b: a BARE image block as a slide (no hero wrapper) keeps its standalone
    card styling — side padding, natural-width img, shadow. In a full-bleed
    hero slider it must read as a slide: edge-to-edge cover image. */
 .thallo-block-carousel--hero .thallo-block-carousel__track > .thallo-block-image,
-.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image { padding-inline: 0; }
+.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image { padding-inline: 0; display: flex; }
+/* Fixed 60vh (the hero-slide min-height floor) gives every image slide the SAME
+   height regardless of source aspect ratio; object-fit: cover crops instead of
+   distorting. The flex figure + min-height: 100% pair covers mixed sliders: if a
+   sibling hero slide stretches the track taller, the image fills the difference. */
 .thallo-block-carousel--hero .thallo-block-carousel__track > .thallo-block-image img,
-.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image img { width: 100%; max-height: 80vh; object-fit: cover; border-radius: 0; box-shadow: none; display: block; }
+.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image img { width: 100%; height: 60vh; min-height: 100%; object-fit: cover; border-radius: 0; box-shadow: none; display: block; }
 .thallo-block-carousel--hero .thallo-block-hero { min-height: 60vh; padding-block: 0; }    /* 3: stacked grid */
 .thallo-block-carousel--hero .thallo-block-hero__inner {
   display: grid; min-height: inherit; max-width: none; margin: 0; padding: 0;
@@ -657,6 +671,40 @@
   padding: 0;
 }
 .thallo-block-carousel__dot[aria-current="true"] { background: var(--accent); }
+/* Autoplay pause/play toggle (runtime-injected, appended to the root like the
+   arrows): same circular-chip language as prev/next, anchored bottom-right. */
+.thallo-block-carousel__pause {
+  position: absolute;
+  right: calc(var(--space-4) / 2);
+  bottom: calc(var(--space-4) / 2);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  line-height: 1;
+  z-index: 1;
+}
+/* 7: hero overlay chrome — a full-bleed slider carries its controls ON the image
+   (the modern pattern), not dangling below it. Dots go white-on-media for
+   contrast; the pause chip shares the same row, bottom-right. */
+.thallo-block-carousel--hero .thallo-block-carousel__dots {
+  position: absolute;
+  inset-inline: 0;
+  bottom: var(--space-4);
+  margin-top: 0;
+  z-index: 1;
+}
+.thallo-block-carousel--hero .thallo-block-carousel__dot { background: rgba(255, 255, 255, 0.55); }
+.thallo-block-carousel--hero .thallo-block-carousel__dot[aria-current="true"] { background: #fff; }
+.thallo-block-carousel--hero .thallo-block-carousel__pause { right: var(--space-4); bottom: var(--space-4); }
 /* visually-hidden 'Slide N of M' status region injected by the runtime carousel module */
 .thallo-block-carousel__status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 
