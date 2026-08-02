@@ -720,6 +720,29 @@ main > article > :where(.thallo-preview-block):first-child > .thallo-block-carou
 }
 .thallo-block-carousel__prev { left: calc(var(--space-4) / 2); }
 .thallo-block-carousel__next { right: calc(var(--space-4) / 2); }
+/* Hover-reveal (2026-08 polish): pointer devices see the arrows only while
+   hovering the carousel — decluttered at rest. Scoped to (hover)+(pointer:
+   fine) so TOUCH devices, which have no hover, keep them always visible; and
+   :focus-within is a reveal trigger of equal rank, so a keyboard user never
+   tabs onto an invisible button. pointer-events: none while hidden — an
+   invisible edge button must not swallow clicks meant for the slide. */
+@media (hover: hover) and (pointer: fine) {
+  .thallo-block-carousel__prev, .thallo-block-carousel__next {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .thallo-block-carousel:hover .thallo-block-carousel__prev,
+  .thallo-block-carousel:hover .thallo-block-carousel__next,
+  .thallo-block-carousel:focus-within .thallo-block-carousel__prev,
+  .thallo-block-carousel:focus-within .thallo-block-carousel__next {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-carousel__prev, .thallo-block-carousel__next { transition: none; }
+}
 .thallo-block-carousel__dots { display: flex; justify-content: center; gap: 0.6rem; margin-top: var(--space-3); }
 .thallo-block-carousel__dot {
   width: 0.7rem;
