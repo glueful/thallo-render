@@ -598,6 +598,54 @@
 .thallo-block-carousel--hero .thallo-block-carousel__viewport::-webkit-scrollbar,
 .thallo-block-carousel[data-thallo-enhanced="carousel"] .thallo-block-carousel__viewport::-webkit-scrollbar { display: none; }
 
+/* Height presets (--h-*, slider-config ruling 2026-08-02): svh so mobile browser
+   chrome doesn't cause unstable sizing, with a pixel floor per preset. Consumed
+   as MIN-height by content slides (text may expand — never clipped to preserve
+   the preset) and as the cover height by bare image slides; presentation applies
+   under --hero. The template always emits one of these; the var() fallbacks on
+   the consuming rules cover hand-written light-DOM markup (README examples). */
+.thallo-block-carousel--h-compact { --carousel-height: max(40svh, 16rem); }
+.thallo-block-carousel--h-standard { --carousel-height: max(60svh, 22rem); }
+.thallo-block-carousel--h-tall { --carousel-height: max(80svh, 28rem); }
+.thallo-block-carousel--h-full { --carousel-height: max(100svh, 34rem); }
+
+/* Transition modes (--fade/--zoom, same ruling): ENHANCED-ONLY — keyed off the
+   runtime marker so a no-JS visitor always keeps the scroll-snap slide floor
+   (and the canvas, which never enhances, stays on the slide layout). Slides
+   stack in one grid cell; the runtime moves data-thallo-active between slides —
+   ONE shared active state for fade AND zoom; opacity cross-fades. No carrier
+   pair on the > * rules: carriers only exist where enhancement never runs. */
+.thallo-block-carousel--fade[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track,
+.thallo-block-carousel--zoom[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track { display: grid; }
+.thallo-block-carousel--fade[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > *,
+.thallo-block-carousel--zoom[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > * {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  overflow: hidden; /* the zoom scale must never bleed outside the slide */
+}
+.thallo-block-carousel--fade[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > [data-thallo-active],
+.thallo-block-carousel--zoom[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > [data-thallo-active] {
+  opacity: 1;
+  z-index: 1;
+}
+/* Zoom: a restrained IMAGE-ONLY scale on the active slide — text and controls
+   never transform. forwards keeps the settled frame until the slide changes
+   (removing data-thallo-active resets the animation for its next activation). */
+.thallo-block-carousel--zoom[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > [data-thallo-active] img {
+  animation: thallo-carousel-zoom 7s ease-out forwards;
+}
+@keyframes thallo-carousel-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+/* Reduced motion (ruling): no cross-fade, no zoom — an immediate state change. */
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-carousel--fade[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > *,
+  .thallo-block-carousel--zoom[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > * { transition: none; }
+  .thallo-block-carousel--zoom[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > [data-thallo-active] img { animation: none; }
+}
+
 /* Hero slider preset (modern-blocks spec §2): presentation only — mechanics inherit. */
 .thallo-block-carousel--hero { max-width: none; padding-inline: 0; }                       /* 1: full-bleed */
 /* 1a: flush opening — a hero slider as the page's FIRST block sits directly
@@ -615,13 +663,14 @@ main > article > :where(.thallo-preview-block):first-child > .thallo-block-carou
    hero slider it must read as a slide: edge-to-edge cover image. */
 .thallo-block-carousel--hero .thallo-block-carousel__track > .thallo-block-image,
 .thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image { padding-inline: 0; display: flex; }
-/* Fixed 60vh (the hero-slide min-height floor) gives every image slide the SAME
-   height regardless of source aspect ratio; object-fit: cover crops instead of
-   distorting. The flex figure + min-height: 100% pair covers mixed sliders: if a
-   sibling hero slide stretches the track taller, the image fills the difference. */
+/* The height preset (the hero-slide min-height floor) gives every image slide
+   the SAME height regardless of source aspect ratio; object-fit: cover crops
+   instead of distorting. The flex figure + min-height: 100% pair covers mixed
+   sliders: if a sibling hero slide stretches the track taller, the image fills
+   the difference. */
 .thallo-block-carousel--hero .thallo-block-carousel__track > .thallo-block-image img,
-.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image img { width: 100%; height: 60vh; min-height: 100%; object-fit: cover; border-radius: 0; box-shadow: none; display: block; }
-.thallo-block-carousel--hero .thallo-block-hero { min-height: 60vh; padding-block: 0; }    /* 3: stacked grid */
+.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > .thallo-block-image img { width: 100%; height: var(--carousel-height, max(60svh, 22rem)); min-height: 100%; object-fit: cover; border-radius: 0; box-shadow: none; display: block; }
+.thallo-block-carousel--hero .thallo-block-hero { min-height: var(--carousel-height, max(60svh, 22rem)); padding-block: 0; } /* 3: stacked grid; height preset drives the floor */
 .thallo-block-carousel--hero .thallo-block-hero__inner {
   display: grid; min-height: inherit; max-width: none; margin: 0; padding: 0;
 }

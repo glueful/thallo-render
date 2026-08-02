@@ -413,6 +413,20 @@ window.ThalloRuntime.register('forms', {
     }
 
     var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Transition modes (slider-config ruling): fade/zoom stack the slides via
+    // enhanced-only CSS and this module drives ONE shared active-slide state
+    // instead of scrollLeft. inert on hidden slides keeps focus/AT parity.
+    var faded = root.dataset.transition === 'fade' || root.dataset.transition === 'zoom';
+    var activeIdx = 0;
+    var dotsSync = null;
+    function setActive(i) {
+      activeIdx = i;
+      slides.forEach(function (s, j) {
+        if (j === i) { s.setAttribute('data-thallo-active', ''); } else { s.removeAttribute('data-thallo-active'); }
+        s.inert = j !== i;
+      });
+      if (dotsSync) { dotsSync(); }
+    }
     var timer = null;
     var userPaused = false; // sticky: only the explicit Play control clears it
     var autoOffscreen = false; // automatic gate: carousel out of the viewport
@@ -425,6 +439,7 @@ window.ThalloRuntime.register('forms', {
       return slides[i] ? slides[i].offsetLeft - track.offsetLeft : 0;
     }
     function currentIndex() {
+      if (faded) { return activeIdx; }
       var x = viewport.scrollLeft;
       var best = 0;
       var bestDist = Infinity;
@@ -439,6 +454,7 @@ window.ThalloRuntime.register('forms', {
       return ((i % n) + n) % n;
     }
     function goTo(i) {
+      if (faded) { setActive(norm(i)); return; }
       viewport.scrollTo({ left: slideStart(norm(i)), behavior: 'smooth' });
     }
     function announce(i) {
@@ -520,9 +536,74 @@ window.ThalloRuntime.register('forms', {
       };
       listen(viewport, 'scroll', throttle(syncDots, 100), { passive: true });
       syncDots();
+      dotsSync = syncDots; // faded modes have no scroll: setActive() drives the sync
     }
 
-    if (root.dataset.autoplay === '1' && !reducedMotion) {
+    if (faded) {
+      setActive(0);
+      // The stacked track has no scroll, so the viewport loses its implicit
+      // scroll-container focusability — restore it for the keyboard surface.
+      viewport.setAttribute('tabindex', '0');
+      undo.push(function () {
+        viewport.removeAttribute('tabindex');
+        slides.forEach(function (s) { s.removeAttribute('data-thallo-active'); s.inert = false; });
+      });
+    }
+
+    // Interaction surface: registered whenever a mode needs it — autoplay for
+    // the sticky user-pause, fade/zoom for swipe + keyboard navigation (the
+    // stacked track has no native scroll to inherit). userInteracted() is a
+    // harmless no-op when autoplay is off. Direction rules unchanged: the
+    // slider owns the x axis, the page owns y — vertical wheel/touch never
+    // count as slide interaction.
+    var auto = root.dataset.autoplay === '1' && !reducedMotion;
+    if (auto || faded) {
+      listen(viewport, 'keydown', function (e) {
+        userInteracted();
+        if (faded && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+          var n = currentIndex() + (e.key === 'ArrowRight' ? 1 : -1);
+          goTo(n);
+          announce(norm(n));
+        }
+      }, { passive: true });
+      listen(viewport, 'wheel', function (e) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { userInteracted(); }
+      }, { passive: true });
+      var endGesture = null;
+      listen(viewport, 'pointerdown', function (e) {
+        if (e.pointerType === 'mouse') { userInteracted(); return; }
+        if (endGesture) { endGesture(); }
+        var sx = e.clientX;
+        var sy = e.clientY;
+        function onMove(m) {
+          var dx = Math.abs(m.clientX - sx);
+          var dy = Math.abs(m.clientY - sy);
+          if (dx < 6 && dy < 6) { return; } // jitter: intent not readable yet
+          if (dx > dy) {
+            userInteracted();
+            if (faded) { // swipe navigates the stacked track
+              var n = currentIndex() + (m.clientX < sx ? 1 : -1);
+              goTo(n);
+              announce(norm(n));
+            }
+          }
+          endGesture();
+        }
+        function done() { endGesture(); }
+        endGesture = function () {
+          viewport.removeEventListener('pointermove', onMove);
+          viewport.removeEventListener('pointerup', done);
+          viewport.removeEventListener('pointercancel', done);
+          endGesture = null;
+        };
+        viewport.addEventListener('pointermove', onMove, { passive: true });
+        viewport.addEventListener('pointerup', done, { passive: true });
+        viewport.addEventListener('pointercancel', done, { passive: true });
+      }, { passive: true });
+      undo.push(function () { if (endGesture) { endGesture(); } });
+    }
+
+    if (auto) {
       live = document.createElement('span');
       live.className = 'thallo-block-carousel__status';
       live.setAttribute('aria-live', 'off'); // silent while rotation is automatic
@@ -538,45 +619,6 @@ window.ThalloRuntime.register('forms', {
       });
       addNode(root, pauseBtn);
       syncPause();
-
-      // Direct slide interaction pauses rotation until explicit Play — but only
-      // HORIZONTAL intent counts: the slider owns the x axis, the page owns y.
-      // Vertical wheel/touch scrolling passing over a full-bleed hero is page
-      // reading, not slide interaction, and must never sticky-pause. Touch/pen
-      // intent is unreadable at pointerdown (a finger landing here is usually a
-      // page scroll starting), so the first real movement decides: a horizontal
-      // swipe pauses; vertical scrolls and plain taps end the watch untriggered
-      // (pointercancel fires when the browser takes over a page scroll). Mouse
-      // pointerdown is a deliberate press: pause immediately.
-      listen(viewport, 'keydown', userInteracted, { passive: true });
-      listen(viewport, 'wheel', function (e) {
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { userInteracted(); }
-      }, { passive: true });
-      var endGesture = null;
-      listen(viewport, 'pointerdown', function (e) {
-        if (e.pointerType === 'mouse') { userInteracted(); return; }
-        if (endGesture) { endGesture(); }
-        var sx = e.clientX;
-        var sy = e.clientY;
-        function onMove(m) {
-          var dx = Math.abs(m.clientX - sx);
-          var dy = Math.abs(m.clientY - sy);
-          if (dx < 6 && dy < 6) { return; } // jitter: intent not readable yet
-          if (dx > dy) { userInteracted(); }
-          endGesture();
-        }
-        function done() { endGesture(); }
-        endGesture = function () {
-          viewport.removeEventListener('pointermove', onMove);
-          viewport.removeEventListener('pointerup', done);
-          viewport.removeEventListener('pointercancel', done);
-          endGesture = null;
-        };
-        viewport.addEventListener('pointermove', onMove, { passive: true });
-        viewport.addEventListener('pointerup', done, { passive: true });
-        viewport.addEventListener('pointercancel', done, { passive: true });
-      }, { passive: true });
-      undo.push(function () { if (endGesture) { endGesture(); } });
 
       if (typeof IntersectionObserver === 'function') {
         io = new IntersectionObserver(function (entries) {
