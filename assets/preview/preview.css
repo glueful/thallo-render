@@ -28,6 +28,11 @@
   background: #18181b;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
+/* Anchors inside a scroll container clip the poking-above default: the carousel
+   viewport is overflow-x: auto, which forces vertical clipping too, so a slide's
+   toolbar at top: -14px is shaved off (2026-08 canvas bug). Tuck it INSIDE the
+   block there instead — same static-offset discipline, no inline geometry. */
+.thallo-block-carousel__viewport .thallo-canvas-toolbar { top: 8px; }
 .thallo-canvas-toolbar button,
 .thallo-canvas-format-bar button {
   display: flex;
