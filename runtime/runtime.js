@@ -539,10 +539,44 @@ window.ThalloRuntime.register('forms', {
       addNode(root, pauseBtn);
       syncPause();
 
-      // Any direct interaction with the slides pauses rotation until explicit Play.
-      ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
-        listen(viewport, ev, userInteracted, { passive: true });
-      });
+      // Direct slide interaction pauses rotation until explicit Play — but only
+      // HORIZONTAL intent counts: the slider owns the x axis, the page owns y.
+      // Vertical wheel/touch scrolling passing over a full-bleed hero is page
+      // reading, not slide interaction, and must never sticky-pause. Touch/pen
+      // intent is unreadable at pointerdown (a finger landing here is usually a
+      // page scroll starting), so the first real movement decides: a horizontal
+      // swipe pauses; vertical scrolls and plain taps end the watch untriggered
+      // (pointercancel fires when the browser takes over a page scroll). Mouse
+      // pointerdown is a deliberate press: pause immediately.
+      listen(viewport, 'keydown', userInteracted, { passive: true });
+      listen(viewport, 'wheel', function (e) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { userInteracted(); }
+      }, { passive: true });
+      var endGesture = null;
+      listen(viewport, 'pointerdown', function (e) {
+        if (e.pointerType === 'mouse') { userInteracted(); return; }
+        if (endGesture) { endGesture(); }
+        var sx = e.clientX;
+        var sy = e.clientY;
+        function onMove(m) {
+          var dx = Math.abs(m.clientX - sx);
+          var dy = Math.abs(m.clientY - sy);
+          if (dx < 6 && dy < 6) { return; } // jitter: intent not readable yet
+          if (dx > dy) { userInteracted(); }
+          endGesture();
+        }
+        function done() { endGesture(); }
+        endGesture = function () {
+          viewport.removeEventListener('pointermove', onMove);
+          viewport.removeEventListener('pointerup', done);
+          viewport.removeEventListener('pointercancel', done);
+          endGesture = null;
+        };
+        viewport.addEventListener('pointermove', onMove, { passive: true });
+        viewport.addEventListener('pointerup', done, { passive: true });
+        viewport.addEventListener('pointercancel', done, { passive: true });
+      }, { passive: true });
+      undo.push(function () { if (endGesture) { endGesture(); } });
 
       if (typeof IntersectionObserver === 'function') {
         io = new IntersectionObserver(function (entries) {
