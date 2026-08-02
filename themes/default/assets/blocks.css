@@ -571,15 +571,24 @@
 :where(.thallo-block-carousel, thallo-carousel) { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); position: relative; }
 .thallo-block-carousel__viewport { overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: thin; }
 .thallo-block-carousel__track { display: flex; gap: var(--space-4); align-items: stretch; }
-.thallo-block-carousel__track > * { scroll-snap-align: start; flex: 0 0 100%; min-width: 0; margin-block: 0; }
+/* Slide sizing must survive the canvas/preview carrier (.thallo-preview-block,
+   display: contents): the carrier's box doesn't exist, so `> *` alone would size
+   the carrier (ignored) while the REAL slide — its child — became an auto-sized
+   flex item. Every rule therefore pairs the direct-child selector with a
+   carrier-piercing variant; :where() keeps both at identical specificity. */
+.thallo-block-carousel__track > *,
+.thallo-block-carousel__track > :where(.thallo-preview-block) > * { scroll-snap-align: start; flex: 0 0 100%; min-width: 0; margin-block: 0; }
 @media (min-width: 40rem) {
-  .thallo-block-carousel--per-2 .thallo-block-carousel__track > * { flex-basis: calc(50% - var(--space-4) / 2); }
-  .thallo-block-carousel--per-3 .thallo-block-carousel__track > * { flex-basis: calc(33.333% - var(--space-4) * 2 / 3); }
+  .thallo-block-carousel--per-2 .thallo-block-carousel__track > *,
+  .thallo-block-carousel--per-2 .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex-basis: calc(50% - var(--space-4) / 2); }
+  .thallo-block-carousel--per-3 .thallo-block-carousel__track > *,
+  .thallo-block-carousel--per-3 .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex-basis: calc(33.333% - var(--space-4) * 2 / 3); }
 }
 
 /* Hero slider preset (modern-blocks spec §2): presentation only — mechanics inherit. */
 .thallo-block-carousel--hero { max-width: none; padding-inline: 0; }                       /* 1: full-bleed */
-.thallo-block-carousel--hero .thallo-block-carousel__track > * { flex: 0 0 100%; }         /* 2: one per view (after --per-N) */
+.thallo-block-carousel--hero .thallo-block-carousel__track > *,
+.thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex: 0 0 100%; } /* 2: one per view (after --per-N) */
 .thallo-block-carousel--hero .thallo-block-hero { min-height: 60vh; padding-block: 0; }    /* 3: stacked grid */
 .thallo-block-carousel--hero .thallo-block-hero__inner {
   display: grid; min-height: inherit; max-width: none; margin: 0; padding: 0;
