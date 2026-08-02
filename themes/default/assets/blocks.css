@@ -1506,6 +1506,25 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 :where(.thallo-block-animated_text__rotate) { display: inline-grid; vertical-align: baseline; }
 .thallo-block-animated_text__word { grid-area: 1 / 1; visibility: hidden; }
 .thallo-block-animated_text__word--active { visibility: visible; }
+/* Word-swap animations (2026-08: the effect previously styled only the one-time
+   scroll-in reveal — every rotation was an instant visibility cut, so
+   fade/slide-up/blur looked identical). The INCOMING word now runs its effect
+   each time --active lands on it. Scoped to --prepared so the server-rendered
+   first word never animates before the runtime takes over. */
+.thallo-block-animated_text--prepared.thallo-block-animated_text--fade .thallo-block-animated_text__word--active { animation: thallo-at-word-fade 0.5s ease; }
+.thallo-block-animated_text--prepared.thallo-block-animated_text--slide-up .thallo-block-animated_text__word--active { animation: thallo-at-word-slide-up 0.5s ease; }
+.thallo-block-animated_text--prepared.thallo-block-animated_text--blur .thallo-block-animated_text__word--active { animation: thallo-at-word-blur 0.5s ease; }
+@keyframes thallo-at-word-fade { from { opacity: 0; } }
+@keyframes thallo-at-word-slide-up { from { opacity: 0; transform: translateY(0.5em); } }
+@keyframes thallo-at-word-blur { from { opacity: 0; filter: blur(8px); } }
+/* Per-segment styling (2026-08 follow-up): one class family, applied to the
+   prefix span, the rotate stack, or the suffix span. em-based sizes track the
+   host heading scale. */
+.thallo-block-animated_text__seg--sm { font-size: 0.75em; }
+.thallo-block-animated_text__seg--lg { font-size: 1.25em; }
+.thallo-block-animated_text__seg--xl { font-size: 1.5em; }
+.thallo-block-animated_text__seg--bold { font-weight: 700; }
+.thallo-block-animated_text__seg--italic { font-style: italic; }
 .thallo-block-animated_text--prepared:not(.thallo-block-animated_text--in-view) { opacity: 0; }
 .thallo-block-animated_text--prepared.thallo-block-animated_text--in-view { animation: thallo-at-fade 500ms ease-out both; }
 .thallo-block-animated_text--prepared.thallo-block-animated_text--slide-up.thallo-block-animated_text--in-view { animation-name: thallo-at-slide-up; }
@@ -1515,6 +1534,7 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 @keyframes thallo-at-blur { from { opacity: 0; filter: blur(8px); } to { opacity: 1; filter: none; } }
 @media (prefers-reduced-motion: reduce) {
   .thallo-block-animated_text--prepared { opacity: 1 !important; animation: none !important; }
+  .thallo-block-animated_text__word--active { animation: none !important; }
 }
 
 /* gallery (modern-blocks spec §4): the grid + real anchors are the no-JS floor. */
