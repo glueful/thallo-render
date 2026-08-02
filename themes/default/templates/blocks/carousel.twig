@@ -4,7 +4,12 @@
 {% set transition = transition in ['slide', 'fade', 'zoom'] ? transition : 'slide' %}
 {% set height = data.height|default('standard') %}
 {% set height = height in ['compact', 'standard', 'tall', 'full'] ? height : 'standard' %}
-<div class="thallo-block thallo-block-carousel thallo-block-carousel--per-{{ data.slides_per_view|default('1') }} thallo-block-carousel--h-{{ height }}{% if data.style|default('default') == 'hero' %} thallo-block-carousel--hero{% endif %}{% if transition != 'slide' %} thallo-block-carousel--{{ transition }}{% endif %}" data-arrows="{{ data.arrows|default(false) ? '1' : '0' }}" data-dots="{{ data.dots|default(false) ? '1' : '0' }}" data-autoplay="{{ data.autoplay|default(false) ? '1' : '0' }}" data-transition="{{ transition }}">
+{# Duration in seconds, ONE pace for every mode (numeric_clamp: non-numeric ->
+   null, else clamped 0.2–5): the runtime reads data-duration for the slide
+   scroll; fade/zoom consume the --carousel-duration property. Absent/garbage
+   emits neither — theme defaults (native scroll pace / 1.2s cross-fade). #}
+{% set duration = data.transition_duration|default(null)|numeric_clamp(0.2, 5) %}
+<div class="thallo-block thallo-block-carousel thallo-block-carousel--per-{{ data.slides_per_view|default('1') }} thallo-block-carousel--h-{{ height }}{% if data.style|default('default') == 'hero' %} thallo-block-carousel--hero{% endif %}{% if transition != 'slide' %} thallo-block-carousel--{{ transition }}{% endif %}" data-arrows="{{ data.arrows|default(false) ? '1' : '0' }}" data-dots="{{ data.dots|default(false) ? '1' : '0' }}" data-autoplay="{{ data.autoplay|default(false) ? '1' : '0' }}" data-transition="{{ transition }}"{% if duration is not same as(null) %} data-duration="{{ duration }}" style="--carousel-duration: {{ duration }}s"{% endif %}>
   <div class="thallo-block-carousel__viewport">
     <div class="thallo-block-carousel__track">{{ blocks(data.slides) }}</div>
   </div>

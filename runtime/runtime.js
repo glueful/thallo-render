@@ -417,6 +417,11 @@ window.ThalloRuntime.register('forms', {
     // enhanced-only CSS and this module drives ONE shared active-slide state
     // instead of scrollLeft. inert on hidden slides keeps focus/AT parity.
     var faded = root.dataset.transition === 'fade' || root.dataset.transition === 'zoom';
+    // Configured pace in ms (data-duration, seconds; 0 = unset): fade/zoom read
+    // it from CSS; slide mode tweens the scroll (native smooth pace is UA-fixed).
+    var durMs = 1000 * (parseFloat(root.dataset.duration) || 0);
+    var tweenSeq = 0;
+    undo.push(function () { tweenSeq++; }); // cancels any running tween
     var activeIdx = 0;
     var dotsSync = null;
     function setActive(i) {
@@ -455,7 +460,23 @@ window.ThalloRuntime.register('forms', {
     }
     function goTo(i) {
       if (faded) { setActive(norm(i)); return; }
-      viewport.scrollTo({ left: slideStart(norm(i)), behavior: 'smooth' });
+      var left = slideStart(norm(i));
+      if (!durMs || reducedMotion) {
+        viewport.scrollTo({ left: left, behavior: 'smooth' });
+        return;
+      }
+      // Smoothstep tween at the configured pace; gestures/snap stay native and
+      // a newer goTo (or teardown) cancels via the sequence counter.
+      var from = viewport.scrollLeft;
+      var t0 = 0;
+      var seq = ++tweenSeq;
+      requestAnimationFrame(function step(now) {
+        if (seq !== tweenSeq) { return; }
+        t0 = t0 || now;
+        var p = Math.min(1, (now - t0) / durMs);
+        viewport.scrollLeft = from + (left - from) * p * p * (3 - 2 * p);
+        if (p < 1) { requestAnimationFrame(step); }
+      });
     }
     function announce(i) {
       if (!live) { return; }
