@@ -42,6 +42,10 @@
       d.addEventListener('close', function () {
         if (lastTrigger && lastTrigger.focus) { lastTrigger.focus(); } // explicit focus restore
       });
+      // Light dismiss: the dialog fills the viewport as the stage, so a click
+      // that lands on the dialog ITSELF (not the image or a control) is the
+      // empty stage — close, like every modern lightbox.
+      d.addEventListener('click', function (e) { if (e.target === d) { d.close(); } });
       return d;
     }
     function discardDialog() {
