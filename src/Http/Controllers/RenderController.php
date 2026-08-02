@@ -97,6 +97,13 @@ final class RenderController
     private bool $annotateBlocks = false;
 
     /**
+     * Preview-context intent (surface split): TRUE for ANY preview render —
+     * canvas or review. Drives the extension's SEO discipline (noindex-only
+     * head) independently of annotation, which the review surface doesn't get.
+     */
+    private bool $previewContext = false;
+
+    /**
      * The active preview session (theme-color-config spec §6): every entry point
      * ASSIGNS it (from the resolved session, or null for live renders) so render()'s
      * reset block can apply/clear the request-local appearance override without the
@@ -111,7 +118,12 @@ final class RenderController
     {
         $this->currentPath = RenderPageCache::normalizePath($request->getPathInfo());
         $session = $this->session($request);
-        $this->annotateBlocks = $session !== null;
+        // Surface split: in-session navigation annotates only inside the design
+        // canvas (companion cookie set by preview()?canvas=1) — a review-session
+        // walk through the site renders clean, with live-page behaviors running.
+        $this->annotateBlocks = $session !== null
+            && $request->cookies->get('thallo_preview_canvas') === '1';
+        $this->previewContext = $session !== null;
         $this->appearanceSession = $session;
         // Source-aware provider (homepage-setting spec §0): the DB site setting
         // wins while resolvable; otherwise the provider already fell back to
@@ -167,7 +179,12 @@ final class RenderController
         }
 
         $session = $this->session($request);
-        $this->annotateBlocks = $session !== null;
+        // Surface split: in-session navigation annotates only inside the design
+        // canvas (companion cookie set by preview()?canvas=1) — a review-session
+        // walk through the site renders clean, with live-page behaviors running.
+        $this->annotateBlocks = $session !== null
+            && $request->cookies->get('thallo_preview_canvas') === '1';
+        $this->previewContext = $session !== null;
         $this->appearanceSession = $session;
         $extra = $this->sessionExtra($session);
         [$env, $assetBase, $assetsDir] = $this->themedEnv($session);
@@ -306,8 +323,13 @@ final class RenderController
         // Preview-session render, entry point ONE (visual-canvas spec §2 P1): this
         // route does NOT pass PreviewSessionMiddleware — the canvas iframe's first
         // load lands here, so annotation keys off controller knowledge, not the
-        // middleware attribute.
-        $this->annotateBlocks = true;
+        // middleware attribute. Surface split: only the design CANVAS declares
+        // itself (?canvas=1 on the stage iframe src) and gets annotated markup;
+        // the plain token URL is the REVIEW surface, rendered clean so the theme
+        // runtime behaves exactly as live (autoplay, arrows, lightboxes run).
+        $canvas = $request->query->getBoolean('canvas');
+        $this->annotateBlocks = $canvas;
+        $this->previewContext = true;
         // Verified up front: the session drives BOTH the cookie and the per-preview
         // theme (spec §5) — a themed token renders through a request-local environment.
         $session = $this->sessionVerifier?->verify($token);
@@ -364,6 +386,25 @@ final class RenderController
                 false,
                 \Symfony\Component\HttpFoundation\Cookie::SAMESITE_LAX,
             ));
+            // Companion canvas marker (surface split): in-session navigation
+            // (home/page under the thallo_preview cookie) annotates only while
+            // this cookie rides along — and a review load actively expires it,
+            // so switching Design -> review in one browser drops the carriers.
+            if ($canvas) {
+                $response->headers->setCookie(new \Symfony\Component\HttpFoundation\Cookie(
+                    'thallo_preview_canvas',
+                    '1',
+                    $session->expiresAt,
+                    '/',
+                    null,
+                    $request->isSecure(),
+                    true,
+                    false,
+                    \Symfony\Component\HttpFoundation\Cookie::SAMESITE_LAX,
+                ));
+            } else {
+                $response->headers->clearCookie('thallo_preview_canvas', '/');
+            }
         }
         return $this->withPreviewBridge($response);
     }
@@ -502,6 +543,7 @@ final class RenderController
     {
         $response = new Response('', 302, ['Location' => '/']);
         $response->headers->clearCookie('thallo_preview', '/');
+        $response->headers->clearCookie('thallo_preview_canvas', '/');
         return $response;
     }
 
@@ -824,6 +866,9 @@ final class RenderController
         // $annotateBlocks (true only for preview renders), so the shared singleton
         // can never leak annotation into a live response.
         $this->extension->setBlockAnnotations($this->annotateBlocks);
+        // After resetPerRenderState (which defaults it off): any-preview flag for
+        // the SEO discipline — true for BOTH canvas and review surfaces.
+        $this->extension->setPreviewContext($this->previewContext);
         $this->extension->setLocale($locale);
         $context = [
             'site' => [

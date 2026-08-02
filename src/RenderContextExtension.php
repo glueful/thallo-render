@@ -754,7 +754,9 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function seoHead(array $context): string
     {
-        if ($this->isPreview()) {
+        // previewContext, NOT isPreview(): the clean review surface has no
+        // annotations but is still a draft render (surface split).
+        if ($this->previewContext) {
             return '<meta name="robots" content="noindex, nofollow">';
         }
         $seo = $context['seo'] ?? null;
@@ -1005,6 +1007,10 @@ final class RenderContextExtension extends AbstractExtension
         $this->resetPriorityImageClaim();
         $this->emittedBlockScripts = [];
         $this->setAssetContext(null, null);
+        // Defaults-off here (not assignment-per-path like annotation) so render
+        // paths unaware of the surface split — e.g. pack fragment renderers —
+        // can never leak a previous preview's context into a live response.
+        $this->previewContext = false;
     }
 
     /**
@@ -1083,6 +1089,22 @@ final class RenderContextExtension extends AbstractExtension
     public function isPreview(): bool
     {
         return $this->annotateBlocks;
+    }
+
+    /**
+     * Preview-context flag (surface split): TRUE for ANY preview render — the
+     * annotated design canvas AND the clean review surface. Distinct from
+     * annotation on purpose: a review preview renders live-fidelity markup
+     * (behaviors run, no carriers, no editor hints — is_preview() stays false),
+     * but its DRAFT content must still never be canonicalized or socially
+     * scrapeable, so the SEO discipline keys off THIS flag. Cleared by
+     * resetPerRenderState(); set after reset by the preview-aware controller.
+     */
+    private bool $previewContext = false;
+
+    public function setPreviewContext(bool $on): void
+    {
+        $this->previewContext = $on;
     }
 
     /** @param list<string> $tags */
