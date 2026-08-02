@@ -1574,7 +1574,7 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
   max-height: 82svh;
   object-fit: contain;
   border-radius: 0.5rem;
-  box-shadow: 0 24px 80px rgb(0 0 0 / 0.55);
+  box-shadow: var(--shadow-2xl);
   display: block;
   margin: 0;
 }

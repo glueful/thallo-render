@@ -19,23 +19,27 @@
 {% if prefix != '' %}{% set stable_parts = stable_parts|merge([prefix]) %}{% endif %}
 {% if clean is not empty %}{% set stable_parts = stable_parts|merge([clean|first]) %}{% endif %}
 {% if suffix != '' %}{% set stable_parts = stable_parts|merge([suffix]) %}{% endif %}
-{% set stable_phrase = stable_parts|join(' ') %}
+{# Break tokens (2026-08 follow-up): authors may type <br>/<br/>/<br /> in
+   prefix, suffix, or a rotate word; br_tokens turns ONLY those into real
+   breaks after escaping. The stable SR phrase strips them to plain spaces —
+   AT hears the phrase, never a token. #}
+{% set stable_phrase = stable_parts|join(' ')|replace({'<br />': ' ', '<br/>': ' ', '<br>': ' '}) %}
 {% set inner %}
-  {%- if prefix != '' %}{{ prefix|editable_text('prefix') }}{% endif -%}
+  {%- if prefix != '' %}{{ prefix|br_tokens|editable_text('prefix') }}{% endif -%}
   {%- if prefix != '' and clean is not empty %}{{ ' ' }}{% endif -%}
   {%- if clean is not empty %}
   <span class="thallo-block-animated_text__rotate">
     {%- for w in clean %}
-    <span class="thallo-block-animated_text__word{% if loop.first %} thallo-block-animated_text__word--active{% endif %}">{{ w }}</span>
+    <span class="thallo-block-animated_text__word{% if loop.first %} thallo-block-animated_text__word--active{% endif %}">{{ w|br_tokens }}</span>
     {%- endfor %}
   </span>
   {%- endif %}
   {%- if suffix != '' and (prefix != '' or clean is not empty) %}{{ ' ' }}{% endif -%}
-  {%- if suffix != '' %}{{ suffix|editable_text('suffix') }}{% endif -%}
+  {%- if suffix != '' %}{{ suffix|br_tokens|editable_text('suffix') }}{% endif -%}
 {% endset %}
-{% if tag == 'h1' %}<h1 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h1>
-{% elseif tag == 'h3' %}<h3 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h3>
-{% elseif tag == 'p' %}<p class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></p>
-{% else %}<h2 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h2>
+{% if tag == 'h1' %}<h1 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" data-loop="{{ data.loop|default(false) ? '1' : '0' }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h1>
+{% elseif tag == 'h3' %}<h3 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" data-loop="{{ data.loop|default(false) ? '1' : '0' }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h3>
+{% elseif tag == 'p' %}<p class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" data-loop="{{ data.loop|default(false) ? '1' : '0' }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></p>
+{% else %}<h2 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}" data-effect="{{ data.effect|default('fade') }}" data-loop="{{ data.loop|default(false) ? '1' : '0' }}"><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h2>
 {% endif %}
 {{ block_script('animated-text') }}

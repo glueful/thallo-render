@@ -26,6 +26,10 @@
     var inView = false;
     var index = 0;
     var done = words.length < 2; // nothing to rotate
+    // data-loop="1" keeps rotating instead of settling after one cycle. The
+    // offscreen/hidden pauses still apply, and hovering pauses (below) so the
+    // current word can be read; reduced motion never reaches this code.
+    var looping = root.getAttribute('data-loop') === '1';
 
     function setActive(n) {
       for (var k = 0; k < words.length; k++) {
@@ -37,9 +41,9 @@
     function maybeRun() {
       if (done || !inView || document.hidden || timer) { return; }
       timer = setInterval(function () {
-        index++;
+        index = (index + 1) % words.length;
         setActive(index);
-        if (index >= words.length - 1) { done = true; stop(); } // ONE cycle, settle on last
+        if (!looping && index >= words.length - 1) { done = true; stop(); } // ONE cycle, settle on last
       }, 1000);
     }
 
@@ -60,6 +64,18 @@
       var onVis = function () { if (document.hidden) { stop(); } else { maybeRun(); } };
       undo.push(function () { document.removeEventListener('visibilitychange', onVis); });
       document.addEventListener('visibilitychange', onVis);
+
+      if (looping) {
+        // Hover pauses an endless rotation so the current word can be read.
+        var onEnter = function () { stop(); };
+        var onLeave = function () { maybeRun(); };
+        undo.push(function () {
+          root.removeEventListener('pointerenter', onEnter);
+          root.removeEventListener('pointerleave', onLeave);
+        });
+        root.addEventListener('pointerenter', onEnter);
+        root.addEventListener('pointerleave', onLeave);
+      }
 
       // Prepared LAST (fail-safe handoff, spec §3): reveal CSS engages only now.
       undo.push(function () {

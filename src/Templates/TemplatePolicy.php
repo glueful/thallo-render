@@ -51,12 +51,17 @@ final class TemplatePolicy
     //         does not loosen anything previously enforced, so compiled caches keyed on v17 are
     //         still valid — no recompile is required.
     // bumped: block_script joined the allowlist (modern-blocks spec §1 — closed-catalog per-block asset emission)
+    // NOT bumped — vocabulary widening (animated-text follow-up, 2026-08-02): br_tokens
+    //         joined FILTERS — a bounded PHP helper (same family as hex_color/numeric_clamp)
+    //         that turns the literal author-typed tokens <br>/<br/>/<br /> into real breaks
+    //         AFTER escaping; no regex, no |raw, nothing previously enforced is loosened,
+    //         so caches keyed on v18 stay valid.
     public const CACHE_VERSION = 18;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
     public const FILTERS = [
-        'abs', 'batch', 'capitalize', 'column', 'date', 'date_modify', 'default',
+        'abs', 'batch', 'br_tokens', 'capitalize', 'column', 'date', 'date_modify', 'default',
         'editable_text', 'escape', 'e', 'first', 'format', 'hex_color', 'join', 'json_encode',
         'keys', 'last', 'length', 'lower', 'merge', 'nl2br', 'number_format', 'numeric_clamp',
         'replace', 'reverse', 'round', 'safe_html', 'safe_url', 'slice', 'sort', 'split',

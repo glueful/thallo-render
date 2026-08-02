@@ -721,7 +721,26 @@ final class RenderContextExtension extends AbstractExtension
             // blocks/style.twig used to run directly (gate-audit amendment, task 7).
             new TwigFilter('hex_color', $this->hexColor(...)),
             new TwigFilter('numeric_clamp', $this->numericClamp(...)),
+            new TwigFilter('br_tokens', $this->brTokens(...), ['is_safe' => ['html']]),
         ];
+    }
+
+    /**
+     * Author-typed line breaks (animated-text follow-up, 2026-08): the literal
+     * tokens <br>, <br/>, <br /> become real breaks; EVERYTHING else stays
+     * escaped — recognition happens on the escaped text, so author markup never
+     * goes live. Accepts a Markup (e.g. editable_text output, already escaped
+     * with a trusted wrapper) and then only rewrites the escaped tokens.
+     */
+    public function brTokens(mixed $value): \Twig\Markup
+    {
+        $s = $value instanceof \Twig\Markup
+            ? (string) $value
+            : htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+        return new \Twig\Markup(
+            str_replace(['&lt;br&gt;', '&lt;br/&gt;', '&lt;br /&gt;'], '<br>', $s),
+            'UTF-8',
+        );
     }
 
     /**
@@ -841,9 +860,15 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function editableText(mixed $value, string $field): string
     {
-        $escaped = is_string($value)
-            ? htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-            : '';
+        // Markup input passes through un-re-escaped: it only originates from a
+        // safe upstream filter (e.g. br_tokens, which escapes the author text
+        // itself) — chaining `x|br_tokens|editable_text(...)` must not
+        // double-escape. Plain strings keep the escape-here contract.
+        $escaped = match (true) {
+            $value instanceof \Twig\Markup => (string) $value,
+            is_string($value) => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            default => '',
+        };
         if (!$this->annotateBlocks || $this->blockFrames === []) {
             return $escaped;
         }
