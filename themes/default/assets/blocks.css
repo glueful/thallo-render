@@ -600,6 +600,13 @@
 
 /* Hero slider preset (modern-blocks spec §2): presentation only — mechanics inherit. */
 .thallo-block-carousel--hero { max-width: none; padding-inline: 0; }                       /* 1: full-bleed */
+/* 1a: flush opening — a hero slider as the page's FIRST block sits directly
+   under the header. Two 40px spacings stack there: main's top padding
+   (site.css) and the block rhythm margin (.thallo-block, --space-5). The
+   padding can't be removed from here, so the margin flips negative to cancel
+   it: +space-5 → -space-5 nets to zero. Carrier-pierced pair for the canvas. */
+main > article > .thallo-block-carousel--hero:first-child,
+main > article > :where(.thallo-preview-block):first-child > .thallo-block-carousel--hero { margin-top: calc(-1 * var(--space-5)); }
 .thallo-block-carousel--hero .thallo-block-carousel__track { gap: 0; }                     /* 1b: slides sit flush — no page-background stripe between full-bleed slides */
 .thallo-block-carousel--hero .thallo-block-carousel__track > *,
 .thallo-block-carousel--hero .thallo-block-carousel__track > :where(.thallo-preview-block) > * { flex: 0 0 100%; } /* 2: one per view (after --per-N) */
