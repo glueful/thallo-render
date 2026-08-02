@@ -15,5 +15,9 @@
   {%- for image in resolved %}
   <a class="thallo-block-gallery__item" href="{{ image.full }}" aria-label="{{ image.alt ?: 'Image ' ~ loop.index ~ ' of ' ~ loop.length }}">{{ blocks([image.item]) }}</a>
   {%- endfor %}
+  {# Canvas empty-state (blog_posts precedent): covers no items AND all-unresolved. #}
+  {% if is_preview() and resolved is empty %}
+  <div class="thallo-block-gallery__empty">Empty gallery — add image blocks to the items region.</div>
+  {% endif %}
 </div>
 {{ block_script('gallery') }}

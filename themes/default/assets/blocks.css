@@ -1398,3 +1398,12 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 @media (prefers-reduced-motion: no-preference) {
   .thallo-block-gallery__dialog[open] { animation: thallo-at-fade 150ms ease-out; }
 }
+
+/* Canvas empty-states for region blocks (blog_posts__empty precedent): preview-only
+   markup, so these bind only inside the editor canvas. */
+.thallo-block-carousel__empty,
+.thallo-block-gallery__empty {
+  padding: var(--space-4); border: 1px dashed var(--line); border-radius: var(--radius-lg);
+  color: var(--muted); text-align: center;
+}
+.thallo-block-gallery__empty { grid-column: 1 / -1; }

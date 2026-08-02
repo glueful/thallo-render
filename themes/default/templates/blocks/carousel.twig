@@ -2,4 +2,9 @@
   <div class="thallo-block-carousel__viewport">
     <div class="thallo-block-carousel__track">{{ blocks(data.slides) }}</div>
   </div>
+  {# Canvas empty-state (blog_posts precedent): an empty track renders as nothing on
+     the live page — invisible in the editor without this preview-only hint. #}
+  {% if is_preview() and data.slides|default([]) is empty %}
+  <div class="thallo-block-carousel__empty">Empty carousel — expand the block and add slides (hero blocks for the hero style).</div>
+  {% endif %}
 </div>
