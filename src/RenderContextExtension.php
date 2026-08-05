@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Thallo\Render;
 
+use Glueful\Bootstrap\ApplicationContext;
+use Thallo\Contracts\Billing\PlanCheckoutUrlResolver;
 use Thallo\Contracts\Content\BlockEditableFieldResolver;
 use Thallo\Contracts\Content\FormSealer;
 use Thallo\Contracts\Content\RegionReader;
@@ -107,6 +109,15 @@ final class RenderContextExtension extends AbstractExtension
     /** @var array<string,bool> block types already logged this process (log ONCE per type) */
     private array $loggedBlockMisses = [];
 
+    /**
+     * Render-time re-validation of an authored `plan_key` (pricing-bridge spec §5.4).
+     * The editor's own schema enforces the IDENTICAL pattern at save time (block-library
+     * spec §5's `pattern` constraint) — this is defense in depth, never trusted alone:
+     * data can reach the template already saved (an older row, a direct API write)
+     * without ever passing through the editor's validator.
+     */
+    private const PLAN_KEY_PATTERN = '/\A[a-z0-9._-]{1,100}\z/';
+
     public function __construct(
         private readonly ?MenuReader $menus,
         private readonly EntryTargetResolver $targets,
@@ -168,6 +179,23 @@ final class RenderContextExtension extends AbstractExtension
          * installed/active — never a fatal error.
          */
         private readonly ?StorefrontWishlistResolver $wishlist = null,
+        /**
+         * Soft-bound (pricing-bridge spec §5.4): null → plan_checkout_url() always
+         * returns null, so the pricing_plan block's CTA falls back to the authored
+         * button_url unchanged.
+         */
+        private readonly ?PlanCheckoutUrlResolver $planCheckoutUrls = null,
+        /**
+         * ONLY needed for planCheckoutUrl()'s resolve() call — every other soft-bound
+         * resolver in this class is ApplicationContext-free. Named `$appContext` (not
+         * `$context`) to stay unambiguous against the many methods below whose OWN
+         * `$context` parameter is the per-render Twig context array, an entirely
+         * different thing. Optional: constructions that never touch
+         * plan_checkout_url() (essentially every existing test) need not supply it,
+         * and the function degrades to null exactly as if the resolver itself were
+         * unbound.
+         */
+        private readonly ?ApplicationContext $appContext = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -242,6 +270,11 @@ final class RenderContextExtension extends AbstractExtension
             // is_safe html: every dynamic value is escaped for its exact sink inside
             // fontFacesStyle() itself (default-theme-font spec §3).
             new TwigFunction('font_faces_style', $this->fontFacesStyle(...), ['is_safe' => ['html']]),
+            // Pricing-bridge spec §5.4: soft-bound; null on ANY of unbound resolver,
+            // missing ApplicationContext, absent/malformed key, or the resolver itself
+            // answering null — the pricing_plan block falls back to its authored
+            // button_url on every one of those, indistinguishably.
+            new TwigFunction('plan_checkout_url', $this->planCheckoutUrl(...)),
         ];
     }
 
@@ -299,6 +332,30 @@ final class RenderContextExtension extends AbstractExtension
     public function shopWishlistUrl(): ?string
     {
         return $this->wishlist?->wishlistUrl();
+    }
+
+    /**
+     * The pricing_plan block's checkout deep link (pricing-bridge spec §5.4). Null on
+     * ANY of: no resolver bound, no {@see ApplicationContext} available, an
+     * absent/blank/malformed key, or the resolver itself answering null (capability
+     * off, engine unavailable, no configured admin origin — see {@see
+     * \Thallo\Subscriptions\Bridge\AdminBillingPlanCheckoutUrlResolver}, which this
+     * pack never imports). Every one of those degrades IDENTICALLY from the
+     * template's point of view: the CTA falls back to the authored `button_url`.
+     *
+     * A well-formed but UNKNOWN key still resolves to a real URL — this function makes
+     * no existence promise about `$planKey`; that is the resolver's contract, not a
+     * render-time catalog query this pack must never perform.
+     */
+    public function planCheckoutUrl(?string $planKey): ?string
+    {
+        if ($this->planCheckoutUrls === null || $this->appContext === null) {
+            return null;
+        }
+        if (!is_string($planKey) || preg_match(self::PLAN_KEY_PATTERN, $planKey) !== 1) {
+            return null;
+        }
+        return $this->planCheckoutUrls->resolve($this->appContext, $planKey);
     }
 
     /**

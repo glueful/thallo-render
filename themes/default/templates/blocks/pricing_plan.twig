@@ -2,7 +2,11 @@
    convention (see cta.twig): guarded --modifier maps up top. Flat CTA fields
    (button_label/url/variant) — no nested button block (depth budget). Features:
    one per line, each with the uniform feature_icon (default 'check'); an unknown
-   icon renders nothing (never the raw name). #}
+   icon renders nothing (never the raw name). Optional plan_key (pricing-bridge
+   spec §5.4): when present, valid, and the soft-bound resolver answers a URL, the
+   CTA deep-links to admin billing checkout instead of the authored button_url —
+   capability off/engine off/resolver unbound/malformed-or-absent key all degrade
+   identically to the authored URL, unchanged. #}
 {% set variant = ({outline:'outline',solid:'solid',soft:'soft',subtle:'subtle'}[data.variant|default('outline')] ?? 'outline') %}
 {% set orientation = ({vertical:'vertical',horizontal:'horizontal'}[data.orientation|default('vertical')] ?? 'vertical') %}
 {% set rootClass = [
@@ -43,7 +47,7 @@
   </div>
   <div class="thallo-block-pricing_plan__footer">
     {% if data.tagline %}<p class="thallo-block-pricing_plan__tagline">{{ data.tagline }}</p>{% endif %}
-    {% set ctaUrl = data.button_url|default('')|safe_url %}
+    {% set ctaUrl = plan_checkout_url(data.plan_key) ?? (data.button_url|default('')|safe_url) %}
     {% if data.button_label|default('') is not empty %}
       {% set ctaTag = ctaUrl ? 'a' : 'span' %}
       <{{ ctaTag }} class="thallo-block-pricing_plan__cta thallo-block-pricing_plan__cta--{{ ({solid:'solid',outline:'outline'}[data.button_variant|default('solid')] ?? 'solid') }}"{% if ctaUrl %} href="{{ ctaUrl }}"{% endif %}>{{ data.button_label|editable_text('button_label') }}</{{ ctaTag }}>

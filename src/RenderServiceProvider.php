@@ -522,6 +522,12 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             wishlist: $container->has(StorefrontWishlistResolver::class)
                 ? $container->get(StorefrontWishlistResolver::class)
                 : null,
+            // plan_checkout_url() (pricing-bridge spec §5.4): soft-bound; null = the
+            // pricing_plan block's CTA always falls back to the authored button_url.
+            planCheckoutUrls: $container->has(\Thallo\Contracts\Billing\PlanCheckoutUrlResolver::class)
+                ? $container->get(\Thallo\Contracts\Billing\PlanCheckoutUrlResolver::class)
+                : null,
+            appContext: $context,
         );
     }
 

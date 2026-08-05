@@ -56,7 +56,11 @@ final class TemplatePolicy
     //         that turns the literal author-typed tokens <br>/<br/>/<br /> into real breaks
     //         AFTER escaping; no regex, no |raw, nothing previously enforced is loosened,
     //         so caches keyed on v18 stay valid.
-    public const CACHE_VERSION = 18;
+    // bumped: plan_checkout_url joined the function allowlist (pricing-bridge spec §5.4 —
+    //         the pricing_plan block's soft-bound admin-billing deep-link resolver; the
+    //         regex re-validation lives in PHP, bound to this one call site, never in
+    //         template source, matching the hex_color/numeric_clamp precedent).
+    public const CACHE_VERSION = 19;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -76,7 +80,7 @@ final class TemplatePolicy
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script',
         'entries', 'is_preview', 'media_image', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',
-        'include', 'parent', 'block', 'cycle', 'date', 'min', 'max',
+        'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'plan_checkout_url',
     ];
 
     public const TESTS = [
