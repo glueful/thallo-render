@@ -584,7 +584,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     {
         // OUTSIDE the capability gate (pack convention): schema must exist regardless
         // of whether rendered delivery is currently enabled.
-        $this->loadMigrationsFrom(__DIR__ . '/../migrations');
+        // Migrations are declared by the composer manifest (extra.glueful.migrations);
+        // the historical implicit source of this bare call was 'migrations' (dir basename),
+        // carried as the descriptor's legacy alias.
 
         $registry = app($context, CapabilityRegistry::class);
 
