@@ -35,9 +35,6 @@
                     "path": "migrations",
                     "priority": "default",
                     "mode": "core",
-                    "legacyAliases": [
-                        "migrations"
-                    ],
                     "verifier": "Thallo\\Render\\Schema\\RenderSchemaVerifier"
                 }
             ]
