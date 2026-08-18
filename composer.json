@@ -33,7 +33,7 @@
                 {
                     "id": "default",
                     "path": "migrations",
-                    "priority": "default",
+                    "priority": "dependent",
                     "mode": "core",
                     "verifier": "Thallo\\Render\\Schema\\RenderSchemaVerifier"
                 }
