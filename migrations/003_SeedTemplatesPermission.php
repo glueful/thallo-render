@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Glueful\Database\Connection;
 use Glueful\Database\Migrations\MigrationInterface;
 use Glueful\Database\Schema\Interfaces\SchemaBuilderInterface;
 use Glueful\Helpers\Utils;
@@ -15,7 +14,7 @@ final class SeedTemplatesPermission implements MigrationInterface
 
     public function up(SchemaBuilderInterface $schema): void
     {
-        $db = new Connection();
+        $db = $schema->getConnection();
         $existing = [];
         foreach (
             $db->table('permissions')->select(['slug'])
