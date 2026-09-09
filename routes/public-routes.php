@@ -43,9 +43,12 @@ $router->get('/_preview-assets/{token}/{path}', [RenderController::class, 'previ
 // Canvas bridge support (visual-canvas spec §3): token-free STATIC assets injected
 // into preview HTML — cacheable, and OpenAPI-excluded via the Default tag like the
 // other HTML-surface routes. Literal first segments win over the '*' catch-all.
-$router->get('/_preview.css', [RenderController::class, 'previewCss'])
+// Under /_thallo/ with the runtime: every PHP-served asset shares the one prefix pair the
+// web-server rule must proxy (docs/production.md) — a root-level *.css/*.js URL is eaten by
+// static-file rules and 404s even on a host that proxied the documented prefixes.
+$router->get(RenderController::PREVIEW_CSS_PATH, [RenderController::class, 'previewCss'])
     ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
-$router->get('/_preview-bridge.js', [RenderController::class, 'previewBridgeJs'])
+$router->get(RenderController::PREVIEW_BRIDGE_PATH, [RenderController::class, 'previewBridgeJs'])
     ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
 
 // Site custom CSS (custom-css spec §3): DB-backed stylesheet, immutable-cached —

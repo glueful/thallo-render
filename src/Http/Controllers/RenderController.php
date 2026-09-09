@@ -44,6 +44,13 @@ use function config;
  */
 final class RenderController
 {
+    /**
+     * Canvas preview support assets, served by PHP under the proxied /_thallo/ prefix — never at
+     * the site root, where a static-file rule (*.css/*.js from disk) answers 404.
+     */
+    public const PREVIEW_CSS_PATH = '/_thallo/preview.css';
+    public const PREVIEW_BRIDGE_PATH = '/_thallo/preview-bridge.js';
+
     private ?Environment $twig = null;
 
     public function __construct(
@@ -490,8 +497,8 @@ final class RenderController
         $assetDir = dirname(__DIR__, 3) . '/assets/preview/';
         $cssV = (int) @filemtime($assetDir . 'preview.css');
         $jsV = (int) @filemtime($assetDir . 'preview-bridge.js');
-        $inject = '<link rel="stylesheet" href="/_preview.css?v=' . $cssV . '">'
-            . '<script src="/_preview-bridge.js?v=' . $jsV . '" defer></script>';
+        $inject = '<link rel="stylesheet" href="' . self::PREVIEW_CSS_PATH . '?v=' . $cssV . '">'
+            . '<script src="' . self::PREVIEW_BRIDGE_PATH . '?v=' . $jsV . '" defer></script>';
         $html = (string) $response->getContent();
         $response->setContent(
             str_contains($html, '</body>')
