@@ -27,7 +27,9 @@ return [
     // https://admin.example.com). Empty = the links don't render.
     'admin_url' => env('RENDER_ADMIN_URL', ''),
 
-    'reserved_prefixes' => ['v1', 'admin', 'extensions', 'theme-assets'],
+    // 'api-docs' is the framework's API reference (API_DOCS_PATH default); '/docs' is NOT
+    // reserved — it is the site's own documentation.
+    'reserved_prefixes' => ['v1', 'admin', 'extensions', 'theme-assets', 'api-docs'],
 
     // Exact reserved paths ('sitemap.xml' does not reserve /sitemap-history).
     'reserved_exact' => ['sitemap.xml', 'robots.txt'],
