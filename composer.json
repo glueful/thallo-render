@@ -1,44 +1,43 @@
 {
-    "name": "glueful/thallo-render",
-    "description": "Rendered delivery for Thallo: server-rendered pages from published content via filesystem Twig themes, as a removable capability pack.",
-    "type": "library",
-    "license": "MIT",
-    "authors": [
+  "name": "glueful/thallo-render",
+  "description": "Rendered delivery for Thallo: server-rendered pages from published content via filesystem Twig themes, as a removable capability pack.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Michael Tawiah Sowah",
+      "email": "michael@glueful.dev"
+    }
+  ],
+  "require": {
+    "php": "^8.3",
+    "glueful/thallo-contracts": "self.version",
+    "glueful/thallo-tenancy": "self.version",
+    "glueful/framework": "^1.65.2",
+    "twig/twig": "^3.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Thallo\\Render\\": "src/"
+    }
+  },
+  "extra": {
+    "glueful": {
+      "provider": "Thallo\\Render\\RenderServiceProvider",
+      "requires": {
+        "glueful": ">=1.79.0",
+        "extensions": []
+      },
+      "migrations": [
         {
-            "name": "Michael Tawiah Sowah",
-            "email": "michael@glueful.dev"
+          "id": "default",
+          "path": "migrations",
+          "priority": "dependent",
+          "mode": "core",
+          "verifier": "Thallo\\Render\\Schema\\RenderSchemaVerifier"
         }
-    ],
-    "version": "0.1.0",
-    "require": {
-        "php": "^8.3",
-        "glueful/thallo-contracts": "*",
-        "glueful/thallo-tenancy": "*",
-        "glueful/framework": "^1.65.2",
-        "twig/twig": "^3.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "Thallo\\Render\\": "src/"
-        }
-    },
-    "extra": {
-        "glueful": {
-            "provider": "Thallo\\Render\\RenderServiceProvider",
-            "requires": {
-                "glueful": ">=1.79.0",
-                "extensions": []
-            },
-            "migrations": [
-                {
-                    "id": "default",
-                    "path": "migrations",
-                    "priority": "dependent",
-                    "mode": "core",
-                    "verifier": "Thallo\\Render\\Schema\\RenderSchemaVerifier"
-                }
-            ]
-        }
-    },
-    "minimum-stability": "stable"
+      ]
+    }
+  },
+  "minimum-stability": "stable"
 }
