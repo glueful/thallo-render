@@ -513,3 +513,10 @@ Taxonomy term INDEX pages (`/{type}/{field}` enumerating all terms), DB-edited
 templates, page/block builder, admin theme/homepage switching UI, full-site preview
 navigation (links on a preview page lead to published pages). Per-page TTL overrides
 and stale-while-revalidate are deferred with them (render caching spec §8).
+
+## Contributing
+
+This repository is a read-only mirror, published from
+[glueful/thallo](https://github.com/glueful/thallo) on every release; its `main` is overwritten
+by the next split, so nothing can land here. Issues and pull requests belong in glueful/thallo,
+where this code lives at `packages/thallo-render/`.
