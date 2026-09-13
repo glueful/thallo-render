@@ -1,0 +1,16 @@
+{# code — a snippet with a language label and a copy button (website plan, phase 1).
+   The no-JS floor is the plain <pre><code>; the Copy button is created by block-code.js
+   (data-copy="1"), so nothing dead ships in the markup. The language rides as a data
+   attribute and a language-* class for a highlighter to pick up (phase 2c). #}
+{% set languages = ['text', 'bash', 'php', 'json', 'yaml', 'html', 'css', 'javascript', 'typescript', 'twig', 'sql'] %}
+{% set language = data.language|default('text') in languages ? data.language|default('text') : 'text' %}
+{% set copy = data.copy ?? true %}
+{% set label = data.label|default('') %}
+<figure class="thallo-block thallo-block-code" data-language="{{ language }}" data-copy="{{ copy ? '1' : '0' }}">
+  <figcaption class="thallo-block-code__caption">
+    <span class="thallo-block-code__label">{{ label ?: language }}</span>
+    <span class="thallo-block-code__actions"></span>
+  </figcaption>
+  <pre class="thallo-block-code__pre"><code class="language-{{ language }}">{{ data.code|default('') }}</code></pre>
+</figure>
+{{ block_script('code') }}

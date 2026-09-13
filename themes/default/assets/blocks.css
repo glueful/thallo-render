@@ -1666,3 +1666,29 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
   color: var(--muted); text-align: center;
 }
 .thallo-block-gallery__empty { grid-column: 1 / -1; }
+
+/* code — a snippet with a language label and a copy button. */
+.thallo-block-code {
+  max-width: var(--content); margin-inline: auto; padding-inline: var(--space-4);
+}
+.thallo-block-code__caption {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line); border-bottom: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface-2, var(--surface));
+  font-size: 0.8125rem; color: var(--muted);
+}
+.thallo-block-code__label { font-family: var(--font-mono, ui-monospace, monospace); text-transform: lowercase; }
+.thallo-block-code__pre {
+  margin: 0; padding: var(--space-3) var(--space-4); overflow-x: auto;
+  border: 1px solid var(--line); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: var(--surface); color: var(--fg);
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.875rem; line-height: 1.6;
+  tab-size: 2;
+}
+.thallo-block-code__copy {
+  font: inherit; color: inherit; background: transparent; border: 1px solid var(--line);
+  border-radius: var(--radius-md); padding: 0.125rem var(--space-2); cursor: pointer;
+}
+.thallo-block-code__copy:hover, .thallo-block-code__copy:focus-visible { border-color: var(--accent); color: var(--accent); }

@@ -73,7 +73,7 @@ final class RenderContextExtension extends AbstractExtension
 
     /** Closed block-asset catalog (modern-blocks spec §1) — block_script() is
      *  DB-template vocabulary; only these names ever resolve to a script tag. */
-    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'gallery'];
+    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'code', 'gallery'];
 
     /** @var array<string,bool> per-render emitted set (bandwidth dedupe only —
      *  the asset's own exactly-once IIFE guard is the correctness authority). */
