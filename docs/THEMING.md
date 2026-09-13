@@ -148,18 +148,23 @@ classes/attributes you must keep stable are ones your **own `blocks.js`** select
 
 ### 4.4 The block set
 
-`accordion` · `accordion_item` · `audio` · `button` · `card` · `carousel` ·
-`collapsible` · `columns` · `container` · `cta` · `feature` · `file` · `footer` ·
-`grid` · `heading` · `hero` · `html` · `icon` · `image` · `links` ·
-`logo` · `logos` · `navigation` · `rich_text` · `section` · `separator` ·
-`shortcode` · `social_link` · `social_links` · `spacer` · `stepper` ·
-`stepper_item` · `tab` · `tabs` · `video`
+`accordion` · `accordion_item` · `animated_text` · `audio` · `blog_posts` ·
+`button` · `card` · `carousel` · `code` · `collapsible` · `color_mode` ·
+`columns` · `container` · `cta` · `feature` · `file` · `footer` · `form` ·
+`gallery` · `grid` · `heading` · `hero` · `html` · `icon` · `image` · `links` ·
+`logo` · `logos` · `navigation` · `pricing_feature` · `pricing_plan` ·
+`pricing_plans` · `pricing_table` · `pricing_tier` · `rich_text` · `section` ·
+`separator` · `shortcode` · `social_link` · `social_links` · `spacer` ·
+`stepper` · `stepper_item` · `style` · `tab` · `tabs` · `video`
 
 `accordion_item` and `stepper_item` are **item carriers**: their parent
 (`accordion` / `stepper`) renders them inline from `item.data.*`, and they also
 have a standalone template for when one is dropped on its own. The single source
-of truth for this set is `app/Content/Blocks/StarterBlockTypes.php` (schema) — the
-template set mirrors it one-to-one.
+of truth for this set is `core/src/Content/Blocks/StarterBlockTypes.php` (schema) — the
+template set mirrors it one-to-one. `code` ships `block-code.js` for its Copy button
+(the floor is the plain `<pre><code>`); `shortcode` renders `shortcodes/{name}.twig`, and the
+default theme ships `copyright` and `thallo-version` (the running install's version as
+`site.version`).
 
 ---
 

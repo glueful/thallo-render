@@ -99,9 +99,9 @@ default layout fallback. To adopt the runtime in a copied theme, delete the copi
 
 **Per-block runtime assets.** `block_script(name)` is a second, block-scoped lazy-load
 channel alongside `runtime_script()`: a block template calls it to emit
-`<script defer src="/_thallo/runtime/block-{name}.js"></script>` for exactly the two
+`<script defer src="/_thallo/runtime/block-{name}.js"></script>` for exactly the three
 names in the closed catalog (`RenderContextExtension::BLOCK_SCRIPT_ASSETS` —
-`animated-text`, `gallery`); any other name — including path-traversal shapes or an
+`animated-text`, `code`, `gallery`); any other name — including path-traversal shapes or an
 empty string — resolves to empty markup, so `block_script()` can never be coerced into
 pointing at an arbitrary path. Emission dedupes once per render per name, but that
 dedupe is a bandwidth optimization only, not the correctness mechanism: the real
