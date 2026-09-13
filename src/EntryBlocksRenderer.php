@@ -73,11 +73,7 @@ final class EntryBlocksRenderer
 
         $blockContext = [
             'entry' => ['uuid' => $result['entry_uuid'], 'fields' => $result['fields']],
-            'site' => [
-                'name' => (string) config($context, 'render.site_name', 'Thallo'),
-                'locale' => $locale,
-                'locales' => [],
-            ],
+            'site' => SiteContext::build($context, $locale),
             'current_path' => null,
             'region_slug' => null,
         ];

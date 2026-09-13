@@ -26,6 +26,7 @@ use Thallo\Render\Templates\RenderTemplateLoader;
 use Thallo\Render\Templates\TemplateLinter;
 use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Render\ThemeLocator;
+use Thallo\Render\SiteContext;
 use Thallo\Render\TwigFactory;
 use Thallo\Tenancy\Cache\TenantCacheSegment;
 use Psr\Log\LoggerInterface;
@@ -878,11 +879,7 @@ final class RenderController
         $this->extension->setPreviewContext($this->previewContext);
         $this->extension->setLocale($locale);
         $context = [
-            'site' => [
-                'name' => (string) config($this->context, 'render.site_name', 'Thallo'),
-                'locale' => $locale,
-                'locales' => [],
-            ],
+            'site' => SiteContext::build($this->context, $locale),
             // Normalized request path (nav-v2 spec §3): same normalizer as the
             // page-cache key, so cached bodies and this value agree per path.
             'current_path' => $this->currentPath,

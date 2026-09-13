@@ -1,0 +1,9 @@
+{# The running Thallo version, from the install itself (site.version): correct on every
+   deploy by construction. params: prefix (optional text before the version, e.g.
+   "Developer Preview "). A development checkout has no version and says so. #}
+{% set version = site.version|default('') %}
+{% if version %}
+<span class="thallo-shortcode-version">{{ params.prefix|default('') }}{{ version }}</span>
+{% else %}
+<span class="thallo-shortcode-version thallo-shortcode-version--development">development checkout</span>
+{% endif %}
