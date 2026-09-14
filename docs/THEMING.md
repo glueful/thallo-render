@@ -634,6 +634,11 @@ accessibility label — escaped. Block semantics that stay in `data` as `token` 
 `choice` fields (animated text's per-part colours) go through
 `token_class(property, value)`, which emits the same utility the compiler does.
 
+The Background setting (`colors.surface`) compiles to the `background` shorthand, so it
+owns the whole background: a theme rule that paints a block with a gradient or an image
+background (the hero's `--bg-gradient` band) yields to a managed colour, `transparent`
+clears it, and a reset gives the theme's background back.
+
 The template lint (the same policy the admin editor enforces) holds a block
 template to its declaration: every declared target is styled, no undeclared
 target is used, and target names are constant strings. A DB override of a shipped

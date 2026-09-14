@@ -17,7 +17,8 @@ use Thallo\Contracts\Style\Vocabulary;
  */
 final class StyleCompiler
 {
-    public const VERSION = 1;
+    // 2: colors.surface compiles to the background shorthand (a theme gradient yields to it).
+    public const VERSION = 2;
 
     private const MEDIA = ['md' => 768, 'lg' => 1024];
 
@@ -46,7 +47,9 @@ final class StyleCompiler
         'typography.size' => 'font-size',
         'shadow' => 'box-shadow',
         'radius' => 'border-radius',
-        'colors.surface' => 'background-color',
+        // The shorthand: the surface colour owns the whole background, so a theme's gradient
+        // (a background-image) yields to a managed colour exactly like a flat theme fill does.
+        'colors.surface' => 'background',
         'colors.text' => 'color',
         'colors.border' => 'border-color',
     ];
