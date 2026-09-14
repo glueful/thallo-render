@@ -383,6 +383,8 @@ final class RenderController
                     $typeSlug !== '' ? $typeSlug : null,
                     $result['presentation'] ?? null,
                 ),
+                // The accepted working-copy pair (visual builder spec §3.5) on <main>.
+                'preview_revision' => $result['preview_revision'] ?? null,
             ], $env, $assetBase, $assetsDir);
         }
 

@@ -21,6 +21,25 @@
   var linkPanel = null // { root, input } — child of the current bubble
   var savedLinkRange = null // session-scoped (link-panel spec); cleared by closeLinkPanel
   var linkPanelOpen = false // freeze flag (link-panel spec §4)
+  // The displayed revision (visual builder spec §3.5): read off <main> at load and after
+  // every patch; a fetched page older than it within the same epoch is refused.
+  var displayed = revisionOf(document)
+
+  function revisionOf(doc) {
+    var main = doc && doc.querySelector ? doc.querySelector('main[data-thallo-revision]') : null
+    if (!main) return null
+    var revision = parseInt(main.getAttribute('data-thallo-revision'), 10)
+    if (isNaN(revision)) return null
+    return { epoch: main.getAttribute('data-thallo-epoch') || '', revision: revision }
+  }
+
+  function withRevision(payload, pair) {
+    if (pair) {
+      payload.epoch = pair.epoch
+      payload.revision = pair.revision
+    }
+    return payload
+  }
 
   function post(type, payload) {
     if (!session) return
@@ -966,7 +985,7 @@
     return clone.innerHTML
   }
 
-  function applyStagePatch(newBody, refreshId) {
+  function applyStagePatch(newBody, refreshId, fetched) {
     var liveClean = cleanedLiveBody()
     var liveTops = topLevelWrappers(liveClean)
     var newTops = topLevelWrappers(newBody)
@@ -980,11 +999,11 @@
       || liveIds.join(' ') !== newIds.join(' ')
       || (liveIds.length > 0 && newIds.length === 0)
     ) {
-      post('stage-refreshed', { refresh_id: refreshId, mode: 'reload', detail: 'id-drift' })
+      post('stage-refreshed', withRevision({ refresh_id: refreshId, mode: 'reload', detail: 'id-drift' }, fetched))
       return
     }
     if (shellSkeleton(liveClean) !== shellSkeleton(newBody)) {
-      post('stage-refreshed', { refresh_id: refreshId, mode: 'reload', detail: 'shell-drift' })
+      post('stage-refreshed', withRevision({ refresh_id: refreshId, mode: 'reload', detail: 'shell-drift' }, fetched))
       return
     }
     var swapped = 0
@@ -1007,11 +1026,12 @@
         selectWrapper(sel)
       }
     }
-    post('stage-refreshed', {
+    if (fetched) displayed = fetched
+    post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',
       detail: 'swapped:' + swapped + '/' + liveIds.length
-    })
+    }, fetched))
   }
 
   function onStageRefresh(refreshId) {
@@ -1037,7 +1057,14 @@
       .then(function (html) {
         var doc = new DOMParser().parseFromString(String(html), 'text/html')
         if (!doc || !doc.body) throw new Error('unparseable')
-        applyStagePatch(doc.body, refreshId)
+        var fetched = revisionOf(doc)
+        // Never step backwards within an epoch (spec §3.5): a slower render of an older
+        // revision is refused and the parent refreshes again from accepted state.
+        if (fetched && displayed && fetched.epoch === displayed.epoch && fetched.revision < displayed.revision) {
+          post('stage-refreshed', withRevision({ refresh_id: refreshId, mode: 'stale' }, fetched))
+          return
+        }
+        applyStagePatch(doc.body, refreshId, fetched)
       })
       .catch(function () {
         post('stage-refreshed', { refresh_id: refreshId, mode: 'reload' })
