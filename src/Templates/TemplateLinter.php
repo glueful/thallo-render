@@ -18,6 +18,7 @@ use Twig\Node\Expression\Variable\ContextVariable;
 use Twig\Node\ImportNode;
 use Twig\Node\IncludeNode;
 use Twig\Node\Node;
+use Twig\Node\TextNode;
 use Twig\Source;
 use Twig\Template;
 
@@ -154,6 +155,23 @@ final class TemplateLinter
 
         if ($node instanceof IncludeNode && !$node->getNode('expr') instanceof ConstantExpression) {
             $deny('include target must be a constant string.');
+        }
+
+        // The managed settings system emits no inline styles (visual builder spec §2.5): a
+        // template never writes a `style=` attribute or a `<style>` element. The three inline
+        // style emitters — theme_colors_style(), theme_style_scope() and font_faces_style(),
+        // variables and @font-face only — are functions, so their output never appears here.
+        if ($node instanceof TextNode) {
+            $text = (string) $node->getAttribute('data');
+            if (preg_match('/(?<![\w-])style\s*=/i', $text) === 1) {
+                $deny('Inline style attributes are not allowed: style through settings or the theme stylesheet.');
+            }
+            if (preg_match('/<style\b/i', $text) === 1) {
+                $deny(
+                    'Inline <style> elements are not allowed: theme_colors_style(), theme_style_scope() and '
+                        . 'font_faces_style() are the only inline style emitters.',
+                );
+            }
         }
 
         // Import target: ONLY the self-import shape (spec §4, gate-audit amendment —

@@ -27,10 +27,8 @@
       <div class="site-header__inner">{{ blocks(header.blocks) }}</div>
     </header>
   {% endif %}
-  <main style="max-width: 72rem; margin: 0 auto; padding: 2rem 1rem;">
-    <div style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 5rem 2rem; text-align: center; color: #94a3b8; font: 0.95rem system-ui;">
-      Page content
-    </div>
+  <main class="thallo-region-preview__main">
+    <div class="thallo-region-preview__placeholder">Page content</div>
   </main>
   {% if footer %}
     <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ footer.settings.width|default('contained') }}">

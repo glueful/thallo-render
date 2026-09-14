@@ -1345,9 +1345,20 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 @media (min-width: 48em) {
   .thallo-block-pricing_plans--orientation-horizontal .thallo-block-pricing_plans__items {
     display: grid;
-    grid-template-columns: repeat(var(--count, 1), minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
   }
+  /* The plan count is a --count-{n} modifier on the root (1–6), never an inline variable. */
+  .thallo-block-pricing_plans--count-2.thallo-block-pricing_plans--orientation-horizontal
+    .thallo-block-pricing_plans__items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .thallo-block-pricing_plans--count-3.thallo-block-pricing_plans--orientation-horizontal
+    .thallo-block-pricing_plans__items { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .thallo-block-pricing_plans--count-4.thallo-block-pricing_plans--orientation-horizontal
+    .thallo-block-pricing_plans__items { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .thallo-block-pricing_plans--count-5.thallo-block-pricing_plans--orientation-horizontal
+    .thallo-block-pricing_plans__items { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .thallo-block-pricing_plans--count-6.thallo-block-pricing_plans--orientation-horizontal
+    .thallo-block-pricing_plans__items { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   /* compact off widens the gap; scale + not-compact widens it more (room for the
      enlarged featured card). */
   .thallo-block-pricing_plans--orientation-horizontal:not(.thallo-block-pricing_plans--compact)

@@ -637,7 +637,10 @@ accessibility label — escaped. Block semantics that stay in `data` as `token` 
 The template lint (the same policy the admin editor enforces) holds a block
 template to its declaration: every declared target is styled, no undeclared
 target is used, and target names are constant strings. A DB override of a shipped
-block template is held to the same rule.
+block template is held to the same rule. No template writes a `style=` attribute
+or a `<style>` element — the lint refuses both at save and before render; the only
+inline style emitters are `theme_colors_style()`, `theme_style_scope()` and
+`font_faces_style()` (variables and `@font-face`, no selectors).
 
 ### 12.4 Browser floor and proofs
 

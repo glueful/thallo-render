@@ -124,6 +124,16 @@ html[data-theme="dark"] .site-name--has-dark .site-logo--dark { display: block; 
 .thallo-region-footer--full .site-footer__inner { max-width: none; }
 .thallo-region .site-header__inner,
 .thallo-region .site-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+/* The admin's chrome preview (region-preview.twig): a placeholder body between the regions. */
+.thallo-region-preview__main { max-width: 72rem; margin: 0 auto; padding: var(--space-6) var(--space-4); }
+.thallo-region-preview__placeholder {
+  border: 2px dashed var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
 .site-nav { display: flex; gap: var(--space-4); flex-wrap: wrap; }
 /* The fallback nav is now a list inside the shared mobile disclosure
    (theme-runtime spec §7) — bare list reset; navigation.css owns the 48rem

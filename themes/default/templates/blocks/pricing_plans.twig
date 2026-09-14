@@ -1,7 +1,7 @@
 {# pricing_plans — a grid (horizontal) or stack (vertical) of pricing_plan cards
-   (refs.md pricingPlans). Auto --count = number of plans drives the grid columns.
-   scale + orientation cascade to the child cards via descendant CSS (blocks.css);
-   no data is threaded to children. #}
+   (refs.md pricingPlans). The number of plans (1–6) is a --count-{n} modifier that
+   drives the grid columns. scale + orientation cascade to the child cards via
+   descendant CSS (blocks.css); no data is threaded to children. #}
 {% set orientation = ({horizontal:'horizontal',vertical:'vertical'}[data.orientation|default('horizontal')] ?? 'horizontal') %}
 {% set rootClass = [
   'thallo-block thallo-block-pricing_plans',
@@ -10,6 +10,7 @@
   data.scale|default(false) ? 'thallo-block-pricing_plans--scale' : '',
 ]|join(' ')|trim %}
 {% set count = data.plans|default([])|length %}
-<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  <div class="thallo-block-pricing_plans__items" style="--count: {{ count > 0 ? count : 1 }}">{{ blocks(data.plans) }}</div>
+{% set countMod = 'thallo-block-pricing_plans--count-' ~ (count < 1 ? 1 : (count > 6 ? 6 : count)) %}
+<div class="{{ rootClass }} {{ countMod }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  <div class="thallo-block-pricing_plans__items">{{ blocks(data.plans) }}</div>
 </div>
