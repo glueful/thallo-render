@@ -164,7 +164,8 @@ of truth for this set is `core/src/Content/Blocks/StarterBlockTypes.php` (schema
 template set mirrors it one-to-one. `code` ships `block-code.js` for its Copy button
 (the floor is the plain `<pre><code>`); `shortcode` renders `shortcodes/{name}.twig`, and the
 default theme ships `copyright` and `thallo-version` (the running install's version as
-`site.version`).
+`site.version`, styled as a pill; recolour it from custom CSS through `--version-fg`,
+`--version-bg` and `--version-dot` on `.thallo-shortcode-version`).
 
 ---
 

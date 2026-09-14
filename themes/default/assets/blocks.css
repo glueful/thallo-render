@@ -892,6 +892,24 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
   padding-inline: var(--space-4);
 }
 
+/* shortcodes/thallo-version — a status pill with a dot. Recolour from a site's custom CSS
+   by setting the three tokens on .thallo-shortcode-version (fg, bg, dot); the floor is the
+   plain <span>. */
+.thallo-shortcode-version {
+  --version-fg: var(--accent);
+  --version-bg: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  --version-dot: var(--version-fg);
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 0.375rem 0.875rem; border-radius: 999px;
+  background: var(--version-bg); color: var(--version-fg);
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.8rem; line-height: 1.4;
+  width: max-content; max-width: 100%;
+}
+.thallo-shortcode-version::before {
+  content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--version-dot); flex: none;
+}
+.thallo-shortcode-version--development { --version-fg: var(--muted); }
+
 /* ── Centered page layout (opt-in via main.layout--centered) ────────────────
    Band blocks present CONTAINED (width-clamped, centered) instead of edge-to-
    edge bands — no card radius; corners stay square. Dormant in themes that
