@@ -169,7 +169,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             ],
             FragmentVerification::class => [
                 'shared' => true,
-                'factory' => static fn (): FragmentVerification => new FragmentVerification(),
+                'factory' => [self::class, 'makeFragmentVerification'],
             ],
             PreviewFragmentRenderer::class => [
                 'shared' => true,
@@ -433,6 +433,12 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->get(ThemeStylesheetArtifacts::class),
             $container->get(CompiledStyleArtifacts::class),
         );
+    }
+
+    /** The verification record shipped with the package (visual builder spec §3.5). */
+    public static function makeFragmentVerification(): FragmentVerification
+    {
+        return new FragmentVerification();
     }
 
     public static function makePreviewFragments(ContainerInterface $container): PreviewFragments
