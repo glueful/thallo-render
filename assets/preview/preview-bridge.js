@@ -1034,6 +1034,88 @@
     }, fetched))
   }
 
+  // ── Fragment swaps (visual builder spec §3.5) ───────────────────────────────
+  // The parent hands over the server-rendered roots of an accepted apply. Every
+  // guard answers before anything moves: the stage must know its pair, the
+  // patch's baseline must be that pair, the patch's epoch the same epoch, its
+  // revision newer; every target must exist, every fragment must be exactly one
+  // wrapper carrying its own id, and no target may sit inside another. Then all
+  // swap, the runtime enhances what came in, selection is re-anchored, and the
+  // displayed pair advances. A failed guard answers fragments-failed and the
+  // parent refreshes from accepted state instead.
+  function onFragments(data) {
+    var refreshId = typeof data.refresh_id === 'string' ? data.refresh_id : ''
+    function fail(reason) {
+      post('fragments-failed', { refresh_id: refreshId, reason: reason })
+    }
+    if (editing || drag) {
+      post('stage-refreshed', { refresh_id: refreshId, mode: 'busy' })
+      return
+    }
+    var fragments = data.fragments
+    if (!fragments || typeof fragments !== 'object') return fail('shape')
+    if (!displayed) return fail('baseline')
+    if (data.baseline_epoch !== displayed.epoch || data.baseline_revision !== displayed.revision) {
+      return fail('baseline')
+    }
+    if (data.epoch !== displayed.epoch) return fail('epoch')
+    if (typeof data.revision !== 'number' || data.revision <= displayed.revision) {
+      post('stage-refreshed', withRevision(
+        { refresh_id: refreshId, mode: 'stale' },
+        { epoch: data.epoch, revision: data.revision }
+      ))
+      return
+    }
+    var ids = Object.keys(fragments)
+    if (ids.length === 0) return fail('empty')
+    var swaps = []
+    for (var i = 0; i < ids.length; i++) {
+      var live = findBlock(ids[i])
+      if (!live || !live.parentNode) return fail('target')
+      var tpl = document.createElement('template')
+      tpl.innerHTML = String(fragments[ids[i]])
+      var next = tpl.content.firstElementChild
+      if (!next || tpl.content.childElementCount !== 1) return fail('markup')
+      if (next.getAttribute('data-thallo-block') !== ids[i]) return fail('markup')
+      swaps.push({ live: live, next: next })
+    }
+    for (var a = 0; a < swaps.length; a++) {
+      for (var b = 0; b < swaps.length; b++) {
+        if (a !== b && swaps[a].live.contains(swaps[b].live)) return fail('overlap')
+      }
+    }
+    for (var s = 0; s < swaps.length; s++) {
+      var inserted = document.importNode(swaps[s].next, true)
+      swaps[s].live.parentNode.replaceChild(inserted, swaps[s].live)
+      // Custom elements tore themselves down with the old subtree; the runtime
+      // enhances the new one (canvas-skipping modules stay no-ops here).
+      if (window.ThalloRuntime && typeof window.ThalloRuntime.enhance === 'function') {
+        try { window.ThalloRuntime.enhance(inserted) } catch (e) { /* a module fault never breaks the swap */ }
+      }
+    }
+    if (selectedId !== null) {
+      var sel = findBlock(selectedId)
+      if (!sel) {
+        var goneId = selectedId
+        clearSelection()
+        post('block-deselect', { id: goneId })
+      } else if (!sel.classList.contains('thallo-canvas-selected')) {
+        selectWrapper(sel)
+      }
+    }
+    displayed = { epoch: data.epoch, revision: data.revision }
+    var main = document.querySelector('main[data-thallo-revision]')
+    if (main) {
+      main.setAttribute('data-thallo-epoch', displayed.epoch)
+      main.setAttribute('data-thallo-revision', String(displayed.revision))
+    }
+    post('stage-refreshed', withRevision({
+      refresh_id: refreshId,
+      mode: 'patched',
+      detail: 'fragments:' + swaps.length
+    }, displayed))
+  }
+
   function onStageRefresh(refreshId) {
     if (editing || drag) {
       // Never fight the user's hands (spec §3) — the parent's edit-end
@@ -1268,6 +1350,7 @@
     if (data.type === 'thallo:stage-refresh') {
       onStageRefresh(typeof data.refresh_id === 'string' ? data.refresh_id : '')
     }
+    if (data.type === 'thallo:fragments') onFragments(data)
     if (data.type === 'thallo:mirror-move') mirrorMove(data.id, data.beforeId, data.afterId)
     if (data.type === 'thallo:mirror-remove') mirrorRemove(data.id)
     if (data.type === 'thallo:mirror-duplicate') mirrorDuplicate(data.sourceId, data.idMap)
