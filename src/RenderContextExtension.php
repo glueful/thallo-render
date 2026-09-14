@@ -1021,8 +1021,13 @@ final class RenderContextExtension extends AbstractExtension
                     continue;
                 }
                 $data = is_array($item['data'] ?? null) ? $item['data'] : [];
+                // Settings (visual builder spec §1.2): every stored block carries them; the frame
+                // and the block context expose them to the style helpers and templates.
+                $settings = is_array($item['settings'] ?? null) ? $item['settings'] : [];
                 $this->blockFrames[] = [
                     'id' => $item['id'] ?? null,
+                    'type' => $type,
+                    'settings' => $settings,
                     // Resolved ONLY when annotating: live renders never consult
                     // the resolver, and non-prose blocks get a null field.
                     'editable_field' => $this->annotateBlocks
@@ -1031,7 +1036,12 @@ final class RenderContextExtension extends AbstractExtension
                 ];
                 try {
                     $rendered = $env->render($template, [
-                        'block' => ['id' => $item['id'] ?? null, 'type' => $type, 'data' => $data],
+                        'block' => [
+                            'id' => $item['id'] ?? null,
+                            'type' => $type,
+                            'data' => $data,
+                            'settings' => $settings,
+                        ],
                         'data' => $data,
                         'entry' => $entry,
                         'site' => $context['site'] ?? [],
