@@ -16,6 +16,11 @@
   <link rel="stylesheet" href="{{ asset('blocks.css') }}">
   <link rel="stylesheet" href="{{ asset('navigation.css') }}">
   <link rel="stylesheet" href="{{ asset('stepper.css') }}">
+  {# Parity with layout.twig: the operator's theme colours/design tokens, then the site
+     custom CSS last — the preview must look like the live page. #}
+  {{ theme_colors_style() }}
+  {% set customCss = custom_css() %}
+  {% if customCss %}<link rel="stylesheet" href="{{ customCss }}">{% endif %}
 </head>
 <body>
   {% if header %}
