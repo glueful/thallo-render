@@ -1,22 +1,17 @@
-{# container — a layout wrapper with background/overlay/spacing/border controls.
-   Authored in the theme's BEM/computed-class convention (see navigation.twig): two
-   layers of control, all optional so an untouched container renders on its defaults —
-     1. ENUM presets → guarded `--modifier` classes (width, padding_preset, min_height,
-        content_align, bg_size/repeat/position, shadow, border_style).
-     2. FREEFORM values → inline style. Backgrounds/overlay stay `--container-*` CSS
-        vars (painted by blocks.css); spacing/border/sizing are direct declarations.
-   The `padding`/`margin`/`radius` BOXES (per-side px) override the padding_preset /
-   emit margin & radius when any side is set. `max_width` overrides the width enum on
-   __inner; `min_height_px` overrides the min_height enum. A background_video (blob) or
+{# container — a layout wrapper with a background image or video, an overlay, width
+   and layout controls. Authored in the theme's BEM/computed-class convention: every
+   enum preset is a guarded `--modifier` class (width, min_height, content_align,
+   bg_size/position, overlay, flex). Spacing, colours, corners, border and shadow are
+   settings on the `root` target (visual builder spec §2.5) — nothing here is inline.
+   A background_image renders as a positioned <img> layer with srcset under the
+   priority-image contract (claim_priority_image()); a background_video (blob) or
    background_video_url renders a muted looping layer behind the overlay: a blob/direct
    file URL as <video>, a YouTube/Vimeo URL as a cover iframe (id parsed by video_embed,
-   so the raw URL never reaches src). The blob wins if both are set.
+   so the raw URL never reaches src). The video wins over the image if both are set.
    content_align places the inner content vertically (needs a min_height). `layout:
    flex` turns __inner into a flex container (flex_direction / justify / align_items /
-   flex_wrap classes + a `--container-gap` var); block mode (default) keeps normal flow,
-   so untouched containers are unchanged. #}
-{% import _self as fx %}
-{% set img = data.background_image ? media(data.background_image) : null %}
+   flex_wrap classes + a gap token class); block mode (default) keeps normal flow. #}
+{% set img = data.background_image ? media_image(data.background_image, [960, 1280, 1920]) : null %}
 {# Background video precedence: uploaded blob > URL. A URL is either a YouTube/Vimeo
    embed (rendered as a cover iframe, id parsed by video_embed so the raw URL never
    reaches src) or a direct video-file URL (native <video>, scheme-allowlisted). #}
@@ -30,14 +25,6 @@
   full:      '',
   narrow:    'thallo-block-container--narrow',
 }[data.width|default('contained')] ?? 'thallo-block-container--contained' %}
-{# The padding BOX (per-side px) overrides the token preset — the preset class is only
-   emitted when no box side is set. #}
-{% set padMod = data.padding is empty ? ({
-  none:   'thallo-block-container--pad-none',
-  small:  'thallo-block-container--pad-small',
-  medium: 'thallo-block-container--pad-medium',
-  large:  'thallo-block-container--pad-large',
-}[data.padding_preset|default('medium')] ?? 'thallo-block-container--pad-medium') : '' %}
 {% set heightMod = {
   auto:   '',
   screen: 'thallo-block-container--h-full',
@@ -50,26 +37,15 @@
   top:    'thallo-block-container--align-top',
   bottom: 'thallo-block-container--align-bottom',
 }[data.content_align|default('center')] ?? '' %}
-{% set bgSizeMod = {
-  cover:   'thallo-block-container--bgsize-cover',
-  contain: 'thallo-block-container--bgsize-contain',
-  auto:    'thallo-block-container--bgsize-auto',
-}[data.bg_size|default('cover')] ?? 'thallo-block-container--bgsize-cover' %}
-{% set bgRepeatMod = {
-  'no-repeat': 'thallo-block-container--bgrepeat-no-repeat',
-  'repeat':    'thallo-block-container--bgrepeat-repeat',
-}[data.bg_repeat|default('no-repeat')] ?? 'thallo-block-container--bgrepeat-no-repeat' %}
-{% set bgPosMod = {
-  center: 'thallo-block-container--bgpos-center',
-  top:    'thallo-block-container--bgpos-top',
-  bottom: 'thallo-block-container--bgpos-bottom',
-  left:   'thallo-block-container--bgpos-left',
-  right:  'thallo-block-container--bgpos-right',
-}[data.bg_position|default('center')] ?? 'thallo-block-container--bgpos-center' %}
-{% set shadowMod = {
-  none: '', '2xs': 'thallo-shadow-2xs', xs: 'thallo-shadow-xs', sm: 'thallo-shadow-sm',
-  md: 'thallo-shadow-md', lg: 'thallo-shadow-lg', xl: 'thallo-shadow-xl', '2xl': 'thallo-shadow-2xl',
-}[data.shadow|default('none')] ?? '' %}
+{% set overlay = {light: 'light', dark: 'dark'}[data.overlay|default('none')] ?? '' %}
+{% set overlayMods = overlay ? ([
+  'thallo-block-container--overlay-' ~ overlay,
+  'thallo-block-container--overlay-' ~ ({'25': '25', '50': '50', '75': '75'}[data.overlay_opacity|default('50')] ?? '50'),
+]|join(' ')) : '' %}
+{# The gap token (spec §1.7): its name becomes a class the theme maps to --t-spacing-*. #}
+{% set gapName = {
+  none: 'none', xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl', '2xl': '2xl', '3xl': '3xl',
+}[(data.gap.value|default(''))|replace({'spacing.': ''})] ?? '' %}
 {# Flex layout: the classes below only bite in flex mode; block mode (default) emits
    nothing so normal flow + the min_height centering above are untouched. #}
 {% set isFlex = (data.layout|default('block')) == 'flex' %}
@@ -84,28 +60,20 @@
   ({start: 'thallo-block-container--items-start', center: 'thallo-block-container--items-center',
     end: 'thallo-block-container--items-end', stretch: 'thallo-block-container--items-stretch'}[data.align_items|default('stretch')] ?? 'thallo-block-container--items-stretch'),
   ({nowrap: '', wrap: 'thallo-block-container--wrap'}[data.flex_wrap|default('nowrap')] ?? ''),
+  gapName ? 'thallo-block-container--gap-' ~ gapName : '',
 ]|join(' ')|trim) : '' %}
 
 {% set rootClass = [
   'thallo-block thallo-block-container',
-  widthMod, padMod, heightMod, alignMod, bgSizeMod, bgRepeatMod, bgPosMod, shadowMod, flexMods,
+  widthMod, heightMod, alignMod, overlayMods, flexMods,
 ]|join(' ')|trim %}
+{% set bgClass = [
+  'thallo-block-container__bg',
+  'thallo-block-container__bg--' ~ ({cover: 'cover', contain: 'contain', auto: 'auto'}[data.bg_size|default('cover')] ?? 'cover'),
+  'thallo-block-container__bg--pos-' ~ ({center: 'center', top: 'top', bottom: 'bottom', left: 'left', right: 'right'}[data.bg_position|default('center')] ?? 'center'),
+]|join(' ') %}
 
-{# freeform → inline style: --container-* vars (painted by blocks.css) + direct
-   spacing/border/sizing declarations (box-sizing is border-box globally). #}
-{% set style = [] %}
-{% if data.background_color %}{% set style = style|merge(['--container-bg: ' ~ data.background_color]) %}{% endif %}
-{% if img %}{% set style = style|merge(['--container-bg-image: url(' ~ img ~ ')']) %}{% endif %}
-{% if data.overlay_color %}{% set style = style|merge(['--container-overlay: ' ~ data.overlay_color]) %}{% endif %}
-{% if data.overlay_opacity is defined and data.overlay_opacity is not null %}{% set style = style|merge(['--container-overlay-opacity: ' ~ (data.overlay_opacity / 100)]) %}{% endif %}
-{% if data.padding is not empty %}{% set style = style|merge(['padding: ' ~ fx.box(data.padding)]) %}{% endif %}
-{% if data.margin is not empty %}{% set style = style|merge(['margin: ' ~ fx.box(data.margin)]) %}{% endif %}
-{% if data.radius is not empty %}{% set style = style|merge(['border-radius: ' ~ fx.box(data.radius)]) %}{% endif %}
-{% if data.border_style is defined and data.border_style and data.border_style != 'none' %}{% set style = style|merge(['border: ' ~ (data.border_width|default(1)) ~ 'px ' ~ data.border_style ~ ' ' ~ (data.border_color|default('#000000'))]) %}{% endif %}
-{% if data.min_height_px %}{% set style = style|merge(['min-height: ' ~ data.min_height_px ~ 'px']) %}{% endif %}
-{% if isFlex and data.gap %}{% set style = style|merge(['--container-gap: ' ~ data.gap ~ 'px']) %}{% endif %}
-
-<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}{% if style is not empty %} style="{{ style|join('; ') }}"{% endif %}>
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if videoSrc %}<video class="thallo-block-container__video" src="{{ videoSrc }}" autoplay muted loop playsinline></video>
   {% elseif vidEmbed %}<div class="thallo-block-container__video-cover">
     {%- if vidEmbed.provider == 'youtube' -%}
@@ -113,8 +81,14 @@
     {%- elseif vidEmbed.provider == 'vimeo' -%}
       <iframe class="thallo-block-container__video-frame" src="https://player.vimeo.com/video/{{ vidEmbed.id }}?autoplay=1&muted=1&loop=1&background=1" title="" loading="lazy" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin"></iframe>
     {%- endif -%}
-  </div>{% endif %}
-  {% if data.overlay_color %}<div class="thallo-block-container__overlay"></div>{% endif %}
-  <div class="thallo-block-container__inner"{% if data.max_width %} style="max-width: {{ data.max_width }}px"{% endif %}>{{ blocks(data.content) }}</div>
+  </div>
+  {% elseif img %}
+    {% set priority = claim_priority_image() %}
+    <img class="{{ bgClass }}" src="{{ img.src }}"
+         {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="100vw"{% endif %}
+         alt="" aria-hidden="true"
+         {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
+  {% endif %}
+  {% if overlay %}<div class="thallo-block-container__overlay"></div>{% endif %}
+  <div class="thallo-block-container__inner">{{ blocks(data.content) }}</div>
 </div>
-{% macro box(b) %}{{ b.top|default(0) }}px {{ b.right|default(0) }}px {{ b.bottom|default(0) }}px {{ b.left|default(0) }}px{% endmacro %}

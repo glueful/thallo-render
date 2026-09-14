@@ -234,14 +234,12 @@ degrades to the default modifier instead of emitting a class no CSS matches:
 }[data.columns|default('3')] ?? 'thallo-block-grid--cols-3' %}
 ```
 
-**Freeform settings (arbitrary color / spacing you can't enumerate) → inline CSS
-variables** the hand-authored CSS then consumes:
-```twig
-<div class="thallo-block thallo-block-container" style="--container-bg: {{ data.background_color }}">
-```
-```css
-.thallo-block-container { background-color: var(--container-bg, transparent); }
-```
+**Colour, spacing, corners, border, shadow → settings, never fields or inline
+style.** A block declares the capabilities its root target accepts and emits them
+through `style_classes()` (§12.3); the compiled settings artifact carries the
+utilities. A template never writes a `style=` attribute — the lint refuses it — and
+the only inline `<style>` elements are the enumerated variable-only emitters (the
+style block's skin scope).
 
 **Author content (`rich_text` / `body`) → the `thallo-block-rich_text` measure**,
 styled by hand in `blocks.css`; never wrap it in utility classes:
@@ -515,7 +513,7 @@ CSP by default. If strict-CSP perfection is later required, the same storage +
 token model can serve the CSS from a linked `/theme-colors.css` route instead —
 a delivery-only change.
 
-## 10. Style block (scoped accent/neutral + class hook)
+## 10. Style block (scoped accent/neutral)
 
 The **Style** block (`slug: style`, category Layout) re-skins a group of blocks
 without swapping templates — the local sibling of the global theme color config (§9).
@@ -523,8 +521,10 @@ without swapping templates — the local sibling of the global theme color confi
 ### 10.1 What it configures
 - **Accent** and **Neutral** — the same closed Tailwind families as §9. Each is
   optional; the first option, **Inherit**, leaves that dimension unchanged.
-- **Class hook** (`class_hook`) — an optional custom-CSS hook (see §10.4).
 - **Content** — the child blocks the skin applies to.
+
+Padding, margin and shadow are settings on the block's root target (§12.3); a
+custom-CSS hook is the Advanced tab's CSS classes, emitted verbatim on the wrapper.
 
 ### 10.2 How it re-skins (tokens only, follows color mode)
 The block redefines design-token custom properties (`--accent`/`--accent-ink` for
@@ -543,29 +543,24 @@ Each Style block emits its own small `<style>` next to its wrapper (not hoisted 
 accent/neutral pairs share one deterministic scope class. As with §9, the inline
 `<style>` relies on the CSP `style-src 'unsafe-inline'` allowance (accepted for v1).
 
-### 10.4 Custom class hook
-The **Class hook** field lets you target the wrapper from `custom.css`. Enter a bare
-hook name (e.g. `promo`); it renders as the namespaced class `thallo-style-promo` on
-the wrapper. Multiple space-separated hooks are allowed. Input is sanitized at render
-time — only safe class tokens survive — so it can never inject markup.
-
-### 10.5 Preview & caching (inherited, no new machinery)
+### 10.4 Preview & caching (inherited, no new machinery)
 Style values are ordinary published block content, so they preview through the normal
 content preview and their rendered HTML is invalidated by the existing content/publish
 cache purge (the render entry is tagged with the page's entry surrogate). There is no
 separate preview token, appearance fingerprint, or purge listener for this block.
 
-## 11. Shadows (elevation scale + block controls)
+## 11. Shadows (elevation scale)
 
 The theme ships a Tailwind-derived elevation scale as design tokens in `site.css`,
-light + dark aware, plus page-builder controls on the Style and Container blocks.
+light + dark aware; the vocabulary's `shadow.*` tokens (§12.1) map onto it, so a
+block's shadow is a setting.
 
 ### 11.1 The scale
 `--shadow-none`, `--shadow-2xs`, `--shadow-xs`, `--shadow-sm`, `--shadow-md`,
 `--shadow-lg`, `--shadow-xl`, `--shadow-2xl`. `--shadow` aliases `--shadow-md` (the
 default), so every component that used the old flat shadow now renders md; floating
-overlays (nav dropdown) use `--shadow-lg`. Apply a depth anywhere with the utility
-classes `.thallo-shadow-{level}`.
+overlays (nav dropdown) use `--shadow-lg`. A block takes a depth through its `shadow`
+setting (`t-shadow-{token}`); theme CSS reads the variables directly.
 
 ### 11.2 Overridable color + opacity
 Each token composes its color from `--shadow-color` and its opacity from
@@ -573,14 +568,6 @@ Each token composes its color from `--shadow-color` and its opacity from
 strength 1; dark black / strength 2.5 (the scale recomputes automatically in dark —
 no separate dark shadow values). Override either variable on an element for a colored
 or stronger/softer shadow.
-
-### 11.3 Block controls
-- **Style block:** `shadow` (depth), `shadow_color` (any hex — the "colored shadow"),
-  `shadow_opacity` (0–200, where 100 = as-designed — the "opacity modifier"),
-  `padding` (all sides) and `margin` (vertical). Color/opacity are emitted as inline
-  `--shadow-color` / `--shadow-strength` on the wrapper, and are only applied when they
-  pass a render-time shape/range guard. All default to `none`/unset.
-- **Container:** `shadow` (depth) only. Defaults to `none`.
 
 ---
 

@@ -623,28 +623,6 @@ final class RenderContextExtension extends AbstractExtension
         ];
     }
 
-    /** Style-block spec §4.3: namespaced, sanitized custom-CSS class hook. */
-    public function styleHook(mixed $value): string
-    {
-        return self::sanitizeStyleHook(is_string($value) ? $value : '');
-    }
-
-    /**
-     * Bounded hex-color helper (gate-audit amendment, admin-contributed-templates task 7):
-     * replaces the |matches "/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/" check blocks/style.twig
-     * used directly — |matches/MatchesBinary stays denied by TemplatePolicy (ReDoS
-     * posture: preg_match on a template-supplied pattern). The SAME pattern now lives
-     * here, in PHP, bound to this one call site — never in template source.
-     */
-    public function hexColor(mixed $value): string
-    {
-        if (!is_string($value)) {
-            return '';
-        }
-        $trimmed = trim($value);
-        return preg_match('/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/', $trimmed) === 1 ? $trimmed : '';
-    }
-
     /**
      * Bounded numeric-clamp helper (gate-audit amendment, admin-contributed-templates
      * task 7): replaces the |matches "/^[0-9]+(\.[0-9]+)?$/" + max()/min() pair
@@ -660,29 +638,6 @@ final class RenderContextExtension extends AbstractExtension
         return max($min, min($max, (float) $value));
     }
 
-    /**
-     * Pure sanitizer for the class hook (pin 7). Keeps only tokens matching
-     * ^[A-Za-z_-][A-Za-z0-9_-]*$, strips any existing thallo-style- prefix
-     * (idempotent), then namespaces each under thallo-style-. Returns a
-     * leading-space-joined string, or '' when nothing survives.
-     */
-    public static function sanitizeStyleHook(string $raw): string
-    {
-        $out = [];
-        foreach (preg_split('/\s+/', trim($raw)) ?: [] as $token) {
-            if ($token === '') {
-                continue;
-            }
-            if (str_starts_with($token, 'thallo-style-')) {
-                $token = substr($token, strlen('thallo-style-'));
-            }
-            if (preg_match('/^[A-Za-z_-][A-Za-z0-9_-]*$/', $token) !== 1) {
-                continue;
-            }
-            $out[] = 'thallo-style-' . $token;
-        }
-        return $out === [] ? '' : ' ' . implode(' ', $out);
-    }
 
     /**
      * The ONE region render path (global-regions spec §10): resolves the
@@ -920,12 +875,7 @@ final class RenderContextExtension extends AbstractExtension
             // filter ESCAPES the value itself in BOTH modes (never autoescape).
             new TwigFilter('editable_text', $this->editableText(...), ['is_safe' => ['html']]),
             new TwigFilter('safe_url', $this->safeUrl(...)),
-            // No is_safe: sanitized output is autoescape-safe (a deliberate second
-            // layer over the sanitizer, since the input is operator-derived).
-            new TwigFilter('style_hook', $this->styleHook(...)),
-            // Bounded PHP helpers replacing the two |matches regex checks
-            // blocks/style.twig used to run directly (gate-audit amendment, task 7).
-            new TwigFilter('hex_color', $this->hexColor(...)),
+            // A bounded PHP helper (gate-audit amendment, task 7): the animated text's interval.
             new TwigFilter('numeric_clamp', $this->numericClamp(...)),
             new TwigFilter('br_tokens', $this->brTokens(...), ['is_safe' => ['html']]),
         ];

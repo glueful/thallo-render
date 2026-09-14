@@ -67,16 +67,18 @@ final class TemplatePolicy
     //         the compiled style artifact is linked after the theme artifact).
     // bumped: style_classes, style_attrs and token_class joined the function allowlist (visual
     //         builder spec §2.5 — style targets).
-    public const CACHE_VERSION = 22;
+    // bumped: hex_color and style_hook left the filter allowlist (visual builder spec §7.2 —
+    //         no template emits an inline colour or a class hook any more).
+    public const CACHE_VERSION = 23;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
     public const FILTERS = [
         'abs', 'batch', 'br_tokens', 'capitalize', 'column', 'date', 'date_modify', 'default',
-        'editable_text', 'escape', 'e', 'first', 'format', 'hex_color', 'join', 'json_encode',
+        'editable_text', 'escape', 'e', 'first', 'format', 'join', 'json_encode',
         'keys', 'last', 'length', 'lower', 'merge', 'nl2br', 'number_format', 'numeric_clamp',
         'replace', 'reverse', 'round', 'safe_html', 'safe_url', 'slice', 'sort', 'split',
-        'striptags', 'style_hook', 'title', 'trim', 'upper', 'url_encode',
+        'striptags', 'title', 'trim', 'upper', 'url_encode',
     ];
 
     public const FUNCTIONS = [

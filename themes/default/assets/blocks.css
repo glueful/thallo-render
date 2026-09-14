@@ -309,30 +309,39 @@
 .thallo-block-container {
   position: relative;
   isolation: isolate;
-  background-color: var(--container-bg, transparent);
-  background-image: var(--container-bg-image, none);
 }
-.thallo-block-container--bgsize-cover { background-size: cover; }
-.thallo-block-container--bgsize-contain { background-size: contain; }
-.thallo-block-container--bgsize-auto { background-size: auto; }
-.thallo-block-container--bgrepeat-no-repeat { background-repeat: no-repeat; }
-.thallo-block-container--bgrepeat-repeat { background-repeat: repeat; }
-.thallo-block-container--bgrepeat-repeat-x { background-repeat: repeat-x; }
-.thallo-block-container--bgrepeat-repeat-y { background-repeat: repeat-y; }
-.thallo-block-container--bgpos-center { background-position: center; }
-.thallo-block-container--bgpos-top { background-position: top; }
-.thallo-block-container--bgpos-bottom { background-position: bottom; }
-.thallo-block-container--bgpos-left { background-position: left; }
-.thallo-block-container--bgpos-right { background-position: right; }
+/* background_image — a positioned <img> layer (srcset, priority-image contract), never a
+   background-image style. z-index 0 sits under __inner (z-index 1). */
+.thallo-block-container__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.thallo-block-container__bg--contain { object-fit: contain; }
+.thallo-block-container__bg--auto { object-fit: none; }
+.thallo-block-container__bg--pos-center { object-position: center; }
+.thallo-block-container__bg--pos-top { object-position: top; }
+.thallo-block-container__bg--pos-bottom { object-position: bottom; }
+.thallo-block-container__bg--pos-left { object-position: left; }
+.thallo-block-container__bg--pos-right { object-position: right; }
+/* overlay — schema enum: none | light | dark, with an opacity step 25 | 50 | 75 */
 .thallo-block-container__overlay {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: var(--container-overlay, transparent);
-  opacity: var(--container-overlay-opacity, 0.5);
   pointer-events: none;
   border-radius: inherit;
 }
+.thallo-block-container--overlay-light .thallo-block-container__overlay { background: #fff; }
+.thallo-block-container--overlay-dark .thallo-block-container__overlay { background: #000; }
+.thallo-block-container--overlay-25 .thallo-block-container__overlay { opacity: 0.25; }
+.thallo-block-container--overlay-50 .thallo-block-container__overlay { opacity: 0.5; }
+.thallo-block-container--overlay-75 .thallo-block-container__overlay { opacity: 0.75; }
 .thallo-block-container__inner { position: relative; z-index: 1; }
 .thallo-block-container--contained .thallo-block-container__inner {
   max-width: var(--container);
@@ -344,10 +353,8 @@
   margin-inline: auto;
   padding-inline: var(--space-4);
 }
-.thallo-block-container--pad-none { padding-block: 0; }
-.thallo-block-container--pad-small { padding-block: var(--space-4); }
-.thallo-block-container--pad-medium { padding-block: var(--space-6); }
-.thallo-block-container--pad-large { padding-block: var(--space-7); }
+/* Padding, margin, corners, border, shadow and colours are settings (t-p*, t-m*, t-radius-*,
+   t-bw-*/t-bs-*, t-shadow-*, t-bg-*/t-fg-*/t-bc-*). */
 .thallo-block-container--h-half { min-height: 50vh; }
 .thallo-block-container--h-full { min-height: 100vh; }
 /* Block-mode vertical centering (scoped away from flex mode, which owns __inner's
@@ -365,10 +372,10 @@
 .thallo-block-container--align-bottom:not(.thallo-block-container--layout-flex) .thallo-block-container__inner { justify-content: flex-end; }
 
 /* Flex layout mode: __inner lays its child blocks out as flex items. Direction /
-   justify / align / wrap come from the modifier classes; gap from the inline var. */
+   justify / align / wrap come from the modifier classes; gap from the token class below. */
 .thallo-block-container--layout-flex .thallo-block-container__inner {
   display: flex;
-  gap: var(--container-gap, 0);
+  gap: 0;
   min-height: inherit;
 }
 .thallo-block-container--dir-row .thallo-block-container__inner { flex-direction: row; }
@@ -386,6 +393,15 @@
 .thallo-block-container--items-end .thallo-block-container__inner { align-items: flex-end; }
 .thallo-block-container--items-stretch .thallo-block-container__inner { align-items: stretch; }
 .thallo-block-container--wrap .thallo-block-container__inner { flex-wrap: wrap; }
+/* gap — a spacing token in data (spec §1.7): the theme maps the name to the compiled variable. */
+.thallo-block-container--gap-none .thallo-block-container__inner { gap: var(--t-spacing-none); }
+.thallo-block-container--gap-xs .thallo-block-container__inner { gap: var(--t-spacing-xs); }
+.thallo-block-container--gap-sm .thallo-block-container__inner { gap: var(--t-spacing-sm); }
+.thallo-block-container--gap-md .thallo-block-container__inner { gap: var(--t-spacing-md); }
+.thallo-block-container--gap-lg .thallo-block-container__inner { gap: var(--t-spacing-lg); }
+.thallo-block-container--gap-xl .thallo-block-container__inner { gap: var(--t-spacing-xl); }
+.thallo-block-container--gap-2xl .thallo-block-container__inner { gap: var(--t-spacing-2xl); }
+.thallo-block-container--gap-3xl .thallo-block-container__inner { gap: var(--t-spacing-3xl); }
 /* background_video — a muted looping cover layer behind the overlay, over any
    background_image. z-index 0 sits under __inner (z-index 1). */
 .thallo-block-container__video {
@@ -1240,24 +1256,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
    blocks already consume. The scoped values arrive via the block's inline <style>. */
 .thallo-block-style { display: block; }
 .thallo-block-style__inner { display: block; }
-.thallo-block-style--pad-small { padding: var(--space-3); }
-.thallo-block-style--pad-medium { padding: var(--space-4); }
-.thallo-block-style--pad-large { padding: var(--space-5); }
-.thallo-block-style--mar-small { margin-block: var(--space-3); }
-.thallo-block-style--mar-medium { margin-block: var(--space-4); }
-.thallo-block-style--mar-large { margin-block: var(--space-5); }
 
-/* Shadow elevation utilities (shadow-system plan): a block opts into a depth by
-   adding one of these; --shadow-color / --shadow-strength (set inline by the block)
-   retint / restrength it. */
-.thallo-shadow-none { box-shadow: var(--shadow-none); }
-.thallo-shadow-2xs { box-shadow: var(--shadow-2xs); }
-.thallo-shadow-xs { box-shadow: var(--shadow-xs); }
-.thallo-shadow-sm { box-shadow: var(--shadow-sm); }
-.thallo-shadow-md { box-shadow: var(--shadow-md); }
-.thallo-shadow-lg { box-shadow: var(--shadow-lg); }
-.thallo-shadow-xl { box-shadow: var(--shadow-xl); }
-.thallo-shadow-2xl { box-shadow: var(--shadow-2xl); }
 
 /* ── Pricing blocks (refs.md pricingPlan/pricingPlans/pricingTable) ──────────
    Self-contained rounded cards (deliberate radius exception to the squared
