@@ -24,6 +24,7 @@ use Thallo\Render\ActiveThemeSource;
 use Thallo\Render\Templates\CustomCssUrl;
 use Thallo\Render\Templates\IconSet;
 use Thallo\Render\Theme\ThemeColors;
+use Thallo\Render\Theme\ThemeDesign;
 use Psr\Log\LoggerInterface;
 use Twig\Environment;
 use Twig\Error\RuntimeError;
@@ -450,7 +451,13 @@ final class RenderContextExtension extends AbstractExtension
         $accent = ThemeColors::normalizeAccent($accent) ?? ThemeColors::DEFAULT_ACCENT;
         $neutral = ThemeColors::normalizeNeutral($neutral) ?? ThemeColors::DEFAULT_NEUTRAL;
 
-        $css = ThemeColors::css($accent, $neutral);
+        // Design tokens (website plan phase 1b) ride in the same block, after the colours.
+        $css = ThemeColors::css($accent, $neutral) . ThemeDesign::css(
+            $this->appearance?->radius() ?? ThemeDesign::DEFAULT_RADIUS,
+            $this->appearance?->font() ?? ThemeDesign::DEFAULT_FONT,
+            $this->appearance?->background() ?? ThemeDesign::DEFAULT_BACKGROUND,
+            $neutral,
+        );
         return new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8');
     }
 

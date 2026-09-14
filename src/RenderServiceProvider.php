@@ -316,7 +316,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
         return new RenderErrorCache(
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            $appearance->accent() . '-' . $appearance->neutral(),
+            $appearance->fingerprint(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
             $container->get(TenantCacheSegment::class),
@@ -333,7 +333,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // this identity is what makes zero-new-purge-code true.
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            $appearance->accent() . '-' . $appearance->neutral(),
+            $appearance->fingerprint(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
             $container->get(TenantCacheSegment::class),

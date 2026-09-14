@@ -161,6 +161,16 @@ final class ThemeColors
      *
      * @return array<string,string>
      */
+    /**
+     * The neutral family's six tokens in one mode (design settings read the ground/surface).
+     *
+     * @return array<string,string>
+     */
+    public static function neutralTokens(string $neutral, string $mode): array
+    {
+        return self::neutralVars(self::normalizeNeutral($neutral) ?? self::DEFAULT_NEUTRAL, $mode);
+    }
+
     private static function neutralVars(string $neutral, string $mode): array
     {
         return $mode === 'dark' ? self::NEUTRAL_DARK[$neutral] : self::NEUTRAL_LIGHT[$neutral];

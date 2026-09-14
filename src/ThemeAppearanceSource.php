@@ -7,6 +7,7 @@ namespace Thallo\Render;
 use Psr\Log\LoggerInterface;
 use Thallo\Contracts\Settings\ThemeAppearanceProvider;
 use Thallo\Render\Theme\ThemeColors;
+use Thallo\Render\Theme\ThemeDesign;
 
 /**
  * The effective theme appearance (theme-color-config spec §4): saved accent/
@@ -18,6 +19,9 @@ final class ThemeAppearanceSource
 {
     private ?string $accentMemo = null;
     private ?string $neutralMemo = null;
+    private ?string $radiusMemo = null;
+    private ?string $fontMemo = null;
+    private ?string $backgroundMemo = null;
 
     public function __construct(
         /** Soft-bound: null = no settings engine, default applies. */
@@ -52,5 +56,56 @@ final class ThemeAppearanceSource
             $ok = ThemeColors::DEFAULT_NEUTRAL;
         }
         return $this->neutralMemo = $ok;
+    }
+
+    public function radius(): string
+    {
+        return $this->radiusMemo ??= $this->design(
+            $this->settings?->radius(),
+            ThemeDesign::normalizeRadius(...),
+            ThemeDesign::DEFAULT_RADIUS,
+            'radius',
+        );
+    }
+
+    public function font(): string
+    {
+        return $this->fontMemo ??= $this->design(
+            $this->settings?->font(),
+            ThemeDesign::normalizeFont(...),
+            ThemeDesign::DEFAULT_FONT,
+            'font',
+        );
+    }
+
+    public function background(): string
+    {
+        return $this->backgroundMemo ??= $this->design(
+            $this->settings?->background(),
+            ThemeDesign::normalizeBackground(...),
+            ThemeDesign::DEFAULT_BACKGROUND,
+            'background',
+        );
+    }
+
+    /**
+     * Every validated appearance choice, joined: the render cache's appearance segment
+     * (theme-color-config spec §7), so any change re-keys every cached page.
+     */
+    public function fingerprint(): string
+    {
+        return implode('-', [$this->accent(), $this->neutral(), $this->radius(), $this->font(), $this->background()]);
+    }
+
+    /** @param callable(string):?string $normalize */
+    private function design(?string $raw, callable $normalize, string $default, string $what): string
+    {
+        $raw ??= $default;
+        $ok = $normalize($raw);
+        if ($ok === null) {
+            $this->logger?->warning("[Thallo] Invalid theme {$what} '{$raw}'; falling back to '{$default}'.");
+            $ok = $default;
+        }
+        return $ok;
     }
 }
