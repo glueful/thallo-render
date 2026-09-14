@@ -1,0 +1,127 @@
+{
+  "name": "an explicit larger breakpoint applies after a reset",
+  "cases": [
+    {
+      "name": "instance md reset, instance lg explicit",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  },
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.xl"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "md": {
+                "type": "reset"
+              },
+              "lg": {
+                "type": "token",
+                "value": "spacing.xs"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.lg"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        },
+        "md": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.xs"
+          },
+          "source": "instance",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "instance md reset, class lg explicit",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  },
+                  "lg": {
+                    "type": "token",
+                    "value": "spacing.2xl"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "md": {
+                "type": "reset"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.lg"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        },
+        "md": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.2xl"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        }
+      }
+    }
+  ]
+}

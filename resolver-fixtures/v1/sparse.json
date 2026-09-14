@@ -1,0 +1,191 @@
+{
+  "name": "sparse maps and inheritance",
+  "cases": [
+    {
+      "name": "nothing declared is theme default everywhere",
+      "property": "spacing.padding.top",
+      "classes": [],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "md": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "lg": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        }
+      }
+    },
+    {
+      "name": "lg only inherits nothing below",
+      "property": "spacing.padding.top",
+      "classes": [],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "lg": {
+                "type": "token",
+                "value": "spacing.xl"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "md": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.xl"
+          },
+          "source": "instance",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "class order: later class wins an exact tie",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "a",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.sm"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "b",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.lg"
+          },
+          "source": "class:b",
+          "state": "explicit"
+        },
+        "md": {
+          "value": {
+            "type": "token",
+            "value": "spacing.lg"
+          },
+          "source": "class:b",
+          "state": "inherited"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.lg"
+          },
+          "source": "class:b",
+          "state": "inherited"
+        }
+      }
+    },
+    {
+      "name": "exact md in an earlier class beats inherited base of a later class",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "a",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.xl"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "b",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.sm"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "class:b",
+          "state": "explicit"
+        },
+        "md": {
+          "value": {
+            "type": "token",
+            "value": "spacing.xl"
+          },
+          "source": "class:a",
+          "state": "explicit"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.xl"
+          },
+          "source": "class:a",
+          "state": "inherited"
+        }
+      }
+    }
+  ]
+}

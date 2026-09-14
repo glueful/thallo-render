@@ -1,0 +1,106 @@
+{
+  "name": "non-responsive properties resolve one value",
+  "cases": [
+    {
+      "name": "instance radius beats class radius",
+      "property": "radius",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "radius": {
+              "type": "token",
+              "value": "radius.lg"
+            }
+          }
+        }
+      ],
+      "instance": {
+        "radius": {
+          "type": "token",
+          "value": "radius.none"
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "radius.none"
+          },
+          "source": "instance",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "class radius applies when the instance is silent",
+      "property": "radius",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "radius": {
+              "type": "token",
+              "value": "radius.lg"
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "radius.lg"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "instance reset of a non-responsive property",
+      "property": "colors.text",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "colors": {
+              "text": {
+                "type": "token",
+                "value": "color.accent"
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "colors": {
+          "text": {
+            "type": "reset"
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        }
+      }
+    },
+    {
+      "name": "unset everywhere",
+      "property": "radius",
+      "classes": [],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        }
+      }
+    }
+  ]
+}

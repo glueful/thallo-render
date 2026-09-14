@@ -1,0 +1,196 @@
+{
+  "name": "reset terminates resolution at its breakpoint",
+  "cases": [
+    {
+      "name": "instance reset bypasses every class",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "a",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.xl"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "b",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "md": {
+                "type": "reset"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "md": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        },
+        "lg": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        }
+      }
+    },
+    {
+      "name": "class reset suppresses lower classes and can be overridden by a later class",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "a",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "b",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "reset"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "c",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.sm"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "md": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "class:c",
+          "state": "explicit"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "class:c",
+          "state": "inherited"
+        }
+      }
+    },
+    {
+      "name": "class reset with nothing above gives the theme default",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "a",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "b",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "md": {
+                    "type": "reset"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "md": {
+          "value": null,
+          "source": "class:b",
+          "state": "reset"
+        },
+        "lg": {
+          "value": null,
+          "source": "class:b",
+          "state": "reset"
+        }
+      }
+    }
+  ]
+}

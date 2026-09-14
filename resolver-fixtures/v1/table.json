@@ -1,0 +1,254 @@
+{
+  "name": "spec \u00a71.6 table",
+  "cases": [
+    {
+      "name": "row-1 base sm under class base lg md xl",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  },
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.xl"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "base": {
+                "type": "token",
+                "value": "spacing.sm"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "explicit"
+        },
+        "md": {
+          "value": {
+            "type": "token",
+            "value": "spacing.xl"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.xl"
+          },
+          "source": "class:c1",
+          "state": "inherited"
+        }
+      }
+    },
+    {
+      "name": "row-2 md sm under class base lg md xl",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  },
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.xl"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "md": {
+                "type": "token",
+                "value": "spacing.sm"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.lg"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        },
+        "md": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "explicit"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "inherited"
+        }
+      }
+    },
+    {
+      "name": "row-3 base sm md sm",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  },
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.xl"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "base": {
+                "type": "token",
+                "value": "spacing.sm"
+              },
+              "md": {
+                "type": "token",
+                "value": "spacing.sm"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "explicit"
+        },
+        "md": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "explicit"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "inherited"
+        }
+      }
+    },
+    {
+      "name": "row-4 md reset",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "spacing": {
+              "padding": {
+                "top": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  },
+                  "md": {
+                    "type": "token",
+                    "value": "spacing.xl"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "md": {
+                "type": "reset"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.lg"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        },
+        "md": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        },
+        "lg": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        }
+      }
+    }
+  ]
+}

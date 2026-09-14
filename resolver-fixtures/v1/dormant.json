@@ -1,0 +1,91 @@
+{
+  "name": "declarations the resolver ignores",
+  "cases": [
+    {
+      "name": "a class declaring another property does not affect this one",
+      "property": "spacing.padding.top",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "spacing": {
+              "padding": {
+                "bottom": {
+                  "base": {
+                    "type": "token",
+                    "value": "spacing.lg"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "md": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        },
+        "lg": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        }
+      }
+    },
+    {
+      "name": "an unknown breakpoint key in stored data is ignored",
+      "property": "spacing.padding.top",
+      "classes": [],
+      "instance": {
+        "spacing": {
+          "padding": {
+            "top": {
+              "xl": {
+                "type": "token",
+                "value": "spacing.lg"
+              },
+              "base": {
+                "type": "token",
+                "value": "spacing.sm"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "explicit"
+        },
+        "md": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "inherited"
+        },
+        "lg": {
+          "value": {
+            "type": "token",
+            "value": "spacing.sm"
+          },
+          "source": "instance",
+          "state": "inherited"
+        }
+      }
+    }
+  ]
+}
