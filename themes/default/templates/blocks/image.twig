@@ -1,35 +1,17 @@
-{# image — a figure with optional caption. Authored in the theme's BEM/computed-class
-   convention (see navigation.twig / separator.twig): the root class string is built in
-   a {% set %} map up top, guarded with ?? so an unknown stored size degrades to the
-   default modifier instead of emitting a class no CSS matches. media_image() resolves
-   the blob and the <img> is skipped when it nulls (private/unresolvable/non-image blob).
-   Fields: image, alt, caption, size (normal|wide|full), width/height (px, optional).
-   `size` presets the figure's layout width within the content column; width/height set
-   the <img>'s intrinsic size — one alone keeps aspect ratio (the other stays auto),
-   both are exact. `max-width:100%` in the theme still keeps a large width responsive.
+{# image — a figure with optional caption. media_image() resolves the blob and the
+   <img> is skipped when it nulls (private/unresolvable/non-image blob). Sizing is a
+   `width` token and placement on the `root` target; corners and shadow on the
+   optional `picture` target (visual builder spec §2.5) — nothing here is inline.
+   Fields: image, alt, caption.
    Image discipline (storefront-performance spec §4): resolve FIRST, claim the
-   at-most-one priority slot only on a non-null resolve, attributes from the claim.
-   `sizes` mirrors the layout: an authored width pins it, else the size preset. #}
+   at-most-one priority slot only on a non-null resolve, attributes from the claim. #}
 {% set img = data.image ? media_image(data.image, [480, 768, 1024, 1536]) : null %}
-{% set rootClass = [
-  'thallo-block thallo-block-image',
-  'thallo-block-image--' ~ ({normal: 'normal', wide: 'wide', full: 'full'}[data.size|default('normal')] ?? 'normal'),
-]|join(' ')|trim %}
-{% set styleParts = [] %}
-{% if data.width %}{% set styleParts = styleParts|merge(['width:' ~ data.width ~ 'px']) %}{% endif %}
-{% if data.height %}{% set styleParts = styleParts|merge(['height:' ~ data.height ~ 'px']) %}{% endif %}
-{% set imgStyle = styleParts|join(';') %}
-{% set imgSizes = data.width
-  ? data.width ~ 'px'
-  : ({normal: '(max-width: 48rem) 100vw, 40rem',
-      wide: '(max-width: 64rem) 100vw, 60rem',
-      full: '100vw'}[data.size|default('normal')] ?? '(max-width: 48rem) 100vw, 40rem') %}
-<figure class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+<figure class="thallo-block thallo-block-image{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if img %}
     {% set priority = claim_priority_image() %}
     <img class="thallo-block-image__img{{ style_classes('picture') }}"{{ style_attrs('picture') }} src="{{ img.src }}"
-         {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="{{ imgSizes }}"{% endif %}
-         alt="{{ data.alt|default('') }}"{% if imgStyle %} style="{{ imgStyle }}"{% endif %}
+         {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="(max-width: 64rem) 100vw, 60rem"{% endif %}
+         alt="{{ data.alt|default('') }}"
          {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
   {% endif %}
   {% if data.caption %}<figcaption>{{ data.caption|editable_text('caption') }}</figcaption>{% endif %}

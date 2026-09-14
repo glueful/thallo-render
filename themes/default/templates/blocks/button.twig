@@ -3,20 +3,19 @@
    guarded variant / color / size / block modifiers, each degrading to a default so
    an unknown stored value never emits a class with no CSS. Optional leading/trailing
    icons resolve via icon(). Unsafe URLs (safe_url) drop the href → a <span>, never a
-   link. Fields: label, url, variant, color, size, shape (pill|rounded|square; unset
-   follows the site's radius setting), leading_icon, trailing_icon, block, align. #}
+   link. Alignment lives on the `root` target, corners/colours/typography on the
+   `control` (visual builder spec §2.5). Fields: label, url, variant, color, size,
+   leading_icon, trailing_icon, block. #}
 {% set url = data.url|default('')|safe_url %}
-{% set align = ({left: 'left', center: 'center', right: 'right'}[data.align|default('left')] ?? 'left') %}
 {% set linkClass = [
   'thallo-block-button__link',
   'thallo-block-button__link--' ~ ({solid: 'solid', outline: 'outline', soft: 'soft', subtle: 'subtle', ghost: 'ghost', link: 'link'}[data.variant|default('solid')] ?? 'solid'),
   'thallo-block-button__link--' ~ ({primary: 'primary', neutral: 'neutral'}[data.color|default('primary')] ?? 'primary'),
   'thallo-block-button__link--' ~ ({xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl'}[data.size|default('md')] ?? 'md'),
-  ({pill: 'thallo-block-button__link--shape-pill', rounded: 'thallo-block-button__link--shape-rounded', square: 'thallo-block-button__link--shape-square'}[data.shape|default('')] ?? ''),
   data.block|default(false) ? 'thallo-block-button__link--block' : '',
 ]|join(' ')|trim %}
 {% set tag = url ? 'a' : 'span' %}
-<div class="thallo-block thallo-block-button thallo-block-button--{{ align }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+<div class="thallo-block thallo-block-button{{ style_classes('root') }}"{{ style_attrs('root') }}>
   <{{ tag }} class="{{ linkClass }}{{ style_classes('control') }}"{{ style_attrs('control') }}{% if url %} href="{{ url }}"{% endif %}>
     {% if data.leading_icon %}<span class="thallo-block-button__icon thallo-block-button__icon--leading" aria-hidden="true">{{ icon(data.leading_icon) ?? data.leading_icon }}</span>{% endif %}
     <span class="thallo-block-button__label">{{ data.label|editable_text('label') }}</span>

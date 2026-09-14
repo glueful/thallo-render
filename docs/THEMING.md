@@ -193,9 +193,11 @@ enum that becomes a BEM modifier (unknown stored values degrade to the default):
   `thallo-block-hero--bg-{value}`; `hero.aside` — any blocks, rendered in the media
   slot instead of the image (`thallo-block-hero__media--blocks`), so a code snippet or
   a card sits beside the copy in the horizontal orientation.
-- `button.shape` — `pill`, `rounded` (the theme radius), `square` →
-  `thallo-block-button__link--shape-{value}`; unset emits no modifier and the button
-  reads `--radius-btn`, which the site's design settings write (§9.6).
+- Button corners are a radius setting on the button's `control` target (`t-radius-*`,
+  §12.3); unset, the button reads `--radius-btn`, which the site's design settings
+  write (§9.6). Heading alignment and colour, image width and placement, and the
+  carousel's `speed` (`slow`, `normal`, `fast` → `thallo-block-carousel--speed-{value}`)
+  follow the same rule: choices and tokens, never freeform values.
 
 ---
 
@@ -483,7 +485,7 @@ stored as `theme_radius`, `theme_font`, `theme_background` and emitted by the sa
 
 - **Corners** — `round` (default: `--radius: 12px`, pill buttons), `soft`
   (`--radius: 12px`, `--radius-btn: 8px`), `sharp` (`--radius: 4px`, `--radius-lg: 8px`,
-  `--radius-btn: 4px`). Buttons read `--radius-btn` unless the block picks a shape.
+  `--radius-btn: 4px`). Buttons read `--radius-btn` unless a radius setting is set.
 - **Typefaces** — `sans` (default: Figtree throughout), `editorial` (a system serif
   stack for `--font-display`, so headings), `serif` (both `--font-display` and
   `--font-body`). System stacks only: the site's CSP is `'self'`, so nothing is fetched.

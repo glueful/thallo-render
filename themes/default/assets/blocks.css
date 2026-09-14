@@ -278,9 +278,9 @@
   max-width: 100%;
   box-shadow: var(--shadow);
 }
-.thallo-block-image--wide img { width: 100%; }
-.thallo-block-image--full { max-width: none; padding-inline: 0; }
-.thallo-block-image--full img { width: 100%; border-radius: 0; box-shadow: none; }
+/* Width is a settings token on the figure (t-w-*); a full-bleed figure loses its gutter. */
+.thallo-block-image.t-w-full { padding-inline: 0; }
+.thallo-block-image.t-w-full img { width: 100%; border-radius: 0; box-shadow: none; }
 .thallo-block-image figcaption {
   color: var(--muted);
   font-size: 0.9rem;
@@ -302,9 +302,7 @@
   margin-inline: auto;
   padding-inline: var(--space-4);
 }
-.thallo-block-heading--start { text-align: start; }
-.thallo-block-heading--center { text-align: center; }
-.thallo-block-heading--end { text-align: end; }
+/* Alignment, colour and typography are settings (t-text-*, t-fg-*, t-size-*). */
 
 /* container — free-form styled wrapper; per-instance backgrounds come in as
    CSS custom properties on the style attribute (typed validated fields only). */
@@ -520,9 +518,8 @@
 .thallo-block-tab { margin-block: 0; }
 
 /* button — standalone action (Button variant/size recipes) */
-.thallo-block-button { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
-.thallo-block-button--center { text-align: center; }
-.thallo-block-button--right { text-align: end; }
+/* The root is a row (display: flex) so the content alignment setting (t-content-*) places the control. */
+.thallo-block-button { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); display: flex; }
 /* color (primary default | neutral) sets a local accent; every variant consumes
    it, so a neutral button is the same recipe re-pointed at --ink. */
 .thallo-block-button__link {
@@ -540,10 +537,7 @@
 }
 .thallo-block-button__link:hover { transform: translateY(-1px); }
 .thallo-block-button__link--neutral { --btn-accent: var(--ink); --btn-accent-ink: var(--bg); }
-/* shape — schema enum: pill | rounded | square; unset reads --radius-btn (the site's radius setting) */
-.thallo-block-button__link--shape-pill { border-radius: 999px; }
-.thallo-block-button__link--shape-rounded { border-radius: var(--radius); }
-.thallo-block-button__link--shape-square { border-radius: 2px; }
+/* Corners are a radius setting on the control (t-radius-*); unset reads --radius-btn (the site's radius setting). */
 /* sizes */
 .thallo-block-button__link--xs { padding: 0.3rem 0.8rem; font-size: 0.8rem; gap: 0.35em; }
 .thallo-block-button__link--sm { padding: 0.45rem 1.1rem; font-size: 0.9rem; }
@@ -632,6 +626,9 @@
    stack in one grid cell; the runtime moves data-thallo-active between slides —
    ONE shared active state for fade AND zoom; opacity cross-fades. No carrier
    pair on the > * rules: carriers only exist where enhancement never runs. */
+/* speed — schema enum: slow | normal | fast; one pace for every mode (the runtime reads data-speed). */
+.thallo-block-carousel--speed-slow { --carousel-duration: 2s; }
+.thallo-block-carousel--speed-fast { --carousel-duration: 0.6s; }
 .thallo-block-carousel--fade[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track,
 .thallo-block-carousel--zoom[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track { display: grid; }
 .thallo-block-carousel--fade[data-thallo-enhanced~="carousel"] .thallo-block-carousel__track > *,
@@ -640,8 +637,7 @@
   opacity: 0;
   /* Default 1.2s: slow enough to READ as a cross-fade (0.6s felt like a cut —
      2026-08 polish); shared by zoom, whose fade is the same rule. The block's
-     transition_duration config overrides via --carousel-duration (template-
-     emitted style attr, numeric_clamp-validated). */
+     speed choice re-maps --carousel-duration through the --speed-* classes. */
   transition: opacity var(--carousel-duration, 1.2s) ease-in-out;
   overflow: hidden; /* the zoom scale must never bleed outside the slide */
 }
@@ -942,10 +938,6 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
   margin-inline: auto;
 }
 .layout--centered .thallo-block-hero { padding-block: var(--space-6); }
-.layout--centered .thallo-block-image--full {
-  max-width: var(--container);
-  padding-inline: var(--space-4);
-}
 
 /* ── Full-width page layout (opt-in via main.layout--full) ───────────────────
    Symmetric to .layout--centered: instead of boxing bands, full mode releases

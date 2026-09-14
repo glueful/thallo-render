@@ -27,36 +27,37 @@
 {# Rotation interval in seconds (numeric_clamp: non-numeric -> null, else
    0.5–10); absent emits nothing and the runtime's 2.5s default applies. #}
 {% set interval = data.interval|default(null)|numeric_clamp(0.5, 10) %}
-{# Per-segment styling (2026-08 follow-up): each segment builds a class list
-   (size/bold/italic) and a hex_color-guarded color — a non-hex value is
-   dropped entirely, never emitted into the style attribute. #}
+{# Per-segment styling: each segment builds a class list (size/bold/italic) and
+   its colour is a `token` field applied through token_class() (visual builder spec
+   §1.7) — the compiler's own utility, never an inline style; an unknown value
+   emits nothing. #}
 {% set p_cls = '' %}
 {% if data.prefix_size|default('inherit') in ['sm', 'lg', 'xl'] %}{% set p_cls = p_cls ~ ' thallo-block-animated_text__seg--' ~ data.prefix_size %}{% endif %}
 {% if data.prefix_bold|default(false) %}{% set p_cls = p_cls ~ ' thallo-block-animated_text__seg--bold' %}{% endif %}
 {% if data.prefix_italic|default(false) %}{% set p_cls = p_cls ~ ' thallo-block-animated_text__seg--italic' %}{% endif %}
-{% set p_color = data.prefix_color|default('')|hex_color %}
+{% set p_cls = p_cls ~ token_class('colors.text', data.prefix_color.value|default(null)) %}
 {% set r_cls = '' %}
 {% if data.rotate_size|default('inherit') in ['sm', 'lg', 'xl'] %}{% set r_cls = r_cls ~ ' thallo-block-animated_text__seg--' ~ data.rotate_size %}{% endif %}
 {% if data.rotate_bold|default(false) %}{% set r_cls = r_cls ~ ' thallo-block-animated_text__seg--bold' %}{% endif %}
 {% if data.rotate_italic|default(false) %}{% set r_cls = r_cls ~ ' thallo-block-animated_text__seg--italic' %}{% endif %}
-{% set r_color = data.rotate_color|default('')|hex_color %}
+{% set r_cls = r_cls ~ token_class('colors.text', data.rotate_color.value|default(null)) %}
 {% set s_cls = '' %}
 {% if data.suffix_size|default('inherit') in ['sm', 'lg', 'xl'] %}{% set s_cls = s_cls ~ ' thallo-block-animated_text__seg--' ~ data.suffix_size %}{% endif %}
 {% if data.suffix_bold|default(false) %}{% set s_cls = s_cls ~ ' thallo-block-animated_text__seg--bold' %}{% endif %}
 {% if data.suffix_italic|default(false) %}{% set s_cls = s_cls ~ ' thallo-block-animated_text__seg--italic' %}{% endif %}
-{% set s_color = data.suffix_color|default('')|hex_color %}
+{% set s_cls = s_cls ~ token_class('colors.text', data.suffix_color.value|default(null)) %}
 {% set inner %}
-  {%- if prefix != '' %}<span class="thallo-block-animated_text__prefix{{ p_cls }}"{% if p_color != '' %} style="color: {{ p_color }}"{% endif %}>{{ prefix|br_tokens|editable_text('prefix') }}</span>{% endif -%}
+  {%- if prefix != '' %}<span class="thallo-block-animated_text__prefix{{ p_cls }}">{{ prefix|br_tokens|editable_text('prefix') }}</span>{% endif -%}
   {%- if prefix != '' and clean is not empty %}{{ ' ' }}{% endif -%}
   {%- if clean is not empty %}
-  <span class="thallo-block-animated_text__rotate{{ r_cls }}"{% if r_color != '' %} style="color: {{ r_color }}"{% endif %}>
+  <span class="thallo-block-animated_text__rotate{{ r_cls }}">
     {%- for w in clean %}
     <span class="thallo-block-animated_text__word{% if loop.first %} thallo-block-animated_text__word--active{% endif %}">{{ w|br_tokens }}</span>
     {%- endfor %}
   </span>
   {%- endif %}
   {%- if suffix != '' and (prefix != '' or clean is not empty) %}{{ ' ' }}{% endif -%}
-  {%- if suffix != '' %}<span class="thallo-block-animated_text__suffix{{ s_cls }}"{% if s_color != '' %} style="color: {{ s_color }}"{% endif %}>{{ suffix|br_tokens|editable_text('suffix') }}</span>{% endif -%}
+  {%- if suffix != '' %}<span class="thallo-block-animated_text__suffix{{ s_cls }}">{{ suffix|br_tokens|editable_text('suffix') }}</span>{% endif -%}
 {% endset %}
 {% if tag == 'h1' %}<h1 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}{{ style_classes('root') }}"{{ style_attrs('root') }} data-effect="{{ data.effect|default('fade') }}" data-loop="{{ data.loop|default(false) ? '1' : '0' }}"{% if interval is not same as(null) %} data-interval="{{ interval }}"{% endif %}><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h1>
 {% elseif tag == 'h3' %}<h3 class="thallo-block thallo-block-animated_text thallo-block-animated_text--{{ data.effect|default('fade') }}{{ style_classes('root') }}"{{ style_attrs('root') }} data-effect="{{ data.effect|default('fade') }}" data-loop="{{ data.loop|default(false) ? '1' : '0' }}"{% if interval is not same as(null) %} data-interval="{{ interval }}"{% endif %}><span class="thallo-block-animated_text__sr">{{ stable_phrase }}</span><span aria-hidden="true">{{ inner }}</span></h3>

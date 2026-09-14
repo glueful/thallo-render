@@ -417,9 +417,11 @@ window.ThalloRuntime.register('forms', {
     // enhanced-only CSS and this module drives ONE shared active-slide state
     // instead of scrollLeft. inert on hidden slides keeps focus/AT parity.
     var faded = root.dataset.transition === 'fade' || root.dataset.transition === 'zoom';
-    // Configured pace in ms (data-duration, seconds; 0 = unset): fade/zoom read
-    // it from CSS; slide mode tweens the scroll (native smooth pace is UA-fixed).
-    var durMs = 1000 * (parseFloat(root.dataset.duration) || 0);
+    // Configured pace in ms from the speed choice (data-speed: slow | normal | fast;
+    // fade/zoom read the same pace from CSS); slide mode tweens the scroll with it
+    // (native smooth pace is UA-fixed). Absent = the native pace.
+    var speeds = { slow: 2000, normal: 1200, fast: 600 };
+    var durMs = speeds[root.dataset.speed] || 0;
     var tweenSeq = 0;
     undo.push(function () { tweenSeq++; }); // cancels any running tween
     var activeIdx = 0;
