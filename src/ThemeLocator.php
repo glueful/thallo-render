@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Thallo\Render;
 
+use Thallo\Render\Style\ThemeVocabulary;
+
 /**
  * Resolves the active theme's filesystem paths per the spec §4 ladder:
  *   1. app theme dir missing entirely → pack default (a warning is the caller's job)
@@ -26,6 +28,10 @@ final class ThemeLocator
 
     /** @var array<string,mixed> validated theme.json `settings` block (may be empty) */
     private array $settings = [];
+
+    private ThemeVocabulary $vocabulary;
+
+    private string $themeDir;
 
     /** @param list<string> $contributedTemplateDirs absolute dirs, in registry order (spec §5.2) */
     public function __construct(
@@ -67,6 +73,22 @@ final class ThemeLocator
 
         $this->active = ['templates' => $templates, 'assets' => $assets, 'name' => $name];
         $this->settings = $this->validateSettings($json['settings'] ?? [], $name);
+        // The vocabulary and stylesheet manifest (visual builder spec §2.2): a theme missing any
+        // baseline name or listing a stylesheet that does not exist fails to load, loudly.
+        $this->themeDir = $name === 'default' ? $default : $appTheme;
+        $this->vocabulary = ThemeVocabulary::fromThemeJson($json, $this->themeDir);
+    }
+
+    /** The active theme's vocabulary mapping and stylesheet manifest. */
+    public function vocabulary(): ThemeVocabulary
+    {
+        return $this->vocabulary;
+    }
+
+    /** The active theme's directory (its theme.json, assets and templates live under it). */
+    public function themeDir(): string
+    {
+        return $this->themeDir;
     }
 
     /**

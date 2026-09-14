@@ -1,5 +1,54 @@
 {
   "name": "default",
   "version": "1.0.0",
-  "menus": ["main"]
+  "menus": [
+    "main"
+  ],
+  "vocabulary": {
+    "spacing.none": "0",
+    "spacing.xs": "var(--space-1)",
+    "spacing.sm": "var(--space-2)",
+    "spacing.md": "var(--space-3)",
+    "spacing.lg": "var(--space-4)",
+    "spacing.xl": "var(--space-5)",
+    "spacing.2xl": "var(--space-6)",
+    "spacing.3xl": "var(--space-7)",
+    "width.narrow": "36rem",
+    "width.content": "var(--content)",
+    "width.container": "var(--container)",
+    "width.full": "none",
+    "radius.none": "0",
+    "radius.sm": "6px",
+    "radius.md": "var(--radius)",
+    "radius.lg": "var(--radius-lg)",
+    "radius.full": "999px",
+    "color.background": "var(--bg)",
+    "color.surface": "var(--surface)",
+    "color.surface-2": "var(--surface-2)",
+    "color.text": "var(--ink)",
+    "color.muted": "var(--muted)",
+    "color.line": "var(--line)",
+    "color.accent": "var(--accent)",
+    "color.accent-contrast": "var(--accent-ink)",
+    "color.transparent": "transparent",
+    "shadow.none": "var(--shadow-none)",
+    "shadow.xs": "var(--shadow-xs)",
+    "shadow.sm": "var(--shadow-sm)",
+    "shadow.md": "var(--shadow-md)",
+    "shadow.lg": "var(--shadow-lg)",
+    "shadow.xl": "var(--shadow-xl)",
+    "typography.size.xs": "0.8rem",
+    "typography.size.sm": "0.9rem",
+    "typography.size.md": "1rem",
+    "typography.size.lg": "clamp(1.125rem, 1rem + 0.5vw, 1.35rem)",
+    "typography.size.xl": "clamp(1.5rem, 1.2rem + 1.2vw, 2rem)",
+    "typography.size.2xl": "clamp(1.9rem, 1.4rem + 2vw, 2.75rem)",
+    "typography.size.3xl": "clamp(2.5rem, 1.8rem + 3.4vw, 4.5rem)"
+  },
+  "stylesheets": [
+    "assets/site.css",
+    "assets/blocks.css",
+    "assets/navigation.css",
+    "assets/stepper.css"
+  ]
 }

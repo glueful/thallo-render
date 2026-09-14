@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Thallo\Render;
 
 use Thallo\Contracts\Delivery\PreviewThemeValidator;
+use Thallo\Render\Style\ThemeVocabulary;
 
 /**
  * The render pack's theme validation (preview-sessions spec §5) — the SAME ladder
@@ -30,6 +31,16 @@ final class RenderThemeValidator implements PreviewThemeValidator
             return false;
         }
         $decoded = json_decode((string) file_get_contents($dir . '/theme.json'), true);
-        return is_array($decoded) && is_string($decoded['name'] ?? null) && $decoded['name'] !== '';
+        if (!is_array($decoded) || !is_string($decoded['name'] ?? null) || $decoded['name'] === '') {
+            return false;
+        }
+        // The switch target must carry a complete vocabulary and an existing stylesheet
+        // manifest (visual builder spec §2.2); a theme that would fail to load is not valid.
+        try {
+            ThemeVocabulary::fromThemeJson($decoded, $dir);
+        } catch (ThemeConfigError) {
+            return false;
+        }
+        return true;
     }
 }
