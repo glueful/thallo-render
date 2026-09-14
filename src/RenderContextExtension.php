@@ -32,6 +32,8 @@ use Twig\Extension\AbstractExtension;
 use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
+use Thallo\Render\Style\ThemeStylesheetArtifact;
+use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
 /**
  * The theme-facing template functions. The extension is the per-render context object:
@@ -93,6 +95,9 @@ final class RenderContextExtension extends AbstractExtension
      * reset before every render by the controller. Null = use the saved/default
      * source; a verified preview session's signed pair sets it for that render only.
      */
+    /** The theme whose artifact theme_stylesheet_url() names: bound by TwigFactory / the render. */
+    private ?ThemeLocator $boundTheme = null;
+
     private ?string $appearanceAccentOverride = null;
     private ?string $appearanceNeutralOverride = null;
 
@@ -197,6 +202,8 @@ final class RenderContextExtension extends AbstractExtension
          * unbound.
          */
         private readonly ?ApplicationContext $appContext = null,
+        /** Layered delivery (visual builder spec §2.2–2.4): the theme artifact per theme. */
+        private readonly ?ThemeStylesheetArtifacts $themeArtifacts = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -255,9 +262,10 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('shop_category_url', $this->shopCategoryUrl(...)),
             new TwigFunction('shop_index_url', $this->shopIndexUrl(...)),
             new TwigFunction('json_script', $this->jsonScript(...)),
-            // The fingerprinted storefront stylesheet for the theme <head> — null when
-            // commerce is off or the seam is unbound, so the theme emits no <link> at all.
-            new TwigFunction('shop_styles_url', $this->shopStylesUrl(...)),
+            // Layered delivery (visual builder spec §2.3): the layer-order sheet and the theme
+            // artifact the head links instead of individual theme files.
+            new TwigFunction('layers_stylesheet_url', $this->layersStylesheetUrl(...)),
+            new TwigFunction('theme_stylesheet_url', $this->themeStylesheetUrl(...)),
             // Storefront-v1 spec §5: soft-bound wishlist seam (see the $wishlist constructor
             // doc). Both null-safe — capability off or seam unbound means null, never a throw.
             new TwigFunction('shop_wishlist_scope', $this->shopWishlistScope(...)),
@@ -291,9 +299,35 @@ final class RenderContextExtension extends AbstractExtension
      * `/_shop/assets/shop.css` ALIAS (which 302s) inside the body, so without this the
      * storefront's own header chrome paints unstyled and restyles on EVERY navigation.
      */
-    public function shopStylesUrl(): ?string
+    /** Bind the theme whose artifact theme_stylesheet_url() names (TwigFactory and the render). */
+    public function bindTheme(?ThemeLocator $theme): void
     {
-        return $this->storefrontLinks?->stylesheetUrl();
+        $this->boundTheme = $theme;
+    }
+
+    /**
+     * The layer-order stylesheet (`@layer theme, settings;`), loaded first; versioned by its
+     * own content so an edit busts the immutable cache.
+     */
+    public function layersStylesheetUrl(): string
+    {
+        static $version = null;
+        $version ??= substr(sha1((string) file_get_contents(dirname(__DIR__) . '/assets/style/layers.css')), 0, 8);
+        return '/_thallo/layers.css?v=' . $version;
+    }
+
+    /**
+     * The layered theme artifact for the bound theme: every manifest stylesheet and every
+     * contributed package stylesheet inside `@layer theme`, content-fingerprinted (spec §2.4).
+     * Under a preview asset base the same file name serves from the preview theme.
+     */
+    public function themeStylesheetUrl(): string
+    {
+        if ($this->boundTheme === null || $this->themeArtifacts === null) {
+            throw new RuntimeError('theme_stylesheet_url(): no theme is bound to the render context.');
+        }
+        $hash = $this->themeArtifacts->forTheme($this->boundTheme)->hash;
+        return ($this->assetBase ?? '/theme-assets') . '/' . ThemeStylesheetArtifact::fileName($hash);
     }
 
     public function shopProductUrl(?string $slug): ?string

@@ -59,6 +59,7 @@ use Thallo\Render\Listeners\PurgeRenderCacheOnThemeChange;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
 use Psr\Container\ContainerInterface;
+use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
 use function config;
 
@@ -136,6 +137,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             RenderController::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeRenderController'],
+            ],
+            // Layered delivery (visual builder spec §2.2–2.4): theme artifacts per theme.
+            ThemeStylesheetArtifacts::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeThemeStylesheetArtifacts'],
             ],
             // Theme runtime delivery (theme-runtime spec §2.3): the map is path-derived
             // from the pack's own runtime/ dir; the controller autowires against it.
@@ -380,6 +386,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->has(SeoHeadResolver::class)
                 ? $container->get(SeoHeadResolver::class)
                 : null,
+            $container->get(ThemeStylesheetArtifacts::class),
         );
     }
 
@@ -409,6 +416,19 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 ? $container->get(\Thallo\Contracts\Settings\ThemeAppearanceProvider::class)
                 : null,
             $container->get(\Psr\Log\LoggerInterface::class),
+            // The theme artifact hash joins the fingerprint (spec §2.4): a theme CSS edit
+            // re-keys every cached page even when the vocabulary is unchanged.
+            static fn (): string => $container->get(ThemeStylesheetArtifacts::class)
+                ->forTheme($container->get(ThemeLocator::class))->hash,
+        );
+    }
+
+    public static function makeThemeStylesheetArtifacts(ContainerInterface $container): ThemeStylesheetArtifacts
+    {
+        $context = $container->get(ApplicationContext::class);
+        return new ThemeStylesheetArtifacts(
+            $context->getBasePath() . '/storage/cache/style',
+            $container->get(RenderContributionRegistry::class),
         );
     }
 
@@ -528,6 +548,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 ? $container->get(\Thallo\Contracts\Billing\PlanCheckoutUrlResolver::class)
                 : null,
             appContext: $context,
+            themeArtifacts: $container->get(ThemeStylesheetArtifacts::class),
         );
     }
 

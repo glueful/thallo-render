@@ -34,6 +34,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
+use Thallo\Render\Style\ThemeStylesheetArtifact;
+use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
 use function config;
 
@@ -85,6 +87,8 @@ final class RenderController
         private readonly ?RenderContributionRegistry $contributions = null,
         /** Composed SEO head data (seo-head spec §3); null = no head tags. */
         private readonly ?SeoHeadResolver $seoHeadResolver = null,
+        /** Layered delivery (visual builder spec §2.4): serves theme artifacts by hash. */
+        private readonly ?ThemeStylesheetArtifacts $themeArtifacts = null,
     ) {
     }
 
@@ -169,7 +173,7 @@ final class RenderController
 
         // Homepage ALWAYS renders index.twig (spec §4) — the entry, when configured,
         // arrives as context; routed pages use the entry hierarchy instead.
-        [$env, $assetBase, $assetsDir] = $this->themedEnv($session);
+        [$env, $assetBase, $assetsDir, $previewTheme] = $this->themedEnv($session);
         $response = $this->render('index.twig', $locale, $entry, 200, $extra, $env, $assetBase, $assetsDir);
         if ($entry !== null) {
             $this->tagResponse($response, $entry, $typeSlug);
@@ -195,7 +199,7 @@ final class RenderController
         $this->previewContext = $session !== null;
         $this->appearanceSession = $session;
         $extra = $this->sessionExtra($session);
-        [$env, $assetBase, $assetsDir] = $this->themedEnv($session);
+        [$env, $assetBase, $assetsDir, $previewTheme] = $this->themedEnv($session);
         $result = $this->resolver->resolvePath('/' . ltrim($path, '/'), $session);
 
         $response = match ($result['kind']) {
@@ -217,8 +221,9 @@ final class RenderController
                 $env,
                 $assetBase,
                 $assetsDir,
+                $previewTheme,
             ),
-            'terms' => $this->renderTerms($result, $extra, $env, $assetBase, $assetsDir),
+            'terms' => $this->renderTerms($result, $extra, $env, $assetBase, $assetsDir, $previewTheme),
             default => $session !== null
                 ? $this->render('404.twig', $this->defaultLocale(), null, 404, $extra, $env, $assetBase, $assetsDir)
                 : $this->errors->themed404(
@@ -260,13 +265,13 @@ final class RenderController
      * assigned to the memoized boot environment. Vanished/broken themes fall back to
      * the boot theme (the content exists; a themed-preview 404 would be wrong) and log.
      *
-     * @return array{0: ?Environment, 1: ?string, 2: ?string} [env, assetBase, assetsDir]
-     *         — [null, null, null] = boot
+     * @return array{0: ?Environment, 1: ?string, 2: ?string, 3: ?ThemeLocator}
+     *         [env, assetBase, assetsDir, theme] — all null = boot
      */
     private function themedEnv(?PreviewSession $session): array
     {
         if ($session === null || $session->theme === null) {
-            return [null, null, null];
+            return [null, null, null, null];
         }
         $base = $this->context->getBasePath();
         try {
@@ -301,13 +306,14 @@ final class RenderController
                 $factory->environment(),
                 '/_preview-assets/' . $session->token,
                 $locator->activePaths()['assets'],
+                $locator,
             ];
         } catch (\Throwable $e) {
             $this->logger->warning('thallo-render: preview theme unavailable, boot theme used', [
                 'theme' => $session->theme,
                 'error' => $e->getMessage(),
             ]);
-            return [null, null, null];
+            return [null, null, null, null];
         }
     }
 
@@ -342,7 +348,7 @@ final class RenderController
         // theme (spec §5) — a themed token renders through a request-local environment.
         $session = $this->sessionVerifier?->verify($token);
         $this->appearanceSession = $session;
-        [$env, $assetBase, $assetsDir] = $this->themedEnv($session);
+        [$env, $assetBase, $assetsDir, $previewTheme] = $this->themedEnv($session);
         $result = $this->resolver->resolvePreview($token);
 
         if ($result['kind'] !== 'content') {
@@ -355,6 +361,7 @@ final class RenderController
                 $env,
                 $assetBase,
                 $assetsDir,
+                $previewTheme,
             );
         } else {
             $entry = $result['content'];
@@ -428,6 +435,18 @@ final class RenderController
     public function previewCss(): Response
     {
         return $this->previewSupportAsset('preview.css', 'text/css; charset=UTF-8');
+    }
+
+    /** The layer-order stylesheet (visual builder spec §2.3); `?v=` carries its content hash. */
+    public const LAYERS_CSS_PATH = '/_thallo/layers.css';
+
+    public function layersCss(): Response
+    {
+        $body = (string) file_get_contents(dirname(__DIR__, 3) . '/assets/style/layers.css');
+        return new Response($body, 200, [
+            'Content-Type' => 'text/css; charset=UTF-8',
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
     }
 
     /**
@@ -586,6 +605,18 @@ final class RenderController
         if ($bad) {
             return ApiResponse::error('Not Found', 404);
         }
+        // The layered theme artifact (visual builder spec §2.4): served by content hash,
+        // immutable, from the artifact store rather than the theme's own files.
+        $hash = ThemeStylesheetArtifact::hashFromFileName($path);
+        if ($hash !== null) {
+            $css = $this->themeArtifacts?->read($hash);
+            return $css === null
+                ? ApiResponse::error('Not Found', 404)
+                : new Response($css, 200, [
+                    'Content-Type' => 'text/css; charset=UTF-8',
+                    'Cache-Control' => 'public, max-age=31536000, immutable',
+                ]);
+        }
         $assets = $this->themes?->activePaths()['assets'] ?? null;
         $file = $assets !== null ? $assets . '/' . $path : null;
         if ($file === null || !is_file($file)) {
@@ -636,10 +667,21 @@ final class RenderController
             return ApiResponse::error('Not Found', 404);
         }
         try {
-            $assets = (new ThemeLocator($session->theme, $this->context->getBasePath() . '/themes'))
-                ->activePaths()['assets'];
+            $locator = new ThemeLocator($session->theme, $this->context->getBasePath() . '/themes');
+            $assets = $locator->activePaths()['assets'];
         } catch (\Throwable) {
             return ApiResponse::error('Not Found', 404);
+        }
+        $hash = ThemeStylesheetArtifact::hashFromFileName($path);
+        if ($hash !== null) {
+            // The preview theme's artifact: built for the preview render, read back by hash.
+            $artifact = $this->themeArtifacts?->forTheme($locator);
+            if ($artifact === null || $artifact->hash !== $hash) {
+                return ApiResponse::error('Not Found', 404);
+            }
+            $response = new Response($artifact->css, 200, ['Content-Type' => 'text/css; charset=UTF-8']);
+            $response->headers->set('Cache-Control', 'no-store');
+            return $response;
         }
         $file = $assets . '/' . $path;
         if (!is_file($file)) {
@@ -847,6 +889,7 @@ final class RenderController
         ?Environment $twig = null,
         ?string $assetBase = null,
         ?string $assetsDir = null,
+        ?ThemeLocator $previewTheme = null,
     ): Response {
         // Reset the render-scoped state BEFORE every render (preview + DB-template
         // specs): the extension instance — and the boot environment's loader — are
@@ -863,6 +906,9 @@ final class RenderController
         $this->extension->resetTags();
         $this->extension->resetPerRenderState();
         $this->extension->setAssetContext($assetBase, $assetsDir);
+        // Layered delivery (visual builder spec §2.3): the artifact the head links belongs
+        // to THIS render's theme — the preview session's locator, else the boot theme.
+        $this->extension->bindTheme($previewTheme ?? $this->themes);
         // theme-color-config spec §6: a verified preview session's signed appearance
         // overrides the saved/default pair for THIS render only; null clears it so a
         // normal render falls back to the source. Reset-before-render discipline.
@@ -931,6 +977,7 @@ final class RenderController
         ?Environment $env = null,
         ?string $assetBase = null,
         ?string $assetsDir = null,
+        ?ThemeLocator $previewTheme = null,
     ): Response {
         // In-session gate failures render FRESH (spec §3) — never the shared fixed body.
         $notFound = $sessionExtra !== []
@@ -943,6 +990,7 @@ final class RenderController
                 $env,
                 $assetBase,
                 $assetsDir,
+                $previewTheme,
             )
             : fn (): Response => $this->errors->themed404(
                 fn (): Response => $this->render('404.twig', $this->defaultLocale(), null, 404),

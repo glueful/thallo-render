@@ -27,6 +27,8 @@ final class ThemeAppearanceSource
         /** Soft-bound: null = no settings engine, default applies. */
         private readonly ?ThemeAppearanceProvider $settings,
         private readonly ?LoggerInterface $logger = null,
+        /** Layered delivery (spec §2.4): the active theme artifact's content hash, lazily. */
+        private readonly ?\Closure $themeArtifactHash = null,
     ) {
     }
 
@@ -94,7 +96,11 @@ final class ThemeAppearanceSource
      */
     public function fingerprint(): string
     {
-        return implode('-', [$this->accent(), $this->neutral(), $this->radius(), $this->font(), $this->background()]);
+        $segments = [$this->accent(), $this->neutral(), $this->radius(), $this->font(), $this->background()];
+        if ($this->themeArtifactHash !== null) {
+            $segments[] = 't' . substr((string) ($this->themeArtifactHash)(), 0, 8);
+        }
+        return implode('-', $segments);
     }
 
     /** @param callable(string):?string $normalize */

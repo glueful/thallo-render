@@ -39,6 +39,9 @@ final class TwigFactory
                 'strict_variables' => false,
             ],
         );
+        // Layered delivery (visual builder spec §2.3): the extension names this environment's
+        // theme artifact; the render re-binds per request (preview themes included).
+        $this->extension->bindTheme($this->themes);
         $twig->addExtension($this->extension);
         return $twig;
     }

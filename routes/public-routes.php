@@ -46,6 +46,8 @@ $router->get('/_preview-assets/{token}/{path}', [RenderController::class, 'previ
 // Under /_thallo/ with the runtime: every PHP-served asset shares the one prefix pair the
 // web-server rule must proxy (docs/production.md) — a root-level *.css/*.js URL is eaten by
 // static-file rules and 404s even on a host that proxied the documented prefixes.
+$router->get(RenderController::LAYERS_CSS_PATH, [RenderController::class, 'layersCss'])
+    ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
 $router->get(RenderController::PREVIEW_CSS_PATH, [RenderController::class, 'previewCss'])
     ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
 $router->get(RenderController::PREVIEW_BRIDGE_PATH, [RenderController::class, 'previewBridgeJs'])

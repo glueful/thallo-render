@@ -1,0 +1,4 @@
+/* Cascade layer order (visual builder spec §2.3), loaded before every other stylesheet:
+   theme CSS is delivered inside @layer theme, the compiled style artifact inside
+   @layer settings, and the site's custom CSS stays unlayered so it still wins. */
+@layer theme, settings;

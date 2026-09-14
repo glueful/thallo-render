@@ -24,6 +24,12 @@ final class RenderContributionRegistry
     /** @var array<string, TemplatePathContributor> */
     private array $templates = [];
 
+    /** @var array<string, StylesheetContributor> */
+    private array $stylesheets = [];
+
+    /** @var list<string>|null */
+    private ?array $frozenStylesheetSnapshot = null;
+
     private bool $frozen = false;
 
     /** @var array{prefixes: list<string>, exacts: list<string>}|null */
@@ -53,6 +59,27 @@ final class RenderContributionRegistry
     }
 
     /** @return array{prefixes: list<string>, exacts: list<string>} */
+    public function registerStylesheets(StylesheetContributor $contributor): void
+    {
+        $id = $contributor->contributorId();
+        $this->guardNotFrozen($id);
+        if (isset($this->stylesheets[$id])) {
+            throw new \LogicException("Duplicate stylesheet contributor id '{$id}'.");
+        }
+        $this->stylesheets[$id] = $contributor;
+    }
+
+    /**
+     * Every contributed stylesheet, absolute paths in priority then id order (spec §2.2).
+     *
+     * @return list<string>
+     */
+    public function frozenStylesheets(): array
+    {
+        $this->freeze();
+        return $this->frozenStylesheetSnapshot ?? [];
+    }
+
     public function frozenReserved(): array
     {
         $this->freeze();
@@ -104,8 +131,16 @@ final class RenderContributionRegistry
         $reservedSnapshot = $this->buildReservedSnapshot();
         $templateSnapshot = $this->buildTemplateSnapshot();
 
+        $stylesheetSnapshot = [];
+        foreach ($this->ordered($this->stylesheets) as $contributor) {
+            foreach ($contributor->stylesheets() as $file) {
+                $stylesheetSnapshot[] = $file;
+            }
+        }
+
         $this->frozenReservedSnapshot = $reservedSnapshot;
         $this->frozenTemplateSnapshot = $templateSnapshot;
+        $this->frozenStylesheetSnapshot = $stylesheetSnapshot;
         $this->frozen = true;
     }
 
