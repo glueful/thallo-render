@@ -1,16 +1,21 @@
 {# code — a snippet with a language label and a copy button (website plan, phase 1).
-   The no-JS floor is the plain <pre><code>; the Copy button is created by block-code.js
-   (data-copy="1"), so nothing dead ships in the markup. The language rides as a data
-   attribute and a language-* class for a highlighter to pick up (phase 2c). #}
+   The root is the block's width and spacing box (the `root` target); the framed figure
+   inside is the `panel` target that carries the corners and the shadow, so those settings
+   land where the theme paints them. The no-JS floor is the plain <pre><code>; the Copy
+   button is created by block-code.js (data-copy="1"), so nothing dead ships in the markup.
+   The language rides as a data attribute and a language-* class for a highlighter to pick
+   up (phase 2c). Long lines wrap; the snippet never scrolls sideways. #}
 {% set languages = ['text', 'bash', 'php', 'json', 'yaml', 'html', 'css', 'javascript', 'typescript', 'twig', 'sql'] %}
 {% set language = data.language|default('text') in languages ? data.language|default('text') : 'text' %}
 {% set copy = data.copy ?? true %}
 {% set label = data.label|default('') %}
-<figure class="thallo-block thallo-block-code{{ style_classes('root') }}"{{ style_attrs('root') }} data-language="{{ language }}" data-copy="{{ copy ? '1' : '0' }}">
-  <figcaption class="thallo-block-code__caption">
-    <span class="thallo-block-code__label">{{ label ?: language }}</span>
-    <span class="thallo-block-code__actions"></span>
-  </figcaption>
-  <pre class="thallo-block-code__pre"><code class="language-{{ language }}">{{ data.code|default('') }}</code></pre>
-</figure>
+<div class="thallo-block thallo-block-code{{ style_classes('root') }}"{{ style_attrs('root') }} data-language="{{ language }}" data-copy="{{ copy ? '1' : '0' }}">
+  <figure class="thallo-block-code__panel{{ style_classes('panel') }}"{{ style_attrs('panel') }}>
+    <figcaption class="thallo-block-code__caption">
+      <span class="thallo-block-code__label">{{ label ?: language }}</span>
+      <span class="thallo-block-code__actions"></span>
+    </figcaption>
+    <pre class="thallo-block-code__pre"><code class="language-{{ language }}">{{ data.code|default('') }}</code></pre>
+  </figure>
+</div>
 {{ block_script('code') }}

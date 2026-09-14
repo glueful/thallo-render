@@ -1704,23 +1704,30 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 }
 .thallo-block-gallery__empty { grid-column: 1 / -1; }
 
-/* code — a snippet with a language label and a copy button. */
+/* code — a snippet with a language label and a copy button. The root is the width and
+   spacing box; __panel is the framed figure that carries the corners and the shadow (the
+   block's `panel` style target), so t-radius-* / t-shadow-* land here. */
 .thallo-block-code {
   max-width: var(--content); margin-inline: auto; padding-inline: var(--space-4);
+}
+.thallo-block-code__panel {
+  margin: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--surface);
 }
 .thallo-block-code__caption {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line); border-bottom: 0;
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: 1px solid var(--line);
   background: var(--surface-2, var(--surface));
   font-size: 0.8125rem; color: var(--muted);
 }
 .thallo-block-code__label { font-family: var(--font-mono, ui-monospace, monospace); text-transform: lowercase; }
+/* Long lines wrap (pre-wrap, breaking inside a long token when nothing else fits): the snippet
+   never scrolls sideways, so every line is readable and copyable in place. */
 .thallo-block-code__pre {
-  margin: 0; padding: var(--space-3) var(--space-4); overflow-x: auto;
-  border: 1px solid var(--line); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  background: var(--surface); color: var(--fg);
+  margin: 0; padding: var(--space-3) var(--space-4);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  color: var(--fg);
   font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.875rem; line-height: 1.6;
   tab-size: 2;
 }

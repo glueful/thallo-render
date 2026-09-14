@@ -982,7 +982,26 @@
   function shellSkeleton(body) {
     var clone = body.cloneNode(true)
     topLevelWrappers(clone).forEach(function (el) { el.innerHTML = '' })
+    // The revision pair on <main> advances with every apply (visual builder spec §3.5): it is
+    // the patch's bookkeeping, never shell drift.
+    var main = clone.querySelector ? clone.querySelector('main[data-thallo-revision]') : null
+    if (main) {
+      main.removeAttribute('data-thallo-epoch')
+      main.removeAttribute('data-thallo-revision')
+    }
     return clone.innerHTML
+  }
+
+  // The stage now displays `pair`: remembered for the next fetch's staleness check and written
+  // back to <main> so a later shell comparison and a reload both read the truth.
+  function advanceDisplayed(pair) {
+    if (!pair) return
+    displayed = pair
+    var main = document.querySelector('main[data-thallo-revision]')
+    if (main) {
+      main.setAttribute('data-thallo-epoch', pair.epoch)
+      main.setAttribute('data-thallo-revision', String(pair.revision))
+    }
   }
 
   function applyStagePatch(newBody, refreshId, fetched) {
@@ -1011,7 +1030,9 @@
       if (liveTops[i].outerHTML === newTops[i].outerHTML) continue
       var liveEl = findBlock(liveIds[i]) // the REAL wrapper (ids are entry-unique)
       if (!liveEl || !liveEl.parentNode) continue
-      liveEl.parentNode.replaceChild(document.importNode(newTops[i], true), liveEl)
+      var fresh = document.importNode(newTops[i], true)
+      liveEl.parentNode.replaceChild(fresh, liveEl)
+      enhanceInserted(fresh)
       swapped++
     }
     // Selection survives a swap (spec §2.6): re-anchor, or clear honestly —
@@ -1026,7 +1047,7 @@
         selectWrapper(sel)
       }
     }
-    if (fetched) displayed = fetched
+    advanceDisplayed(fetched)
     post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',
@@ -1087,11 +1108,7 @@
     for (var s = 0; s < swaps.length; s++) {
       var inserted = document.importNode(swaps[s].next, true)
       swaps[s].live.parentNode.replaceChild(inserted, swaps[s].live)
-      // Custom elements tore themselves down with the old subtree; the runtime
-      // enhances the new one (canvas-skipping modules stay no-ops here).
-      if (window.ThalloRuntime && typeof window.ThalloRuntime.enhance === 'function') {
-        try { window.ThalloRuntime.enhance(inserted) } catch (e) { /* a module fault never breaks the swap */ }
-      }
+      enhanceInserted(inserted)
     }
     if (selectedId !== null) {
       var sel = findBlock(selectedId)
@@ -1103,17 +1120,20 @@
         selectWrapper(sel)
       }
     }
-    displayed = { epoch: data.epoch, revision: data.revision }
-    var main = document.querySelector('main[data-thallo-revision]')
-    if (main) {
-      main.setAttribute('data-thallo-epoch', displayed.epoch)
-      main.setAttribute('data-thallo-revision', String(displayed.revision))
-    }
+    advanceDisplayed({ epoch: data.epoch, revision: data.revision })
     post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',
       detail: 'fragments:' + swaps.length
     }, displayed))
+  }
+
+  // A swapped-in wrapper is server markup: custom elements tore themselves down with the
+  // old subtree, and the runtime enhances the new one (canvas-skipping modules stay no-ops).
+  function enhanceInserted(el) {
+    if (window.ThalloRuntime && typeof window.ThalloRuntime.enhance === 'function') {
+      try { window.ThalloRuntime.enhance(el) } catch (e) { /* a module fault never breaks the swap */ }
+    }
   }
 
   function onStageRefresh(refreshId) {

@@ -2,7 +2,9 @@
    block_script('code'); may execute more than once and possibly before
    ThalloRuntime exists (same contract as block-gallery.js). Adds a Copy button
    to each enhanced block: the floor is the plain <pre><code>, so without JS
-   there is no dead control. */
+   there is no dead control. Runs in the canvas too (canvas: 'allow'): the button
+   is inert chrome the editor should see, and the bridge re-enhances a swapped
+   wrapper. */
 (function () {
   'use strict';
   if (window.__thalloBlockCode) { return; }
@@ -58,7 +60,7 @@
     };
   }
 
-  RT.register('code', { selector: '.thallo-block-code', enhance: enhance });
+  RT.register('code', { selector: '.thallo-block-code', enhance: enhance, canvas: 'allow' });
   window.__thalloBlockCode = true;
   RT.enhance(document.documentElement);
 })();
