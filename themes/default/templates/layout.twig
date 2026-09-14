@@ -23,6 +23,7 @@
      artifact — every manifest stylesheet and every package stylesheet inside @layer theme. #}
   <link rel="stylesheet" href="{{ layers_stylesheet_url() }}">
   <link rel="stylesheet" href="{{ theme_stylesheet_url() }}">
+  <link rel="stylesheet" href="{{ settings_stylesheet_url() }}">
   {# Theme color config (theme-color-config spec §5): a :root + dark token
      override generated from the operator's accent/neutral choice. Emits nothing
      for the default (blue/slate). AFTER the theme CSS, BEFORE custom.css so

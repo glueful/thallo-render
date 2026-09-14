@@ -59,6 +59,9 @@ use Thallo\Render\Listeners\PurgeRenderCacheOnThemeChange;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
 use Psr\Container\ContainerInterface;
+use Thallo\Contracts\Style\StyleArtifactCompiler;
+use Thallo\Render\Style\CompiledStyleArtifacts;
+use Thallo\Render\Style\ThemeStyleArtifactCompiler;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
 use function config;
@@ -142,6 +145,15 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             ThemeStylesheetArtifacts::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeThemeStylesheetArtifacts'],
+            ],
+            CompiledStyleArtifacts::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeCompiledStyleArtifacts'],
+            ],
+            // The compile seam provision and a theme switch go through (spec §2.4).
+            StyleArtifactCompiler::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeStyleArtifactCompiler'],
             ],
             // Theme runtime delivery (theme-runtime spec §2.3): the map is path-derived
             // from the pack's own runtime/ dir; the controller autowires against it.
@@ -387,6 +399,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 ? $container->get(SeoHeadResolver::class)
                 : null,
             $container->get(ThemeStylesheetArtifacts::class),
+            $container->get(CompiledStyleArtifacts::class),
         );
     }
 
@@ -420,6 +433,25 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // re-keys every cached page even when the vocabulary is unchanged.
             static fn (): string => $container->get(ThemeStylesheetArtifacts::class)
                 ->forTheme($container->get(ThemeLocator::class))->hash,
+            static fn (): string => $container->get(CompiledStyleArtifacts::class)
+                ->forTheme($container->get(ThemeLocator::class))['hash'],
+        );
+    }
+
+    public static function makeCompiledStyleArtifacts(ContainerInterface $container): CompiledStyleArtifacts
+    {
+        $context = $container->get(ApplicationContext::class);
+        return new CompiledStyleArtifacts($context->getBasePath() . '/storage/cache/style');
+    }
+
+    public static function makeStyleArtifactCompiler(ContainerInterface $container): StyleArtifactCompiler
+    {
+        $context = $container->get(ApplicationContext::class);
+        return new ThemeStyleArtifactCompiler(
+            $container->get(CompiledStyleArtifacts::class),
+            $container->get(ThemeLocator::class),
+            $context->getBasePath() . '/themes',
+            $container->get(RenderContributionRegistry::class)->frozenTemplatePaths(),
         );
     }
 
@@ -549,6 +581,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 : null,
             appContext: $context,
             themeArtifacts: $container->get(ThemeStylesheetArtifacts::class),
+            compiledArtifacts: $container->get(CompiledStyleArtifacts::class),
         );
     }
 

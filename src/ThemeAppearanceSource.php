@@ -29,6 +29,8 @@ final class ThemeAppearanceSource
         private readonly ?LoggerInterface $logger = null,
         /** Layered delivery (spec §2.4): the active theme artifact's content hash, lazily. */
         private readonly ?\Closure $themeArtifactHash = null,
+        /** The compiled style artifact's hash (spec §2.4), lazily: a recompile re-keys every page. */
+        private readonly ?\Closure $settingsArtifactHash = null,
     ) {
     }
 
@@ -99,6 +101,9 @@ final class ThemeAppearanceSource
         $segments = [$this->accent(), $this->neutral(), $this->radius(), $this->font(), $this->background()];
         if ($this->themeArtifactHash !== null) {
             $segments[] = 't' . substr((string) ($this->themeArtifactHash)(), 0, 8);
+        }
+        if ($this->settingsArtifactHash !== null) {
+            $segments[] = 's' . substr((string) ($this->settingsArtifactHash)(), 0, 8);
         }
         return implode('-', $segments);
     }

@@ -35,6 +35,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
 use Thallo\Render\Style\ThemeStylesheetArtifact;
+use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
 use function config;
@@ -89,6 +90,8 @@ final class RenderController
         private readonly ?SeoHeadResolver $seoHeadResolver = null,
         /** Layered delivery (visual builder spec §2.4): serves theme artifacts by hash. */
         private readonly ?ThemeStylesheetArtifacts $themeArtifacts = null,
+        /** The compiled style artifact per theme (visual builder spec §2.4), served by hash. */
+        private readonly ?CompiledStyleArtifacts $compiledArtifacts = null,
     ) {
     }
 
@@ -608,8 +611,9 @@ final class RenderController
         // The layered theme artifact (visual builder spec §2.4): served by content hash,
         // immutable, from the artifact store rather than the theme's own files.
         $hash = ThemeStylesheetArtifact::hashFromFileName($path);
-        if ($hash !== null) {
-            $css = $this->themeArtifacts?->read($hash);
+        $compiled = CompiledStyleArtifacts::hashFromFileName($path);
+        if ($hash !== null || $compiled !== null) {
+            $css = $hash !== null ? $this->themeArtifacts?->read($hash) : $this->compiledArtifacts?->read($compiled);
             return $css === null
                 ? ApiResponse::error('Not Found', 404)
                 : new Response($css, 200, [
@@ -673,13 +677,21 @@ final class RenderController
             return ApiResponse::error('Not Found', 404);
         }
         $hash = ThemeStylesheetArtifact::hashFromFileName($path);
-        if ($hash !== null) {
-            // The preview theme's artifact: built for the preview render, read back by hash.
-            $artifact = $this->themeArtifacts?->forTheme($locator);
-            if ($artifact === null || $artifact->hash !== $hash) {
+        $compiled = CompiledStyleArtifacts::hashFromFileName($path);
+        if ($hash !== null || $compiled !== null) {
+            // The preview theme's artifacts: built for the preview render, read back by hash.
+            $css = null;
+            if ($hash !== null) {
+                $artifact = $this->themeArtifacts?->forTheme($locator);
+                $css = $artifact !== null && $artifact->hash === $hash ? $artifact->css : null;
+            } else {
+                $artifact = $this->compiledArtifacts?->forTheme($locator);
+                $css = $artifact !== null && $artifact['hash'] === $compiled ? $artifact['css'] : null;
+            }
+            if ($css === null) {
                 return ApiResponse::error('Not Found', 404);
             }
-            $response = new Response($artifact->css, 200, ['Content-Type' => 'text/css; charset=UTF-8']);
+            $response = new Response($css, 200, ['Content-Type' => 'text/css; charset=UTF-8']);
             $response->headers->set('Cache-Control', 'no-store');
             return $response;
         }

@@ -33,6 +33,7 @@ use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Thallo\Render\Style\ThemeStylesheetArtifact;
+use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
 /**
@@ -204,6 +205,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?ApplicationContext $appContext = null,
         /** Layered delivery (visual builder spec §2.2–2.4): the theme artifact per theme. */
         private readonly ?ThemeStylesheetArtifacts $themeArtifacts = null,
+        /** The compiled style artifact per theme (visual builder spec §2.4). */
+        private readonly ?CompiledStyleArtifacts $compiledArtifacts = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -266,6 +269,7 @@ final class RenderContextExtension extends AbstractExtension
             // artifact the head links instead of individual theme files.
             new TwigFunction('layers_stylesheet_url', $this->layersStylesheetUrl(...)),
             new TwigFunction('theme_stylesheet_url', $this->themeStylesheetUrl(...)),
+            new TwigFunction('settings_stylesheet_url', $this->settingsStylesheetUrl(...)),
             // Storefront-v1 spec §5: soft-bound wishlist seam (see the $wishlist constructor
             // doc). Both null-safe — capability off or seam unbound means null, never a throw.
             new TwigFunction('shop_wishlist_scope', $this->shopWishlistScope(...)),
@@ -328,6 +332,20 @@ final class RenderContextExtension extends AbstractExtension
         }
         $hash = $this->themeArtifacts->forTheme($this->boundTheme)->hash;
         return ($this->assetBase ?? '/theme-assets') . '/' . ThemeStylesheetArtifact::fileName($hash);
+    }
+
+    /**
+     * The compiled style artifact for the bound theme: `@layer settings` with the `--t-*`
+     * custom properties and every utility the vocabulary yields, content-fingerprinted (spec
+     * §2.4). Linked after the theme artifact; served from the same asset base.
+     */
+    public function settingsStylesheetUrl(): string
+    {
+        if ($this->boundTheme === null || $this->compiledArtifacts === null) {
+            throw new RuntimeError('settings_stylesheet_url(): no theme is bound to the render context.');
+        }
+        $hash = $this->compiledArtifacts->forTheme($this->boundTheme)['hash'];
+        return ($this->assetBase ?? '/theme-assets') . '/' . CompiledStyleArtifacts::fileName($hash);
     }
 
     public function shopProductUrl(?string $slug): ?string
