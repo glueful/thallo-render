@@ -10,6 +10,6 @@
   data.scale|default(false) ? 'thallo-block-pricing_plans--scale' : '',
 ]|join(' ')|trim %}
 {% set count = data.plans|default([])|length %}
-<div class="{{ rootClass }}">
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   <div class="thallo-block-pricing_plans__items" style="--count: {{ count > 0 ? count : 1 }}">{{ blocks(data.plans) }}</div>
 </div>

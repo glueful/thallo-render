@@ -6,6 +6,10 @@ namespace Thallo\Render;
 
 use Glueful\Bootstrap\ApplicationContext;
 use Thallo\Contracts\Billing\PlanCheckoutUrlResolver;
+use Thallo\Contracts\Style\BlockStyleRegistry;
+use Thallo\Contracts\Style\StyleSchema;
+use Thallo\Contracts\Style\StyleTargets;
+use Thallo\Contracts\Style\Vocabulary;
 use Thallo\Contracts\Content\BlockEditableFieldResolver;
 use Thallo\Contracts\Content\FormSealer;
 use Thallo\Contracts\Content\RegionReader;
@@ -33,6 +37,8 @@ use Twig\Markup;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
 use Thallo\Render\Style\ThemeStylesheetArtifact;
+use Thallo\Render\Style\BlockStyleEmitter;
+use Thallo\Render\Style\ClassNames;
 use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
@@ -207,6 +213,9 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?ThemeStylesheetArtifacts $themeArtifacts = null,
         /** The compiled style artifact per theme (visual builder spec §2.4). */
         private readonly ?CompiledStyleArtifacts $compiledArtifacts = null,
+        /** Block style declarations (spec §1.7): soft-bound; null = no block declares targets. */
+        private readonly ?BlockStyleRegistry $styleRegistry = null,
+        private readonly BlockStyleEmitter $styleEmitter = new BlockStyleEmitter(),
     ) {
         $this->locale = $defaultLocale;
     }
@@ -270,6 +279,11 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('layers_stylesheet_url', $this->layersStylesheetUrl(...)),
             new TwigFunction('theme_stylesheet_url', $this->themeStylesheetUrl(...)),
             new TwigFunction('settings_stylesheet_url', $this->settingsStylesheetUrl(...)),
+            // Style targets (visual builder spec §2.5): a block template styles its declared
+            // targets through these; nothing else turns a setting into markup.
+            new TwigFunction('style_classes', $this->styleClasses(...)),
+            new TwigFunction('style_attrs', $this->styleAttrs(...), ['is_safe' => ['html']]),
+            new TwigFunction('token_class', $this->tokenClass(...)),
             // Storefront-v1 spec §5: soft-bound wishlist seam (see the $wishlist constructor
             // doc). Both null-safe — capability off or seam unbound means null, never a throw.
             new TwigFunction('shop_wishlist_scope', $this->shopWishlistScope(...)),
@@ -346,6 +360,82 @@ final class RenderContextExtension extends AbstractExtension
         }
         $hash = $this->compiledArtifacts->forTheme($this->boundTheme)['hash'];
         return ($this->assetBase ?? '/theme-assets') . '/' . CompiledStyleArtifacts::fileName($hash);
+    }
+
+    /**
+     * The utility classes the current block's settings resolve to for `$target` (spec §2.5),
+     * with a leading space so it drops straight after a template's own class list. Empty
+     * outside a block, for a type without declared targets, and when nothing is set.
+     *
+     * @throws RuntimeError for a target the block type does not declare (the lint refuses
+     *         it at save; a declaration edited out from under a template still fails loudly)
+     */
+    public function styleClasses(string $target): string
+    {
+        [$frame, $targets] = $this->styleFrame($target);
+        if ($frame === null || $targets === null) {
+            return '';
+        }
+        $classes = $this->styleEmitter->classesFor($frame['settings'], $targets, $target);
+        return $classes === [] ? '' : ' ' . implode(' ', $classes);
+    }
+
+    /** The attributes `$target` owns (anchor, `data-*`, accessibility label), escaped, leading space. */
+    public function styleAttrs(string $target): string
+    {
+        [$frame, $targets] = $this->styleFrame($target);
+        if ($frame === null || $targets === null) {
+            return '';
+        }
+        $out = '';
+        foreach ($this->styleEmitter->attrsFor($frame['settings'], $targets, $target) as $name => $value) {
+            $out .= ' ' . $name . '="' . htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+        }
+        return $out;
+    }
+
+    /**
+     * The utility class for a `token` or `choice` field a block keeps in `data` (spec §1.7):
+     * the same class the compiler emits for the property, leading space; '' for an absent or
+     * unknown value so a stale stored value never reaches the class attribute.
+     */
+    public function tokenClass(string $property, mixed $value): string
+    {
+        $def = StyleSchema::property($property);
+        if ($def === null) {
+            throw new RuntimeError("token_class(): unknown style property \"{$property}\".");
+        }
+        if (!is_string($value) || $value === '') {
+            return '';
+        }
+        $valid = $def->tokenDomain !== null
+            ? str_starts_with($value, $def->tokenDomain . '.')
+                && in_array(substr($value, strlen($def->tokenDomain) + 1), Vocabulary::names($def->tokenDomain), true)
+            : in_array($value, $def->choices ?? [], true);
+        return $valid ? ' ' . ClassNames::for($property, $value) : '';
+    }
+
+    /**
+     * @return array{0: array{type: string, settings: array<string,mixed>}|null, 1: StyleTargets|null}
+     */
+    private function styleFrame(string $target): array
+    {
+        if ($this->blockFrames === [] || $this->styleRegistry === null) {
+            return [null, null];
+        }
+        $frame = $this->blockFrames[count($this->blockFrames) - 1];
+        $targets = $this->styleRegistry->targetsFor($frame['type']);
+        if ($targets === null) {
+            return [null, null];
+        }
+        if (!in_array($target, $targets->names(), true)) {
+            throw new RuntimeError(sprintf(
+                'Style target "%s" is not declared by block type "%s".',
+                $target,
+                $frame['type'],
+            ));
+        }
+        return [$frame, $targets];
     }
 
     public function shopProductUrl(?string $slug): ?string

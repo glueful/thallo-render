@@ -24,10 +24,10 @@
   : ({normal: '(max-width: 48rem) 100vw, 40rem',
       wide: '(max-width: 64rem) 100vw, 60rem',
       full: '100vw'}[data.size|default('normal')] ?? '(max-width: 48rem) 100vw, 40rem') %}
-<figure class="{{ rootClass }}">
+<figure class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if img %}
     {% set priority = claim_priority_image() %}
-    <img src="{{ img.src }}"
+    <img class="thallo-block-image__img{{ style_classes('picture') }}"{{ style_attrs('picture') }} src="{{ img.src }}"
          {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="{{ imgSizes }}"{% endif %}
          alt="{{ data.alt|default('') }}"{% if imgStyle %} style="{{ imgStyle }}"{% endif %}
          {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>

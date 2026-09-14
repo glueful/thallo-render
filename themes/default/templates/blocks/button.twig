@@ -16,8 +16,8 @@
   data.block|default(false) ? 'thallo-block-button__link--block' : '',
 ]|join(' ')|trim %}
 {% set tag = url ? 'a' : 'span' %}
-<div class="thallo-block thallo-block-button thallo-block-button--{{ align }}">
-  <{{ tag }} class="{{ linkClass }}"{% if url %} href="{{ url }}"{% endif %}>
+<div class="thallo-block thallo-block-button thallo-block-button--{{ align }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  <{{ tag }} class="{{ linkClass }}{{ style_classes('control') }}"{{ style_attrs('control') }}{% if url %} href="{{ url }}"{% endif %}>
     {% if data.leading_icon %}<span class="thallo-block-button__icon thallo-block-button__icon--leading" aria-hidden="true">{{ icon(data.leading_icon) ?? data.leading_icon }}</span>{% endif %}
     <span class="thallo-block-button__label">{{ data.label|editable_text('label') }}</span>
     {% if data.trailing_icon %}<span class="thallo-block-button__icon thallo-block-button__icon--trailing" aria-hidden="true">{{ icon(data.trailing_icon) ?? data.trailing_icon }}</span>{% endif %}

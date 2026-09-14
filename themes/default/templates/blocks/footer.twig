@@ -9,7 +9,7 @@
 {% set hasLeft = data.copyright|default([]) is not empty %}
 {% set hasCenter = data.links|default([]) is not empty %}
 {% set hasRight = data.social|default([]) is not empty %}
-<footer class="thallo-block thallo-block-footer">
+<footer class="thallo-block thallo-block-footer{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if hasTop %}<div class="thallo-block-footer__top">{{ blocks(data.top) }}</div>{% endif %}
   <div class="thallo-block-footer__bar">
     {% if hasLeft %}<div class="thallo-block-footer__left">{{ blocks(data.copyright) }}</div>{% endif %}

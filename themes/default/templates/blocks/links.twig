@@ -5,7 +5,7 @@
    from navigationMenu (active → --accent, others muted → --ink on hover).
    Fields: title (optional, editable_text), items — a plain array (NOT child
    blocks) of { label, url, icon (optional), active (optional bool) }. #}
-<nav class="thallo-block thallo-block-links">
+<nav class="thallo-block thallo-block-links{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if data.title|default('') is not empty %}
     <p class="thallo-block-links__title">{{ data.title|editable_text('title') }}</p>
   {% endif %}

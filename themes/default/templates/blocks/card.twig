@@ -14,9 +14,9 @@
   orientation == 'horizontal' ? 'thallo-block-card--horizontal' : '',
   reverse ? 'thallo-block-card--reverse' : '',
 ]|join(' ')|trim %}
-<div class="{{ rootClass }}">
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if data.icon %}<span class="thallo-block-card__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
-  {% if data.title %}<h3 class="thallo-block-card__title">{{ data.title|editable_text('title') }}</h3>{% endif %}
+  {% if data.title %}<h3 class="thallo-block-card__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h3>{% endif %}
   {% if data.description %}<p class="thallo-block-card__description">{{ data.description|editable_text('description') }}</p>{% endif %}
   {% if data.body|default([]) is not empty %}<div class="thallo-block-card__body">{{ blocks(data.body) }}</div>{% endif %}
 </div>

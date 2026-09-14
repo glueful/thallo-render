@@ -12,7 +12,7 @@
   'thallo-block-separator--size-' ~ ({xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl'}[size] ?? 'xs'),
   hasContent ? 'thallo-block-separator--labeled' : '',
 ]|join(' ')|trim %}
-<div class="{{ rootClass }}">
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   <span class="thallo-block-separator__line"></span>
   {% if hasContent %}
     <span class="thallo-block-separator__content">

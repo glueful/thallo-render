@@ -17,7 +17,7 @@
   order: data.order|default('newest'),
   category: data.category|default(null),
 }) %}
-<div class="{{ rootClass }}">
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if posts is not empty %}
     <div class="thallo-block-blog_posts__grid">
       {# region_slug is threaded as an ARGUMENT: Twig macros have isolated context,

@@ -10,7 +10,7 @@
   'thallo-block thallo-block-accordion',
   multiple ? 'thallo-block-accordion--multiple' : '',
 ]|join(' ')|trim %}
-<div class="{{ rootClass }}">
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if data.title %}<h2 class="thallo-block-accordion__title">{{ data.title|editable_text('title') }}</h2>{% endif %}
   {# Items rendered inline: native <details name> needs the PARENT accordion's
      group id for exclusive-open — a child template can't know it. #}

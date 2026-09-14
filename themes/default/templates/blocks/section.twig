@@ -17,7 +17,7 @@
   'thallo-block-section--' ~ ({vertical: 'vertical', horizontal: 'horizontal'}[orientation] ?? 'vertical'),
   reverse ? 'thallo-block-section--reverse' : '',
 ]|join(' ')|trim %}
-<section class="{{ rootClass }}">
+<section class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   <div class="thallo-block-section__inner">
     {% if hasHeader %}
     <div class="thallo-block-section__header">

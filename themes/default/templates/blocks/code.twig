@@ -6,7 +6,7 @@
 {% set language = data.language|default('text') in languages ? data.language|default('text') : 'text' %}
 {% set copy = data.copy ?? true %}
 {% set label = data.label|default('') %}
-<figure class="thallo-block thallo-block-code" data-language="{{ language }}" data-copy="{{ copy ? '1' : '0' }}">
+<figure class="thallo-block thallo-block-code{{ style_classes('root') }}"{{ style_attrs('root') }} data-language="{{ language }}" data-copy="{{ copy ? '1' : '0' }}">
   <figcaption class="thallo-block-code__caption">
     <span class="thallo-block-code__label">{{ label ?: language }}</span>
     <span class="thallo-block-code__actions"></span>

@@ -10,7 +10,7 @@
    the floor's enumerated CSS pairs exactly that many, and over-cap content
    cannot exist (pre-launch decision, no legacy-overflow rules). Fields:
    items — each a block with item.data.label; panel body renders the item itself. #}
-<div class="thallo-block thallo-block-tabs">
+<div class="thallo-block thallo-block-tabs{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% for item in data.items|default([]) %}
   <input class="thallo-block-tabs__radio" type="radio" name="tabs-{{ block.id }}" id="tabs-{{ block.id }}-{{ loop.index }}"{% if loop.first %} checked{% endif %}>
   {% endfor %}

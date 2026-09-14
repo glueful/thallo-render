@@ -1,5 +1,5 @@
 {% set src = data.audio ? media(data.audio) : null %}
-<figure class="thallo-block thallo-block-audio">
+<figure class="thallo-block thallo-block-audio{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if data.title %}<figcaption class="thallo-block-audio__title">{{ data.title|editable_text('title') }}</figcaption>{% endif %}
   {% if src %}<audio class="thallo-block-audio__player" src="{{ src }}" controls preload="metadata"></audio>{% endif %}
 </figure>

@@ -3,8 +3,8 @@
    (see navigation.twig / separator.twig) — the matching rules live in assets/blocks.css.
    Fields (all optional): icon, title, description, url. #}
 {% set url = data.url|default('')|safe_url %}
-<div class="thallo-block thallo-block-feature">
+<div class="thallo-block thallo-block-feature{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if data.icon %}<span class="thallo-block-feature__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
-  {% if data.title %}<h3 class="thallo-block-feature__title">{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>{% endif %}
+  {% if data.title %}<h3 class="thallo-block-feature__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>{% endif %}
   {% if data.description %}<p class="thallo-block-feature__description">{{ data.description|editable_text('description') }}</p>{% endif %}
 </div>

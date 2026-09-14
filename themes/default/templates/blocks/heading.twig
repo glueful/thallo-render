@@ -10,4 +10,4 @@
   'thallo-block thallo-block-heading',
   'thallo-block-heading--' ~ ({start: 'start', center: 'center', end: 'end'}[data.align|default('start')] ?? 'start'),
 ]|join(' ')|trim %}
-<{{ level }} class="{{ rootClass }}"{% if data.color %} style="color:{{ data.color }}"{% endif %}>{{ data.text|default('')|editable_text('text') }}</{{ level }}>
+<{{ level }} class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}{% if data.color %} style="color:{{ data.color }}"{% endif %}>{{ data.text|default('')|editable_text('text') }}</{{ level }}>

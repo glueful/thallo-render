@@ -105,7 +105,7 @@
 {% if data.min_height_px %}{% set style = style|merge(['min-height: ' ~ data.min_height_px ~ 'px']) %}{% endif %}
 {% if isFlex and data.gap %}{% set style = style|merge(['--container-gap: ' ~ data.gap ~ 'px']) %}{% endif %}
 
-<div class="{{ rootClass }}"{% if style is not empty %} style="{{ style|join('; ') }}"{% endif %}>
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}{% if style is not empty %} style="{{ style|join('; ') }}"{% endif %}>
   {% if videoSrc %}<video class="thallo-block-container__video" src="{{ videoSrc }}" autoplay muted loop playsinline></video>
   {% elseif vidEmbed %}<div class="thallo-block-container__video-cover">
     {%- if vidEmbed.provider == 'youtube' -%}

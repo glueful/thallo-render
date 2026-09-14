@@ -11,6 +11,6 @@
   'thallo-block-grid--' ~ ({grid: 'grid', masonry: 'masonry'}[data.flow|default('grid')] ?? 'grid'),
   'thallo-block-grid--gap-' ~ ({small: 'small', medium: 'medium', large: 'large'}[data.gap|default('medium')] ?? 'medium'),
 ]|join(' ')|trim %}
-<div class="{{ rootClass }}">
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   <div class="thallo-block-grid__items">{{ blocks(data.items) }}</div>
 </div>

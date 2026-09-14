@@ -4,6 +4,6 @@
    styled by .thallo-block-social_link__link in assets/blocks.css. #}
 {% set url = data.url|default('')|safe_url %}
 {% set name = data.label|default(data.icon|default('')|replace({'brand:': ''})) %}
-<div class="thallo-block thallo-block-social_link">
+<div class="thallo-block thallo-block-social_link{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if url %}<a class="thallo-block-social_link__link" href="{{ url }}" aria-label="{{ name }}">{{ icon(data.icon|default('')) ?? name }}</a>{% endif %}
 </div>

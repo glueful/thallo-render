@@ -54,7 +54,7 @@ final class CascadeResolver
                     continue;
                 }
                 if (($value['type'] ?? null) === 'reset') {
-                    return Resolution::reset($layer['layer'], $target);
+                    return Resolution::reset($layer['layer'], $target, $bp === $target);
                 }
                 return Resolution::managed($value, $layer['layer'], $bp === $target, $target);
             }

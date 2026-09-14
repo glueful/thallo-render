@@ -5,11 +5,11 @@
    field names are never trusted. #}
 {% set f = form_render(block) %}
 {% if f is null %}
-  <div class="thallo-block thallo-block-form thallo-block-form--disabled">
+  <div class="thallo-block thallo-block-form thallo-block-form--disabled{{ style_classes('root') }}"{{ style_attrs('root') }}>
     <p>This form isn’t configured yet — set a recipient email to activate it.</p>
   </div>
 {% else %}
-  <form class="thallo-block thallo-block-form" method="post" action="/_forms/submit"
+  <form class="thallo-block thallo-block-form{{ style_classes('root') }}"{{ style_attrs('root') }} method="post" action="/_forms/submit"
         data-thallo-form data-form-key="{{ f.key }}">
     {% if f.heading %}<h2 class="thallo-block-form__heading">{{ f.heading }}</h2>{% endif %}
     {% if f.intro %}<p class="thallo-block-form__intro">{{ f.intro }}</p>{% endif %}

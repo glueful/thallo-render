@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Templates;
 
+use Thallo\Contracts\Style\BlockStyleRegistry;
 use Thallo\Render\RenderContextExtension;
 use Twig\Environment;
 use Twig\Error\SyntaxError;
@@ -31,8 +32,11 @@ use Twig\Template;
  */
 final class TemplateLinter
 {
-    public function __construct(private readonly RenderContextExtension $extension)
-    {
+    public function __construct(
+        private readonly RenderContextExtension $extension,
+        /** Block style declarations (spec §2.5): null = the target rules never apply. */
+        private readonly ?BlockStyleRegistry $styleRegistry = null,
+    ) {
     }
 
     /** @return list<array{line:int,message:string}> empty = clean */
@@ -55,6 +59,14 @@ final class TemplateLinter
             ];
         }
         $this->walk($module, $violations);
+        // Style-target rules (visual builder spec §2.5) for a block template whose type declares
+        // targets: `blocks/{type}.twig` is the name the render loads it by.
+        if (preg_match('~\Ablocks/([a-z][a-z0-9_-]*)\.twig\z~', $name, $m) === 1) {
+            $targets = $this->styleRegistry?->targetsFor($m[1]);
+            if ($targets !== null) {
+                $violations = array_merge($violations, TargetLint::lint($module, $targets));
+            }
+        }
         usort($violations, static fn (array $a, array $b): int => $a['line'] <=> $b['line']);
         return $violations;
     }

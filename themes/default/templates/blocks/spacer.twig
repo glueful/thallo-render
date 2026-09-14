@@ -4,4 +4,4 @@
   medium: 'h-8',
   large:  'h-16'
 }[data.size|default('medium')] ?? 'h-8' %}
-<div role="presentation" class="thallo-block thallo-block-spacer {{ sizeClass }}"></div>
+<div role="presentation" class="thallo-block thallo-block-spacer {{ sizeClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}></div>

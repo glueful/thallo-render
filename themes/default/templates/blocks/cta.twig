@@ -13,10 +13,10 @@
   'thallo-block-cta--' ~ ({vertical: 'vertical', horizontal: 'horizontal'}[orientation] ?? 'vertical'),
   reverse ? 'thallo-block-cta--reverse' : '',
 ]|join(' ')|trim %}
-<aside class="{{ rootClass }}">
+<aside class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   <div class="thallo-block-cta__inner">
     <div class="thallo-block-cta__wrapper">
-      <h2 class="thallo-block-cta__title">{{ data.title|editable_text('title') }}</h2>
+      <h2 class="thallo-block-cta__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h2>
       {% if data.description %}<p class="thallo-block-cta__description">{{ data.description|editable_text('description') }}</p>{% endif %}
     </div>
     {% if data.links|default([]) is not empty %}<div class="thallo-block-cta__links">{{ blocks(data.links) }}</div>{% endif %}

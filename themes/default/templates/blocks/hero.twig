@@ -20,23 +20,23 @@
   'thallo-block-hero--bg-' ~ background,
   reverse ? 'thallo-block-hero--reverse' : '',
 ]|join(' ')|trim %}
-<header class="{{ rootClass }}">
+<header class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   <div class="thallo-block-hero__inner">
     <div class="thallo-block-hero__wrapper">
       {% if data.headline %}<p class="thallo-block-hero__headline">{{ data.headline|editable_text('headline') }}</p>{% endif %}
       {% set headingLevel = data.heading_level|default('h1') %}
-      {% if headingLevel == 'h2' %}<h2 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h2>
-      {% elseif headingLevel == 'h3' %}<h3 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h3>
-      {% else %}<h1 class="thallo-block-hero__title">{{ data.title|editable_text('title') }}</h1>
+      {% if headingLevel == 'h2' %}<h2 class="thallo-block-hero__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h2>
+      {% elseif headingLevel == 'h3' %}<h3 class="thallo-block-hero__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h3>
+      {% else %}<h1 class="thallo-block-hero__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h1>
       {% endif %}
       {% if data.description %}<p class="thallo-block-hero__description">{{ data.description|editable_text('description') }}</p>{% endif %}
       {% if data.links|default([]) is not empty %}<div class="thallo-block-hero__links">{{ blocks(data.links) }}</div>{% endif %}
     </div>
     {% if aside is not empty %}
-      <div class="thallo-block-hero__media thallo-block-hero__media--blocks">{{ blocks(aside) }}</div>
+      <div class="thallo-block-hero__media thallo-block-hero__media--blocks{{ style_classes('media') }}"{{ style_attrs('media') }}>{{ blocks(aside) }}</div>
     {% elseif img %}
       {% set priority = claim_priority_image() %}
-      <div class="thallo-block-hero__media">
+      <div class="thallo-block-hero__media{{ style_classes('media') }}"{{ style_attrs('media') }}>
         <img src="{{ img.src }}"
              {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="(max-width: 48rem) 100vw, 40rem"{% endif %}
              alt=""

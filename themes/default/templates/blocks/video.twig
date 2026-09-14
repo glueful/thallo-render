@@ -1,5 +1,5 @@
 {% set source = data.source|default('upload') %}
-<figure class="thallo-block thallo-block-video thallo-block-video--{{ data.width|default('normal') }}">
+<figure class="thallo-block thallo-block-video thallo-block-video--{{ data.width|default('normal') }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if source == 'embed' %}
     {% set emb = data.url|default('') ? video_embed(data.url) : null %}
     {% if emb %}

@@ -6,7 +6,7 @@
    label, new_tab. #}
 {% set href = data.file ? media(data.file) : null %}
 {% set label = data.label|default('')|trim ?: 'Download' %}
-<div class="thallo-block thallo-block-file">
+<div class="thallo-block thallo-block-file{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if href %}
     <a class="thallo-block-file__link" href="{{ href }}"
        {%- if data.new_tab %} target="_blank" rel="noopener noreferrer"{% else %} download{% endif %}>

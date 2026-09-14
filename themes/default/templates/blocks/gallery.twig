@@ -11,7 +11,7 @@
   {% endif %}
 {% endfor %}
 {% set lightbox = data.lightbox ?? true %}
-<div class="thallo-block thallo-block-gallery thallo-block-gallery--cols-{{ data.columns|default('3') }} thallo-block-gallery--{{ data.aspect|default('natural') }}" data-lightbox="{{ lightbox ? '1' : '0' }}">
+<div class="thallo-block thallo-block-gallery thallo-block-gallery--cols-{{ data.columns|default('3') }} thallo-block-gallery--{{ data.aspect|default('natural') }}{{ style_classes('root') }}"{{ style_attrs('root') }} data-lightbox="{{ lightbox ? '1' : '0' }}">
   {%- for image in resolved %}
   <a class="thallo-block-gallery__item" href="{{ image.full }}" aria-label="{{ image.alt ?: 'Image ' ~ loop.index ~ ' of ' ~ loop.length }}">{{ blocks([image.item]) }}</a>
   {%- endfor %}

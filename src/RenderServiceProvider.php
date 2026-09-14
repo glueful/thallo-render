@@ -59,6 +59,7 @@ use Thallo\Render\Listeners\PurgeRenderCacheOnThemeChange;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
 use Psr\Container\ContainerInterface;
+use Thallo\Contracts\Style\BlockStyleRegistry;
 use Thallo\Contracts\Style\StyleArtifactCompiler;
 use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStyleArtifactCompiler;
@@ -269,7 +270,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
 
     public static function makeTemplateLinter(ContainerInterface $container): TemplateLinter
     {
-        return new TemplateLinter($container->get(RenderContextExtension::class));
+        return new TemplateLinter(
+            $container->get(RenderContextExtension::class),
+            $container->has(BlockStyleRegistry::class) ? $container->get(BlockStyleRegistry::class) : null,
+        );
     }
 
     public static function makePreviewSessionMiddleware(
@@ -582,6 +586,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             appContext: $context,
             themeArtifacts: $container->get(ThemeStylesheetArtifacts::class),
             compiledArtifacts: $container->get(CompiledStyleArtifacts::class),
+            styleRegistry: $container->has(BlockStyleRegistry::class)
+                ? $container->get(BlockStyleRegistry::class)
+                : null,
         );
     }
 

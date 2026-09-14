@@ -65,7 +65,9 @@ final class TemplatePolicy
     //         stylesheets ride inside the theme artifact through the contribution registry).
     // bumped: settings_stylesheet_url joined the function allowlist (visual builder spec §2.4 —
     //         the compiled style artifact is linked after the theme artifact).
-    public const CACHE_VERSION = 21;
+    // bumped: style_classes, style_attrs and token_class joined the function allowlist (visual
+    //         builder spec §2.5 — style targets).
+    public const CACHE_VERSION = 22;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -82,7 +84,7 @@ final class TemplatePolicy
         'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
         'runtime_script', 'seo_head', 'font_faces_style',
         'shop_wishlist_scope', 'shop_wishlist_url', 'layers_stylesheet_url', 'theme_stylesheet_url',
-        'settings_stylesheet_url',
+        'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class',
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script',
         'entries', 'is_preview', 'media_image', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',

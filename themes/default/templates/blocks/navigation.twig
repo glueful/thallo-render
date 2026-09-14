@@ -65,7 +65,7 @@
   'thallo-block-navigation--submenu-' ~ ({dropdown: 'dropdown', columns: 'columns'}[sublayout] ?? 'dropdown'),
   'thallo-block-navigation--reveal-' ~ ({hover: 'hover', click: 'click'}[reveal] ?? 'hover'),
 ]|join(' ')|trim %}
-<div class="{{ rootClass }}">
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if items %}
     <nav class="thallo-block-navigation__nav" aria-label="{{ data.aria_label|default('Navigation') }}">
       {# Mobile disclosure (theme-runtime spec §3.2): the whole list sits inside
