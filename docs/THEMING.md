@@ -167,6 +167,17 @@ default theme ships `copyright` and `thallo-version` (the running install's vers
 `site.version`, styled as a pill; recolour it from custom CSS through `--version-fg`,
 `--version-bg` and `--version-dot` on `.thallo-shortcode-version`).
 
+Two blocks carry presentation choices an operator picks in the editor, each a closed
+enum that becomes a BEM modifier (unknown stored values degrade to the default):
+
+- `hero.background` — `gradient` (the default), `none`, `muted`, `inverted` →
+  `thallo-block-hero--bg-{value}`; `hero.aside` — any blocks, rendered in the media
+  slot instead of the image (`thallo-block-hero__media--blocks`), so a code snippet or
+  a card sits beside the copy in the horizontal orientation.
+- `button.shape` — `pill`, `rounded` (the theme radius), `square` →
+  `thallo-block-button__link--shape-{value}`; unset emits no modifier and the button
+  reads `--radius-btn`, which the site's design settings write (§9.6).
+
 ---
 
 ## 5. Styling convention (hand-authored BEM in Twig)
@@ -243,7 +254,8 @@ slide loses its contrast guarantee.
 
 ```twig
 {# Fields: headline, title, description, links (nested button blocks),
-   image (asset → media()), orientation (vertical|horizontal), reverse. #}
+   image (asset → media()), aside (nested blocks; takes the media slot),
+   orientation (vertical|horizontal), reverse, background (gradient|none|muted|inverted). #}
 {% set img = data.image ? media(data.image) : null %}
 {% set orientation = data.orientation|default('vertical') %}
 {% set reverse = data.reverse|default(false) %}
@@ -436,11 +448,33 @@ the saved pair with no residue.
 
 ### 9.4 Caching
 
-The render page cache (and the fixed 404/410 bodies) key on the resolved pair —
-`render:{theme}:{accent}-{neutral}:{path}` — and a save dispatches
+The render page cache (and the fixed 404/410 bodies) key on every resolved appearance
+choice — `render:{theme}:{accent}-{neutral}-{radius}-{font}-{background}:{path}` — and a save dispatches
 `ThemeAppearanceChanged`, which purges `thallo:render:page`. A color change is
 reflected immediately, and a bad stored value falls back to `blue`/`slate` (and
 logs) rather than emitting broken CSS.
+
+### 9.6 Design settings (radius, typefaces, page ground)
+
+Next to the colours, **Settings → General → Design** carries three more closed enums,
+stored as `theme_radius`, `theme_font`, `theme_background` and emitted by the same
+`theme_colors_style()` block (`Thallo\Render\Theme\ThemeDesign`), after the colours:
+
+- **Corners** — `round` (default: `--radius: 12px`, pill buttons), `soft`
+  (`--radius: 12px`, `--radius-btn: 8px`), `sharp` (`--radius: 4px`, `--radius-lg: 8px`,
+  `--radius-btn: 4px`). Buttons read `--radius-btn` unless the block picks a shape.
+- **Typefaces** — `sans` (default: Figtree throughout), `editorial` (a system serif
+  stack for `--font-display`, so headings), `serif` (both `--font-display` and
+  `--font-body`). System stacks only: the site's CSP is `'self'`, so nothing is fetched.
+- **Page ground** — `plain` (default: white page, tinted panels) or `tinted`, which
+  swaps the neutral family's `--bg` and `--surface` in light mode (a tinted page with
+  white panels); dark mode is unchanged.
+
+`site.css` declares `--font-body` and `--font-display` (display follows body by default)
+and `body`/headings read them, so a theme inheriting the default layout gets the settings
+for free. Defaults emit nothing. Every choice is in the cache fingerprint (§9.4 —
+`render:{theme}:{accent}-{neutral}-{radius}-{font}-{background}:{path}`) and a change
+dispatches `ThemeAppearanceChanged`.
 
 ### 9.5 Content-Security-Policy
 
@@ -452,7 +486,7 @@ per-request nonce. If you run a strict CSP, allow inline styles:
 style-src 'unsafe-inline'
 ```
 
-This is acceptable because the style is generated from **two closed enums**, not
+This is acceptable because the style is generated from **closed enums**, not
 free CSS (a far narrower trust surface than `custom.css`), and Glueful ships no
 CSP by default. If strict-CSP perfection is later required, the same storage +
 token model can serve the CSS from a linked `/theme-colors.css` route instead —
