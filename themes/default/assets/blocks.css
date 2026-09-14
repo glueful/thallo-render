@@ -27,12 +27,22 @@
 .thallo-block-hero {
   margin-block: 0 var(--space-5);
   padding-block: var(--space-7);
+  border-bottom: 0;
+}
+/* background — schema enum: gradient (the original look) | none | muted | inverted */
+.thallo-block-hero--bg-gradient {
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--accent) 9%, var(--bg)),
     var(--bg)
   );
-  border-bottom: 0;
+}
+.thallo-block-hero--bg-none { background: transparent; }
+.thallo-block-hero--bg-muted { background: var(--surface-2); }
+.thallo-block-hero--bg-inverted { background: var(--ink); color: var(--accent-ink); }
+.thallo-block-hero--bg-inverted .thallo-block-hero__title { color: var(--accent-ink); }
+.thallo-block-hero--bg-inverted .thallo-block-hero__description {
+  color: color-mix(in srgb, var(--accent-ink) 72%, transparent);
 }
 .thallo-block-hero__inner {
   max-width: var(--container);
@@ -81,6 +91,9 @@
   gap: var(--space-3);
   margin-top: var(--space-4);
 }
+/* aside blocks fill the media column: no band clamp, no inner gutter */
+.thallo-block-hero__media--blocks { min-width: 0; }
+.thallo-block-hero__media--blocks > .thallo-block { max-width: none; padding-inline: 0; margin-inline: 0; }
 .thallo-block-hero__media img {
   display: block;
   /* Layout reservation (storefront-performance spec §5): explicit width + ratio
