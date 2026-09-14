@@ -60,8 +60,12 @@ use Thallo\Render\Listeners\PurgeRenderCacheOnThemeChange;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
 use Psr\Container\ContainerInterface;
+use Thallo\Contracts\Preview\PreviewFragmentRenderer;
 use Thallo\Contracts\Style\BlockStyleRegistry;
 use Thallo\Contracts\Style\StyleArtifactCompiler;
+use Thallo\Render\Fragments\FragmentRenderer;
+use Thallo\Render\Fragments\FragmentVerification;
+use Thallo\Render\Fragments\PreviewFragments;
 use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStyleArtifactCompiler;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
@@ -156,6 +160,20 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             StyleArtifactCompiler::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeStyleArtifactCompiler'],
+            ],
+            // The canvas fragment path (visual builder spec §3.5), behind render.fragments.enabled.
+            FragmentRenderer::class => [
+                'class' => FragmentRenderer::class,
+                'shared' => true,
+                'autowire' => true,
+            ],
+            FragmentVerification::class => [
+                'shared' => true,
+                'factory' => static fn (): FragmentVerification => new FragmentVerification(),
+            ],
+            PreviewFragmentRenderer::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makePreviewFragments'],
             ],
             // Theme runtime delivery (theme-runtime spec §2.3): the map is path-derived
             // from the pack's own runtime/ dir; the controller autowires against it.
@@ -414,6 +432,23 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 : null,
             $container->get(ThemeStylesheetArtifacts::class),
             $container->get(CompiledStyleArtifacts::class),
+        );
+    }
+
+    public static function makePreviewFragments(ContainerInterface $container): PreviewFragments
+    {
+        $context = $container->get(ApplicationContext::class);
+        return new PreviewFragments(
+            $container->get(\Thallo\Contracts\Delivery\PublicRouteResolver::class),
+            $container->has(PreviewSessionVerifier::class) ? $container->get(PreviewSessionVerifier::class) : null,
+            $container->get(BlockStyleRegistry::class),
+            $container->get(TwigFactory::class),
+            $container->get(FragmentRenderer::class),
+            $container->get(FragmentVerification::class),
+            (string) config($context, 'render.theme', 'default'),
+            (bool) config($context, 'render.fragments.enabled', false),
+            (bool) config($context, 'app.debug', false),
+            $container->get(\Psr\Log\LoggerInterface::class),
         );
     }
 

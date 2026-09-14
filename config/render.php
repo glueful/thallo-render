@@ -58,6 +58,14 @@ return [
     // (pre-feature behavior) and the template admin routes are not registered.
     'db_templates' => env('RENDER_DB_TEMPLATES', true),
 
+    // Canvas fragment swaps (visual builder spec §3.5): an accepted apply answers the affected
+    // roots' markup so the stage swaps them instead of refreshing. Ships disabled: activation
+    // requires the measured apply-to-paint gate on thallo.dev (plan A6.3). Off = the apply
+    // answers `fragments: null` and the stage refreshes from accepted state, as before.
+    'fragments' => [
+        'enabled' => (bool) env('RENDER_FRAGMENTS_ENABLED', false),
+    ],
+
     // Site custom CSS (custom-css spec §2): save-time size cap for the DB-backed
     // custom.css, in bytes. Encoding + size are the ONLY gates — CSS is never
     // syntax-validated (a broken rule loses in the browser; it cannot 500 the site).

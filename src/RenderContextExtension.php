@@ -1172,6 +1172,16 @@ final class RenderContextExtension extends AbstractExtension
         $this->blockDepth = 0;
     }
 
+    /**
+     * The nesting depth the next blocks() call starts from (visual builder spec §3.5): a
+     * fragment renders a root at the depth the page render reaches it, so the depth cap holds
+     * the same either way.
+     */
+    public function setBlockDepth(int $depth): void
+    {
+        $this->blockDepth = max(0, $depth);
+    }
+
     /** Reset-family: an escaped exception must not leak frames into the next render. */
     public function resetBlockFrames(): void
     {
