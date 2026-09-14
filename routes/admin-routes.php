@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Thallo\Render\Http\Controllers\StyleSchemaController;
 use Thallo\Render\Http\Controllers\TemplatesAdminController;
 use Glueful\Routing\Router;
 
@@ -46,6 +47,10 @@ $router->group(
         // (content.manage — mirror of routes/admin.php's settings/general),
         // not templates.manage.
         $router->get('/themes', [TemplatesAdminController::class, 'themes'])
+            ->middleware('content_permission:content.manage');
+
+        // The style schema (visual builder spec §3.4): what the inspector's controls are made of.
+        $router->get('/style-schema', [StyleSchemaController::class, 'show'])
             ->middleware('content_permission:content.manage');
 
         // Clone-theme: scaffold themes/{name}/ from an existing theme. Same

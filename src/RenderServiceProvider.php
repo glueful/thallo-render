@@ -46,6 +46,7 @@ use Thallo\Contracts\Delivery\SeoHeadResolver;
 use Thallo\Contracts\Delivery\StorefrontLinkResolver;
 use Thallo\Contracts\Delivery\StorefrontWishlistResolver;
 use Thallo\Render\Http\Controllers\RenderController;
+use Thallo\Render\Http\Controllers\StyleSchemaController;
 use Thallo\Render\Http\Controllers\RuntimeAssetController;
 use Thallo\Render\Http\Controllers\TemplatesAdminController;
 use Thallo\Render\Templates\TemplateCatalog;
@@ -227,6 +228,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 'shared' => true,
                 'factory' => [self::class, 'makeTemplatesAdminController'],
             ],
+            StyleSchemaController::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeStyleSchemaController'],
+            ],
         ];
     }
 
@@ -241,6 +246,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // runtime can never disagree about what is contributed.
             $container->get(RenderContributionRegistry::class)->frozenTemplateContributions(),
         );
+    }
+
+    public static function makeStyleSchemaController(ContainerInterface $container): StyleSchemaController
+    {
+        return new StyleSchemaController($container->get(ThemeLocator::class));
     }
 
     public static function makeTemplatesAdminController(ContainerInterface $container): TemplatesAdminController
