@@ -531,7 +531,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
-  border-radius: 999px;
+  border-radius: var(--radius-btn, 999px);
   border: 1.5px solid transparent;
   font-weight: 600;
   line-height: 1.2;
@@ -540,6 +540,10 @@
 }
 .thallo-block-button__link:hover { transform: translateY(-1px); }
 .thallo-block-button__link--neutral { --btn-accent: var(--ink); --btn-accent-ink: var(--bg); }
+/* shape — schema enum: pill | rounded | square; unset reads --radius-btn (the site's radius setting) */
+.thallo-block-button__link--shape-pill { border-radius: 999px; }
+.thallo-block-button__link--shape-rounded { border-radius: var(--radius); }
+.thallo-block-button__link--shape-square { border-radius: 2px; }
 /* sizes */
 .thallo-block-button__link--xs { padding: 0.3rem 0.8rem; font-size: 0.8rem; gap: 0.35em; }
 .thallo-block-button__link--sm { padding: 0.45rem 1.1rem; font-size: 0.9rem; }

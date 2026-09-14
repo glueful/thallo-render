@@ -3,8 +3,8 @@
    guarded variant / color / size / block modifiers, each degrading to a default so
    an unknown stored value never emits a class with no CSS. Optional leading/trailing
    icons resolve via icon(). Unsafe URLs (safe_url) drop the href → a <span>, never a
-   link. Fields: label, url, variant, color, size, leading_icon, trailing_icon,
-   block, align. #}
+   link. Fields: label, url, variant, color, size, shape (pill|rounded|square; unset
+   follows the site's radius setting), leading_icon, trailing_icon, block, align. #}
 {% set url = data.url|default('')|safe_url %}
 {% set align = ({left: 'left', center: 'center', right: 'right'}[data.align|default('left')] ?? 'left') %}
 {% set linkClass = [
@@ -12,6 +12,7 @@
   'thallo-block-button__link--' ~ ({solid: 'solid', outline: 'outline', soft: 'soft', subtle: 'subtle', ghost: 'ghost', link: 'link'}[data.variant|default('solid')] ?? 'solid'),
   'thallo-block-button__link--' ~ ({primary: 'primary', neutral: 'neutral'}[data.color|default('primary')] ?? 'primary'),
   'thallo-block-button__link--' ~ ({xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl'}[data.size|default('md')] ?? 'md'),
+  ({pill: 'thallo-block-button__link--shape-pill', rounded: 'thallo-block-button__link--shape-rounded', square: 'thallo-block-button__link--shape-square'}[data.shape|default('')] ?? ''),
   data.block|default(false) ? 'thallo-block-button__link--block' : '',
 ]|join(' ')|trim %}
 {% set tag = url ? 'a' : 'span' %}
