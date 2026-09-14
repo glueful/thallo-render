@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Console;
 
-use Glueful\Cache\CacheStore;
+use Thallo\Render\Http\Middleware\RenderCachePurge;
 use Glueful\Console\BaseCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputInterface;
@@ -23,7 +23,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 )]
 final class ClearRenderCacheCommand extends BaseCommand
 {
-    public function __construct(private readonly CacheStore $cache)
+    public function __construct(private readonly RenderCachePurge $purge)
     {
         parent::__construct();
     }
@@ -31,10 +31,7 @@ final class ClearRenderCacheCommand extends BaseCommand
     /** The testable unit: drop every render:* key. */
     public function clear(): bool
     {
-        $legacy = $this->cache->deletePattern('render:*');
-        $segmented = $this->cache->deletePattern('tenant:*:render:*');
-
-        return $legacy && $segmented;
+        return $this->purge->purgeAll();
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int

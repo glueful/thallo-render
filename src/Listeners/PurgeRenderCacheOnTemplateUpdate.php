@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Listeners;
 
-use Glueful\Cache\CacheStore;
+use Thallo\Contracts\Delivery\RenderedPageCachePurge;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\ThemeLocator;
 use Psr\Container\ContainerInterface;
@@ -32,6 +32,6 @@ final class PurgeRenderCacheOnTemplateUpdate
         if ($event->theme !== $active) {
             return;
         }
-        $this->container->get(CacheStore::class)->invalidateTags(['thallo:render:page']);
+        $this->container->get(RenderedPageCachePurge::class)->purge(['thallo:render:page']);
     }
 }

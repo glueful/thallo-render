@@ -60,7 +60,9 @@ use Thallo\Render\Listeners\PurgeRenderCacheOnThemeChange;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
 use Psr\Container\ContainerInterface;
+use Thallo\Contracts\Delivery\RenderedPageCachePurge;
 use Thallo\Contracts\Preview\PreviewFragmentRenderer;
+use Thallo\Render\Http\Middleware\RenderCachePurge;
 use Thallo\Contracts\Style\BlockStyleRegistry;
 use Thallo\Contracts\Style\StyleArtifactCompiler;
 use Thallo\Render\Fragments\FragmentRenderer;
@@ -218,6 +220,18 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 'shared' => true,
                 'factory' => [self::class, 'makeClearRenderCacheCommand'],
             ],
+            // The one purge path for rendered pages: tags, or the whole namespace on a driver
+            // without tag invalidation. Bound to the contract so core's entry listener and the
+            // packs purge through it.
+            RenderCachePurge::class => [
+                'class' => RenderCachePurge::class,
+                'shared' => true,
+                'autowire' => true,
+            ],
+            RenderedPageCachePurge::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeRenderedPageCachePurge'],
+            ],
             PreviewThemeValidator::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeRenderThemeValidator'],
@@ -334,7 +348,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     public static function makeClearRenderCacheCommand(
         ContainerInterface $container,
     ): ClearRenderCacheCommand {
-        return new ClearRenderCacheCommand($container->get(CacheStore::class));
+        return new ClearRenderCacheCommand($container->get(RenderCachePurge::class));
     }
 
     public static function makePurgeRenderCacheOnMenuUpdate(
@@ -456,6 +470,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             (bool) config($context, 'app.debug', false),
             $container->get(\Psr\Log\LoggerInterface::class),
         );
+    }
+
+    public static function makeRenderedPageCachePurge(ContainerInterface $container): RenderCachePurge
+    {
+        return $container->get(RenderCachePurge::class);
     }
 
     public static function makeThemeLocator(ContainerInterface $container): ThemeLocator
