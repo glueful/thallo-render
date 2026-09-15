@@ -786,7 +786,9 @@
     if (editing || drag || selectedId === null) return
     var w = findBlock(selectedId)
     if (!w || !w.parentNode) return
-    e.preventDefault()
+    e.preventDefault() // no text selection — and no focus change, so take focus explicitly:
+    // Escape must reach THIS document even when the selection came from the parent's outline.
+    if (typeof window.focus === 'function') window.focus()
     var blocks = selectedIds.indexOf(selectedId) !== -1 ? selectedIds.slice() : [selectedId]
     drag = {
       session: newSession(), blocks: blocks, wrapper: w, external: false,
