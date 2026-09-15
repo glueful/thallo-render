@@ -59,6 +59,9 @@
 }
 @media (min-width: 52rem) {
   .thallo-block-hero--horizontal .thallo-block-hero__inner { grid-template-columns: 1fr 1fr; }
+  /* split — schema enum: equal (above) | copy | media: the wider column takes three fifths. */
+  .thallo-block-hero--split-copy .thallo-block-hero__inner { grid-template-columns: 3fr 2fr; }
+  .thallo-block-hero--split-media .thallo-block-hero__inner { grid-template-columns: 2fr 3fr; }
   .thallo-block-hero--horizontal.thallo-block-hero--reverse .thallo-block-hero__wrapper { order: 2; }
   .thallo-block-hero--horizontal.thallo-block-hero--reverse .thallo-block-hero__media { order: 1; }
 }

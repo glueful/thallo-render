@@ -12,12 +12,14 @@
 {% set img = data.image ? media_image(data.image, [640, 960, 1280, 1920]) : null %}
 {% set orientation = data.orientation|default('vertical') %}
 {% set reverse = data.reverse|default(false) %}
+{% set split = {equal: 'equal', copy: 'copy', media: 'media'}[data.split|default('equal')] ?? 'equal' %}
 {% set background = {gradient: 'gradient', none: 'none', muted: 'muted', inverted: 'inverted'}[data.background|default('gradient')] ?? 'gradient' %}
 {% set aside = data.aside|default([]) %}
 {% set rootClass = [
   'thallo-block thallo-block-hero',
   'thallo-block-hero--' ~ ({vertical: 'vertical', horizontal: 'horizontal'}[orientation] ?? 'vertical'),
   'thallo-block-hero--bg-' ~ background,
+  orientation == 'horizontal' and split != 'equal' ? 'thallo-block-hero--split-' ~ split : '',
   reverse ? 'thallo-block-hero--reverse' : '',
 ]|join(' ')|trim %}
 <header class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
