@@ -146,7 +146,7 @@
      -> theme.json per-type -> theme.json default -> built-ins. Templates never
      read _presentation directly. #}
   {% set layoutClass = {centered: 'layout--centered', full: 'layout--full'}[presentation.layout ?? 'centered'] ?? 'layout--centered' %}
-  <main id="main" tabindex="-1" class="{{ layoutClass }}"{% if preview_revision is defined and preview_revision %} data-thallo-epoch="{{ preview_revision.epoch }}" data-thallo-revision="{{ preview_revision.revision }}"{% endif %}>
+  <main id="main" tabindex="-1" class="{{ layoutClass }}"{% if preview_revision is defined and preview_revision %} data-thallo-epoch="{{ preview_revision.epoch }}" data-thallo-revision="{{ preview_revision.revision }}"{% if preview_revision.style_generation is defined %} data-thallo-style-generation="{{ preview_revision.style_generation }}"{% endif %}{% endif %}>
     {% block content %}{% endblock %}
   </main>
   {% set footerHidden = (presentation.footer|default('default')) == 'hidden' %}

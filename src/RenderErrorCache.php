@@ -26,8 +26,9 @@ final class RenderErrorCache
     public function __construct(
         private readonly CacheStore $cache,
         private readonly string $theme,
-        /** Validated accent-neutral fingerprint (theme-color-config spec §7). */
-        private readonly string $appearance,
+        /** The appearance fingerprint (theme-color-config spec §7), evaluated per request so the key
+         *  names the style class snapshot the same request renders from (visual builder spec §4.3). */
+        private readonly \Closure $appearance,
         private readonly bool $enabled,
         private readonly int $ttl,
         private readonly ?TenantCacheSegment $tenantCache = null,
@@ -42,7 +43,8 @@ final class RenderErrorCache
             ? $this->tenantCache->segment($this->context, 'render')
             : '';
 
-        return $prefix . "render:{$this->theme}:{$this->appearance}:{$status}";
+        $appearance = ($this->appearance)();
+        return $prefix . "render:{$this->theme}:{$appearance}:{$status}";
     }
 
     /** @param callable(): Response $render renders 404.twig — invoked only on a cold key */

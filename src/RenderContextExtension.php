@@ -7,6 +7,7 @@ namespace Thallo\Render;
 use Glueful\Bootstrap\ApplicationContext;
 use Thallo\Contracts\Billing\PlanCheckoutUrlResolver;
 use Thallo\Contracts\Style\BlockStyleRegistry;
+use Thallo\Contracts\Style\StyleClassProvider;
 use Thallo\Contracts\Style\StyleSchema;
 use Thallo\Contracts\Style\StyleTargets;
 use Thallo\Contracts\Style\Vocabulary;
@@ -216,8 +217,30 @@ final class RenderContextExtension extends AbstractExtension
         /** Block style declarations (spec §1.7): soft-bound; null = no block declares targets. */
         private readonly ?BlockStyleRegistry $styleRegistry = null,
         private readonly BlockStyleEmitter $styleEmitter = new BlockStyleEmitter(),
+        /** The site's style classes (visual builder spec §4.3): soft-bound; null = no class layer. */
+        private readonly ?StyleClassProvider $styleClasses = null,
     ) {
         $this->locale = $defaultLocale;
+    }
+
+    /** The generation of the style class snapshot this request renders from (spec §4.3). */
+    public function styleSnapshotGeneration(): int
+    {
+        return $this->styleClasses?->snapshot()->generation ?? 0;
+    }
+
+    /**
+     * The cascade layers for a block's ordered `settings.classes`, from the request's snapshot.
+     *
+     * @param mixed $ids
+     * @return list<array{id: string, style: array<string,mixed>}>
+     */
+    private function classRefsFor(mixed $ids): array
+    {
+        if ($this->styleClasses === null || !is_array($ids) || $ids === []) {
+            return [];
+        }
+        return $this->styleClasses->snapshot()->refsFor(array_values(array_filter($ids, 'is_string')));
     }
 
     public function setLocale(string $locale): void
@@ -376,7 +399,12 @@ final class RenderContextExtension extends AbstractExtension
         if ($frame === null || $targets === null) {
             return '';
         }
-        $classes = $this->styleEmitter->classesFor($frame['settings'], $targets, $target);
+        $classes = $this->styleEmitter->classesFor(
+            $frame['settings'],
+            $targets,
+            $target,
+            $this->classRefsFor($frame['settings']['classes'] ?? null),
+        );
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
     }
 

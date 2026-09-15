@@ -30,13 +30,18 @@
     if (!main) return null
     var revision = parseInt(main.getAttribute('data-thallo-revision'), 10)
     if (isNaN(revision)) return null
-    return { epoch: main.getAttribute('data-thallo-epoch') || '', revision: revision }
+    var pair = { epoch: main.getAttribute('data-thallo-epoch') || '', revision: revision }
+    // The style class generation the page was rendered from (visual builder spec §4.3).
+    var generation = parseInt(main.getAttribute('data-thallo-style-generation'), 10)
+    if (!isNaN(generation)) pair.style_generation = generation
+    return pair
   }
 
   function withRevision(payload, pair) {
     if (pair) {
       payload.epoch = pair.epoch
       payload.revision = pair.revision
+      if (typeof pair.style_generation === 'number') payload.style_generation = pair.style_generation
     }
     return payload
   }
@@ -988,6 +993,7 @@
     if (main) {
       main.removeAttribute('data-thallo-epoch')
       main.removeAttribute('data-thallo-revision')
+      main.removeAttribute('data-thallo-style-generation')
     }
     return clone.innerHTML
   }
@@ -1001,6 +1007,9 @@
     if (main) {
       main.setAttribute('data-thallo-epoch', pair.epoch)
       main.setAttribute('data-thallo-revision', String(pair.revision))
+      if (typeof pair.style_generation === 'number') {
+        main.setAttribute('data-thallo-style-generation', String(pair.style_generation))
+      }
     }
   }
 
@@ -1120,7 +1129,9 @@
         selectWrapper(sel)
       }
     }
-    advanceDisplayed({ epoch: data.epoch, revision: data.revision })
+    var next = { epoch: data.epoch, revision: data.revision }
+    if (typeof data.style_generation === 'number') next.style_generation = data.style_generation
+    advanceDisplayed(next)
     post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',

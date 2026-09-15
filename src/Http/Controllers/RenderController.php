@@ -383,8 +383,11 @@ final class RenderController
                     $typeSlug !== '' ? $typeSlug : null,
                     $result['presentation'] ?? null,
                 ),
-                // The accepted working-copy pair (visual builder spec §3.5) on <main>.
-                'preview_revision' => $result['preview_revision'] ?? null,
+                // The accepted working-copy pair (visual builder spec §3.5) on <main>, with the
+                // generation of the style class snapshot this request renders from (spec §4.3).
+                'preview_revision' => isset($result['preview_revision']) && is_array($result['preview_revision'])
+                    ? $result['preview_revision'] + ['style_generation' => $this->extension->styleSnapshotGeneration()]
+                    : null,
             ], $env, $assetBase, $assetsDir);
         }
 

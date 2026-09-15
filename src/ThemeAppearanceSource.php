@@ -31,6 +31,8 @@ final class ThemeAppearanceSource
         private readonly ?\Closure $themeArtifactHash = null,
         /** The compiled style artifact's hash (spec §2.4), lazily: a recompile re-keys every page. */
         private readonly ?\Closure $settingsArtifactHash = null,
+        /** The style class generation (spec §4.3), lazily: the request's snapshot names the entry. */
+        private readonly ?\Closure $styleGeneration = null,
     ) {
     }
 
@@ -104,6 +106,9 @@ final class ThemeAppearanceSource
         }
         if ($this->settingsArtifactHash !== null) {
             $segments[] = 's' . substr((string) ($this->settingsArtifactHash)(), 0, 8);
+        }
+        if ($this->styleGeneration !== null) {
+            $segments[] = 'g' . (int) ($this->styleGeneration)();
         }
         return implode('-', $segments);
     }

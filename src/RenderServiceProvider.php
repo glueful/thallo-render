@@ -56,6 +56,7 @@ use Thallo\Render\Listeners\PurgeRenderCacheOnMenuUpdate;
 use Thallo\Render\Listeners\PurgeRenderCacheOnRegionUpdate;
 use Thallo\Render\Listeners\PurgeRenderCacheOnTemplateUpdate;
 use Thallo\Render\Listeners\PurgeRenderCacheOnAppearanceChange;
+use Thallo\Render\Listeners\PurgeRenderCacheOnStyleClassChange;
 use Thallo\Render\Listeners\PurgeRenderCacheOnThemeChange;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
@@ -120,6 +121,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             PurgeRenderCacheOnThemeChange::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makePurgeRenderCacheOnThemeChange'],
+            ],
+            PurgeRenderCacheOnStyleClassChange::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makePurgeRenderCacheOnStyleClassChange'],
             ],
             PurgeRenderCacheOnAppearanceChange::class => [
                 'shared' => true,
@@ -380,7 +385,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
         return new RenderErrorCache(
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            $appearance->fingerprint(),
+            static fn (): string => $appearance->fingerprint(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
             $container->get(TenantCacheSegment::class),
@@ -397,7 +402,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // this identity is what makes zero-new-purge-code true.
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            $appearance->fingerprint(),
+            static fn (): string => $appearance->fingerprint(),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
             $container->get(TenantCacheSegment::class),
@@ -509,6 +514,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 ->forTheme($container->get(ThemeLocator::class))->hash,
             static fn (): string => $container->get(CompiledStyleArtifacts::class)
                 ->forTheme($container->get(ThemeLocator::class))['hash'],
+            // The style class generation (visual builder spec §4.3): the request's snapshot.
+            static fn (): int => $container->has(\Thallo\Contracts\Style\StyleClassProvider::class)
+                ? $container->get(\Thallo\Contracts\Style\StyleClassProvider::class)->snapshot()->generation
+                : 0,
         );
     }
 
@@ -556,6 +565,12 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
         ContainerInterface $container,
     ): PurgeRenderCacheOnThemeChange {
         return new PurgeRenderCacheOnThemeChange($container);
+    }
+
+    public static function makePurgeRenderCacheOnStyleClassChange(
+        ContainerInterface $container,
+    ): PurgeRenderCacheOnStyleClassChange {
+        return new PurgeRenderCacheOnStyleClassChange($container);
     }
 
     public static function makePurgeRenderCacheOnAppearanceChange(
@@ -621,6 +636,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             colorModeEnabled: (bool) config($context, 'theme.color_mode.enabled', true),
             // theme-color-config spec §4: the saved/default accent-neutral source.
             appearance: $container->get(ThemeAppearanceSource::class),
+            // The class layer (visual builder spec §4.3): soft-bound; null = no style classes.
+            styleClasses: $container->has(\Thallo\Contracts\Style\StyleClassProvider::class)
+                ? $container->get(\Thallo\Contracts\Style\StyleClassProvider::class)
+                : null,
             // asset() content fingerprint (theme-setting spec §3 P1): the active theme's
             // assets dir — the SAME dir themeAsset() serves from — so ?v=<mtime> matches
             // the file the browser actually fetches.
@@ -770,6 +789,12 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $events->addListener(
                 ThemeAppearanceChanged::class,
                 [app($context, PurgeRenderCacheOnAppearanceChange::class), 'onAppearanceChanged'],
+            );
+            // A style class write (visual builder spec §4.3): keys carry the generation, so the
+            // purge is hygiene for the previous generation's entries.
+            $events->addListener(
+                \Thallo\Contracts\Style\StyleClassSaved::class,
+                [app($context, PurgeRenderCacheOnStyleClassChange::class), 'onStyleClassSaved'],
             );
         }
 
