@@ -4,13 +4,13 @@
     {% set emb = data.url|default('') ? video_embed(data.url) : null %}
     {% if emb %}
       {# The iframe src is BUILT here from a fixed pattern — user URLs never pass through (block-library spec §2). #}
-      {% if emb.provider == 'youtube' %}<iframe class="thallo-block-video__frame" src="https://www.youtube-nocookie.com/embed/{{ emb.id }}" title="Video" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-      {% elseif emb.provider == 'vimeo' %}<iframe class="thallo-block-video__frame" src="https://player.vimeo.com/video/{{ emb.id }}" title="Video" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>{% endif %}
+      {% if emb.provider == 'youtube' %}<iframe class="thallo-block-video__frame{{ style_classes('frame') }}"{{ style_attrs('frame') }} src="https://www.youtube-nocookie.com/embed/{{ emb.id }}" title="Video" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      {% elseif emb.provider == 'vimeo' %}<iframe class="thallo-block-video__frame{{ style_classes('frame') }}"{{ style_attrs('frame') }} src="https://player.vimeo.com/video/{{ emb.id }}" title="Video" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>{% endif %}
     {% endif %}
   {% else %}
     {% set src = data.video ? media(data.video) : null %}
     {% set poster = data.poster ? media(data.poster) : null %}
-    {% if src %}<video class="thallo-block-video__player" src="{{ src }}" controls{% if poster %} poster="{{ poster }}"{% endif %}></video>{% endif %}
+    {% if src %}<video class="thallo-block-video__player{{ style_classes('frame') }}"{{ style_attrs('frame') }} src="{{ src }}" controls{% if poster %} poster="{{ poster }}"{% endif %}></video>{% endif %}
   {% endif %}
   {% if data.caption %}<figcaption class="thallo-block-video__caption">{{ data.caption|editable_text('caption') }}</figcaption>{% endif %}
 </figure>

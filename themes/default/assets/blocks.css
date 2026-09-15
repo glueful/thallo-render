@@ -94,16 +94,22 @@
 /* aside blocks fill the media column: no band clamp, no inner gutter */
 .thallo-block-hero__media--blocks { min-width: 0; }
 .thallo-block-hero__media--blocks > .thallo-block { max-width: none; padding-inline: 0; margin-inline: 0; }
+/* The media box is the `media` style target: it carries the corners and the shadow (so a
+   radius or shadow setting lands here) and clips the image to them. */
+.thallo-block-hero__media:not(.thallo-block-hero__media--blocks) {
+  max-width: min(100%, 40rem);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
 .thallo-block-hero__media img {
   display: block;
   /* Layout reservation (storefront-performance spec §5): explicit width + ratio
      reserve the media box before the image loads — no CLS on the hero. */
   width: 100%;
-  max-width: min(100%, 40rem);
   max-height: 26rem;
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  box-shadow: var(--shadow);
 }
 /* Links rows: the button block collapses its align wrapper and takes the
    context-forced size (hero=xl, cta=lg) — the Nuxt UI links behavior. */
@@ -225,7 +231,9 @@
 .thallo-block-spacer--medium { height: var(--space-5); }
 .thallo-block-spacer--large { height: var(--space-6); }
 
-/* cta — contained band (PageCTA anatomy: 5 variants, orientation, reverse) */
+/* cta — contained band (PageCTA anatomy: 5 variants, orientation, reverse). The root is the
+   band's spacing and width box; __inner is the `panel` style target — the variants paint its
+   background, border and shadow, so colours, border, corners and shadow settings land there. */
 .thallo-block-cta { padding-inline: var(--space-4); }
 .thallo-block-cta__inner {
   max-width: var(--container);
@@ -877,11 +885,13 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 
 /* video / audio */
 .thallo-block-video { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
+/* The frame (iframe or native player) is the `frame` style target: corners and shadow land here. */
 .thallo-block-video__frame, .thallo-block-video__player {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 0;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   background: var(--surface);
 }
