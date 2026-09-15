@@ -773,6 +773,9 @@
     drag.reason = ''
     if (!zone) {
       removeIndicator()
+      // The parent's strip and remembered zone clear with the indicator: one null proposal per
+      // leave (sameZone above swallows the repeats while the pointer stays outside every slot).
+      post('drag-propose', { session: drag.session, blocks: drag.blocks, zone: null })
       return
     }
     showIndicator(zone)
@@ -917,6 +920,25 @@
   }
   function onExternalDragEnd(data) {
     if (!drag || drag.session !== data.session) return
+    endDrag()
+  }
+  /**
+   * The parent released its drag over the stage: answer with the zone under THAT point — the
+   * last legality answer described an earlier hover, so it never gates this; the parent judges
+   * the final zone. No zone under the point cancels. Either way the session ends here.
+   */
+  function onExternalDragDrop(data) {
+    if (!drag || !drag.external || drag.session !== data.session) return
+    var zone = zoneAt(data.x || 0, data.y || 0, draggedWrappers())
+    if (zone) {
+      post('block-drop', {
+        session: drag.session,
+        blocks: drag.blocks,
+        zone: { parent: zone.parent, slot: zone.slot, index: zone.index, layout: zone.layout }
+      })
+    } else {
+      post('drag-cancel', { session: drag.session })
+    }
     endDrag()
   }
   function onDragLegality(data) {
@@ -1465,6 +1487,7 @@
     if (data.type === 'thallo:drag-begin' && typeof data.session === 'string') onExternalDragBegin(data)
     if (data.type === 'thallo:drag-hover' && typeof data.session === 'string') onExternalDragHover(data)
     if (data.type === 'thallo:drag-legality' && typeof data.session === 'string') onDragLegality(data)
+    if (data.type === 'thallo:drag-drop' && typeof data.session === 'string') onExternalDragDrop(data)
     if (data.type === 'thallo:drag-end' && typeof data.session === 'string') onExternalDragEnd(data)
     if (data.type === 'thallo:stage-refresh') {
       onStageRefresh(typeof data.refresh_id === 'string' ? data.refresh_id : '')
