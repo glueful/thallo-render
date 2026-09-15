@@ -74,7 +74,7 @@ final class RenderContextExtension extends AbstractExtension
      * Nesting amendment §A2: mirrors the app-side BlockDepth::MAX (packs cannot
      * import app classes); an app-side test asserts the two agree.
      */
-    public const MAX_BLOCK_DEPTH = 3;
+    public const MAX_BLOCK_DEPTH = 5;
 
     /** Render-scoped nesting depth (see resetBlockDepth). */
     private int $blockDepth = 0;

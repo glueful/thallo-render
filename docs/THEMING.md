@@ -135,6 +135,8 @@ Functions:
 - `asset('blocks.css')` — URL to a theme asset.
 - `media(uuid, variant?)` — resolve an asset UUID to a servable URL (`null` if not servable).
 - `blocks(list)` — render a list of **child blocks** (nesting; e.g. hero links, carousel slides).
+  Blocks nest up to five levels deep (section → columns → card → container → heading); a
+  deeper list renders nothing and the validator refuses it.
 - `icon(name)` — render an icon.
 - `menu('main')` — items for a named menu.
 - `region_blocks(name)` / `region_settings(name)` — region HTML / settings.
