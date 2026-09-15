@@ -647,7 +647,25 @@ or a `<style>` element — the lint refuses both at save and before render; the 
 inline style emitters are `theme_colors_style()`, `theme_style_scope()` and
 `font_faces_style()` (variables and `@font-face`, no selectors).
 
-### 12.4 Browser floor and proofs
+### 12.4 Style classes (the class layer)
+
+A style class is a site-owned, theme-independent record: a name and a `style` in the
+same schema a block's own settings use, with sparse breakpoints and resets. A block
+lists the classes it composes in `settings.classes`, in order; the cascade resolves
+each class as a layer below the block's own settings, later classes over earlier
+ones (spec §1.6), and `style_classes()` emits the result exactly as it does for
+instance values. A class declares no capabilities or targets: applied to a block,
+each declaration lands only where the block has the capability and is dormant
+elsewhere. Themes never see classes as such — only the utilities the cascade
+resolves to — so a theme needs nothing new for them.
+
+Every class write increments the site's style generation, which names the exact set
+of class records a render resolved through. The page-cache key carries it
+(`…-g<generation>`), and the canvas page carries it on `<main>` as
+`data-thallo-style-generation` next to the revision pair, so an editor can tell when
+the classes it resolved with have changed.
+
+### 12.5 Browser floor and proofs
 
 The public site requires cascade layers, `revert-layer` and `color-mix()`:
 Chrome 111, Firefox 113, Safari 16.2. `tools/style-proofs` proves the computed
