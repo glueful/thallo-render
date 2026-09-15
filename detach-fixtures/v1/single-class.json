@@ -1,0 +1,29 @@
+{
+  "name": "one class, nothing on the instance",
+  "cases": [
+    {
+      "name": "md declaration materialises at md and at the inherited lg",
+      "capabilities": ["spacing"],
+      "classes": [{ "id": "c1", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" } } } } } }],
+      "instance": {},
+      "detach": "c1",
+      "expect": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" }, "lg": { "type": "token", "value": "spacing.xl" } } } } }
+    },
+    {
+      "name": "base declaration materialises at every breakpoint",
+      "capabilities": ["spacing"],
+      "classes": [{ "id": "c1", "style": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.lg" } } } } } }],
+      "instance": {},
+      "detach": "c1",
+      "expect": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.lg" }, "md": { "type": "token", "value": "spacing.lg" }, "lg": { "type": "token", "value": "spacing.lg" } } } } }
+    },
+    {
+      "name": "a class the block does not carry leaves the instance unchanged",
+      "capabilities": ["spacing"],
+      "classes": [{ "id": "c1", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" } } } } } }],
+      "instance": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.sm" } } } } },
+      "detach": "c9",
+      "expect": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.sm" } } } } }
+    }
+  ]
+}

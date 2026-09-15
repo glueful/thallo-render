@@ -1,0 +1,21 @@
+{
+  "name": "non-responsive properties resolve at base only",
+  "cases": [
+    {
+      "name": "a class radius becomes a bare instance radius",
+      "capabilities": ["radius"],
+      "classes": [{ "id": "c1", "style": { "radius": { "type": "token", "value": "radius.lg" } } }],
+      "instance": {},
+      "detach": "c1",
+      "expect": { "radius": { "type": "token", "value": "radius.lg" } }
+    },
+    {
+      "name": "a class radius reset becomes a bare instance reset",
+      "capabilities": ["radius"],
+      "classes": [{ "id": "c1", "style": { "radius": { "type": "reset" } } }],
+      "instance": {},
+      "detach": "c1",
+      "expect": { "radius": { "type": "reset" } }
+    }
+  ]
+}

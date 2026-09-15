@@ -1,6 +1,6 @@
 # Cascade resolver fixtures, v1
 
-The compatibility contract between the PHP resolver (`Thallo\Render\Style\CascadeResolver`) and
+The compatibility contract between the PHP resolver (`Thallo\Contracts\Style\CascadeResolver`) and
 the TypeScript resolver (`admin/src/style/resolver.ts`). Both runtimes load every `*.json` file
 here and must produce byte-equivalent normalised output; drift is a compatibility bug (visual
 builder spec §3.3). Versioned with the settings schema: a new schema version gets a new folder.

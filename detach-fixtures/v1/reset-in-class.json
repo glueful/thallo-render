@@ -1,0 +1,24 @@
+{
+  "name": "a reset in the detached class",
+  "cases": [
+    {
+      "name": "a class reset at md becomes an instance reset at md and lg",
+      "capabilities": ["spacing"],
+      "classes": [{ "id": "c1", "style": { "spacing": { "padding": { "top": { "md": { "type": "reset" } } } } } }],
+      "instance": {},
+      "detach": "c1",
+      "expect": { "spacing": { "padding": { "top": { "md": { "type": "reset" }, "lg": { "type": "reset" } } } } }
+    },
+    {
+      "name": "a class reset that shadowed an earlier class stays a reset",
+      "capabilities": ["spacing"],
+      "classes": [
+        { "id": "a", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" } } } } } },
+        { "id": "b", "style": { "spacing": { "padding": { "top": { "md": { "type": "reset" } } } } } }
+      ],
+      "instance": {},
+      "detach": "b",
+      "expect": { "spacing": { "padding": { "top": { "md": { "type": "reset" }, "lg": { "type": "reset" } } } } }
+    }
+  ]
+}

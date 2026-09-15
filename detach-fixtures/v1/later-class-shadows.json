@@ -1,0 +1,27 @@
+{
+  "name": "a later class already shadows the detached one",
+  "cases": [
+    {
+      "name": "detaching the earlier class changes nothing",
+      "capabilities": ["spacing"],
+      "classes": [
+        { "id": "a", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.lg" } } } } } },
+        { "id": "b", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" } } } } } }
+      ],
+      "instance": {},
+      "detach": "a",
+      "expect": {}
+    },
+    {
+      "name": "detaching the later class materialises its value, not the earlier class's",
+      "capabilities": ["spacing"],
+      "classes": [
+        { "id": "a", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.lg" } } } } } },
+        { "id": "b", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" } } } } } }
+      ],
+      "instance": {},
+      "detach": "b",
+      "expect": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" }, "lg": { "type": "token", "value": "spacing.xl" } } } } }
+    }
+  ]
+}

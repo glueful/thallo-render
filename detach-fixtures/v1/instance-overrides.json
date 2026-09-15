@@ -1,0 +1,21 @@
+{
+  "name": "instance declarations already win",
+  "cases": [
+    {
+      "name": "an instance md under a class md is untouched",
+      "capabilities": ["spacing"],
+      "classes": [{ "id": "c1", "style": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.xl" } } } } } }],
+      "instance": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.sm" } } } } },
+      "detach": "c1",
+      "expect": { "spacing": { "padding": { "top": { "md": { "type": "token", "value": "spacing.sm" } } } } }
+    },
+    {
+      "name": "an instance base under a class base and md keeps base and materialises md and lg",
+      "capabilities": ["spacing"],
+      "classes": [{ "id": "c1", "style": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.lg" }, "md": { "type": "token", "value": "spacing.xl" } } } } } }],
+      "instance": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.sm" } } } } },
+      "detach": "c1",
+      "expect": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.sm" }, "md": { "type": "token", "value": "spacing.xl" }, "lg": { "type": "token", "value": "spacing.xl" } } } } }
+    }
+  ]
+}

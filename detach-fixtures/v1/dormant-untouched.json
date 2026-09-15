@@ -1,0 +1,21 @@
+{
+  "name": "declarations outside the block's capabilities are dormant",
+  "cases": [
+    {
+      "name": "a radius the block cannot take is never written; its spacing is",
+      "capabilities": ["spacing"],
+      "classes": [{ "id": "c1", "style": { "radius": { "type": "token", "value": "radius.lg" }, "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.lg" } } } } } }],
+      "instance": {},
+      "detach": "c1",
+      "expect": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.lg" }, "md": { "type": "token", "value": "spacing.lg" }, "lg": { "type": "token", "value": "spacing.lg" } } } } }
+    },
+    {
+      "name": "no capabilities at all writes nothing and drops empty maps",
+      "capabilities": [],
+      "classes": [{ "id": "c1", "style": { "spacing": { "padding": { "top": { "base": { "type": "token", "value": "spacing.lg" } } } } } }],
+      "instance": { "spacing": {} },
+      "detach": "c1",
+      "expect": {}
+    }
+  ]
+}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Style;
 
+use Thallo\Contracts\Style\CascadeResolver;
 use Thallo\Contracts\Style\StyleSchema;
 use Thallo\Contracts\Style\StyleTargets;
 
