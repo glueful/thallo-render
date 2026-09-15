@@ -9,6 +9,6 @@
    host (w.firstElementChild) is always the content wrapper — never the <style> (P1). #}
 {% set scope = theme_style_scope(data.accent|default(''), data.neutral|default('')) %}
 <div class="thallo-block thallo-block-style{{ scope.class }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  <div class="thallo-block-style__inner">{{ blocks(data.content|default([])) }}</div>
+  <div class="thallo-block-style__inner"{{ slot_attrs('content') }}>{{ blocks(data.content|default([])) }}</div>
   {{ scope.style }}
 </div>

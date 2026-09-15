@@ -32,10 +32,10 @@
       {% else %}<h1 class="thallo-block-hero__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h1>
       {% endif %}
       {% if data.description %}<p class="thallo-block-hero__description">{{ data.description|editable_text('description') }}</p>{% endif %}
-      {% if data.links|default([]) is not empty %}<div class="thallo-block-hero__links">{{ blocks(data.links) }}</div>{% endif %}
+      {% if data.links|default([]) is not empty or is_canvas() %}<div class="thallo-block-hero__links"{{ slot_attrs('links') }}>{{ blocks(data.links|default([])) }}</div>{% endif %}
     </div>
-    {% if aside is not empty %}
-      <div class="thallo-block-hero__media thallo-block-hero__media--blocks{{ style_classes('media') }}"{{ style_attrs('media') }}>{{ blocks(aside) }}</div>
+    {% if aside is not empty or is_canvas() %}
+      <div class="thallo-block-hero__media thallo-block-hero__media--blocks{{ style_classes('media') }}"{{ style_attrs('media') }}{{ slot_attrs('aside') }}>{{ blocks(aside|default([])) }}</div>
     {% elseif img %}
       {% set priority = claim_priority_image() %}
       <div class="thallo-block-hero__media{{ style_classes('media') }}"{{ style_attrs('media') }}>

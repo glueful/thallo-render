@@ -3,6 +3,20 @@
    display:contents elements paint no boxes, so rings go on the wrapper's
    CHILDREN via > *; the -target classes are the first-child fallback. */
 .thallo-preview-block { display: contents; }
+/* Empty slots (visual builder spec §5.4): a labelled placeholder in canvas mode only — geometry
+   with no id and no document presence. The bridge marks a slot empty when it holds no wrapper. */
+[data-thallo-slot][data-thallo-slot-empty] {
+  min-height: 2.5rem;
+  outline: 1px dashed rgba(37, 99, 235, 0.5);
+  outline-offset: -4px;
+}
+[data-thallo-slot][data-thallo-slot-empty]::before {
+  content: attr(data-thallo-slot) ' — drop blocks here';
+  display: block;
+  padding: 0.5rem 0.75rem;
+  font: 12px/1.4 system-ui, sans-serif;
+  color: rgba(37, 99, 235, 0.8);
+}
 [data-thallo-block].thallo-canvas-hover > *,
 .thallo-canvas-hover-target { outline: 2px dashed rgba(37, 99, 235, 0.6); outline-offset: 2px; }
 [data-thallo-block].thallo-canvas-selected > *,

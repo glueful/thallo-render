@@ -11,6 +11,6 @@
     </span>
   </summary>
   <div class="thallo-block-collapsible__panel">
-    <div class="thallo-block-collapsible__panel-inner">{{ blocks(data.content) }}</div>
+    <div class="thallo-block-collapsible__panel-inner"{{ slot_attrs('content') }}>{{ blocks(data.content) }}</div>
   </div>
 </details>

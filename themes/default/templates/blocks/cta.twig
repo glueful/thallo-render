@@ -19,6 +19,6 @@
       <h2 class="thallo-block-cta__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h2>
       {% if data.description %}<p class="thallo-block-cta__description">{{ data.description|editable_text('description') }}</p>{% endif %}
     </div>
-    {% if data.links|default([]) is not empty %}<div class="thallo-block-cta__links">{{ blocks(data.links) }}</div>{% endif %}
+    {% if data.links|default([]) is not empty or is_canvas() %}<div class="thallo-block-cta__links"{{ slot_attrs('links') }}>{{ blocks(data.links|default([])) }}</div>{% endif %}
   </div>
 </aside>

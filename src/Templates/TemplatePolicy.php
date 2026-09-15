@@ -69,7 +69,8 @@ final class TemplatePolicy
     //         builder spec §2.5 — style targets).
     // bumped: hex_color and style_hook left the filter allowlist (visual builder spec §7.2 —
     //         no template emits an inline colour or a class hook any more).
-    public const CACHE_VERSION = 23;
+    // bumped: slot_attrs + is_canvas joined the function allowlist (visual builder spec §5.4)
+    public const CACHE_VERSION = 24;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -86,7 +87,7 @@ final class TemplatePolicy
         'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
         'runtime_script', 'seo_head', 'font_faces_style',
         'shop_wishlist_scope', 'shop_wishlist_url', 'layers_stylesheet_url', 'theme_stylesheet_url',
-        'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class',
+        'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script',
         'entries', 'is_preview', 'media_image', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',

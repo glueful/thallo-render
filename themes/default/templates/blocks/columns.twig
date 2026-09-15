@@ -27,7 +27,7 @@
   alignToken,
 ]|join(' ')|trim %}
 <div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  <div class="thallo-block-columns__col">{{ blocks(data.col_1) }}</div>
-  <div class="thallo-block-columns__col">{{ blocks(data.col_2) }}</div>
-  {% if layout == '3' %}<div class="thallo-block-columns__col">{{ blocks(data.col_3) }}</div>{% endif %}
+  <div class="thallo-block-columns__col"{{ slot_attrs('col_1') }}>{{ blocks(data.col_1) }}</div>
+  <div class="thallo-block-columns__col"{{ slot_attrs('col_2') }}>{{ blocks(data.col_2) }}</div>
+  {% if layout == '3' %}<div class="thallo-block-columns__col"{{ slot_attrs('col_3') }}>{{ blocks(data.col_3) }}</div>{% endif %}
 </div>

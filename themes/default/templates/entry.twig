@@ -12,7 +12,7 @@
        constrained .entry-content: the reference theme cannot know that a
        field named "body" is sanitized rich text rather than arbitrary text. #}
     {% if entry.fields.body is defined %}
-      {% if entry.fields.body is iterable %}{{ blocks(entry.fields.body) }}
+      {% if entry.fields.body is iterable %}<div class="entry-blocks"{{ slot_attrs('body') }}>{{ blocks(entry.fields.body) }}</div>
       {% else %}<div class="entry-content"><div class="body">{{ entry.fields.body }}</div></div>{% endif %}
     {% endif %}
   </article>

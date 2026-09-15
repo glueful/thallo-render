@@ -12,5 +12,5 @@
 {% set count = data.plans|default([])|length %}
 {% set countMod = 'thallo-block-pricing_plans--count-' ~ (count < 1 ? 1 : (count > 6 ? 6 : count)) %}
 <div class="{{ rootClass }} {{ countMod }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  <div class="thallo-block-pricing_plans__items">{{ blocks(data.plans) }}</div>
+  <div class="thallo-block-pricing_plans__items"{{ slot_attrs('plans') }}>{{ blocks(data.plans) }}</div>
 </div>

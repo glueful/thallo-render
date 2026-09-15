@@ -11,7 +11,7 @@
 {% set speed = speed in ['slow', 'normal', 'fast'] ? speed : 'normal' %}
 <div class="thallo-block thallo-block-carousel thallo-block-carousel--per-{{ data.slides_per_view|default('1') }} thallo-block-carousel--h-{{ height }} thallo-block-carousel--speed-{{ speed }}{% if data.style|default('default') == 'hero' %} thallo-block-carousel--hero{% endif %}{% if transition != 'slide' %} thallo-block-carousel--{{ transition }}{% endif %}{{ style_classes('root') }}"{{ style_attrs('root') }} data-arrows="{{ data.arrows|default(false) ? '1' : '0' }}" data-dots="{{ data.dots|default(false) ? '1' : '0' }}" data-autoplay="{{ data.autoplay|default(false) ? '1' : '0' }}" data-transition="{{ transition }}" data-speed="{{ speed }}">
   <div class="thallo-block-carousel__viewport">
-    <div class="thallo-block-carousel__track">{{ blocks(data.slides) }}</div>
+    <div class="thallo-block-carousel__track"{{ slot_attrs('slides') }}>{{ blocks(data.slides) }}</div>
   </div>
   {# Canvas empty-state (blog_posts precedent): an empty track renders as nothing on
      the live page — invisible in the editor without this preview-only hint. #}

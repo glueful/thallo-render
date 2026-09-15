@@ -26,7 +26,7 @@
       {% if data.description|default('') %}<p class="thallo-block-section__description">{{ data.description|editable_text('description') }}</p>{% endif %}
     </div>
     {% endif %}
-    {% if data.content|default([]) is not empty %}<div class="thallo-block-section__content">{{ blocks(data.content) }}</div>{% endif %}
-    {% if data.links|default([]) is not empty %}<div class="thallo-block-section__links">{{ blocks(data.links) }}</div>{% endif %}
+    {% if data.content|default([]) is not empty or is_canvas() %}<div class="thallo-block-section__content"{{ slot_attrs('content') }}>{{ blocks(data.content|default([])) }}</div>{% endif %}
+    {% if data.links|default([]) is not empty or is_canvas() %}<div class="thallo-block-section__links"{{ slot_attrs('links') }}>{{ blocks(data.links|default([])) }}</div>{% endif %}
   </div>
 </section>

@@ -8,7 +8,7 @@
       {# Byte-mirror of entry.twig's body branch (spec pin): a homepage with a
          blocks body renders blocks(), never the scalar fallback. #}
       {% if entry.fields.body is defined %}
-        {% if entry.fields.body is iterable %}{{ blocks(entry.fields.body) }}
+        {% if entry.fields.body is iterable %}<div class="entry-blocks"{{ slot_attrs('body') }}>{{ blocks(entry.fields.body) }}</div>
         {% else %}<div class="entry-content"><div class="body">{{ entry.fields.body }}</div></div>{% endif %}
       {% endif %}
     </article>

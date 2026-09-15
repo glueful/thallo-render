@@ -18,5 +18,5 @@
   {% if data.icon %}<span class="thallo-block-card__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
   {% if data.title %}<h3 class="thallo-block-card__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</h3>{% endif %}
   {% if data.description %}<p class="thallo-block-card__description">{{ data.description|editable_text('description') }}</p>{% endif %}
-  {% if data.body|default([]) is not empty %}<div class="thallo-block-card__body">{{ blocks(data.body) }}</div>{% endif %}
+  {% if data.body|default([]) is not empty or is_canvas() %}<div class="thallo-block-card__body"{{ slot_attrs('body') }}>{{ blocks(data.body|default([])) }}</div>{% endif %}
 </div>

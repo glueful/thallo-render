@@ -90,5 +90,5 @@
          {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
   {% endif %}
   {% if overlay %}<div class="thallo-block-container__overlay"></div>{% endif %}
-  <div class="thallo-block-container__inner">{{ blocks(data.content) }}</div>
+  <div class="thallo-block-container__inner"{{ slot_attrs('content') }}>{{ blocks(data.content) }}</div>
 </div>

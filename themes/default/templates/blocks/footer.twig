@@ -10,10 +10,10 @@
 {% set hasCenter = data.links|default([]) is not empty %}
 {% set hasRight = data.social|default([]) is not empty %}
 <footer class="thallo-block thallo-block-footer{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  {% if hasTop %}<div class="thallo-block-footer__top">{{ blocks(data.top) }}</div>{% endif %}
+  {% if hasTop or is_canvas() %}<div class="thallo-block-footer__top"{{ slot_attrs('top') }}>{{ blocks(data.top|default([])) }}</div>{% endif %}
   <div class="thallo-block-footer__bar">
-    {% if hasLeft %}<div class="thallo-block-footer__left">{{ blocks(data.copyright) }}</div>{% endif %}
-    {% if hasCenter %}<div class="thallo-block-footer__center">{{ blocks(data.links) }}</div>{% endif %}
-    {% if hasRight %}<div class="thallo-block-footer__right">{{ blocks(data.social) }}</div>{% endif %}
+    {% if hasLeft or is_canvas() %}<div class="thallo-block-footer__left"{{ slot_attrs('copyright') }}>{{ blocks(data.copyright|default([])) }}</div>{% endif %}
+    {% if hasCenter or is_canvas() %}<div class="thallo-block-footer__center"{{ slot_attrs('links') }}>{{ blocks(data.links|default([])) }}</div>{% endif %}
+    {% if hasRight or is_canvas() %}<div class="thallo-block-footer__right"{{ slot_attrs('social') }}>{{ blocks(data.social|default([])) }}</div>{% endif %}
   </div>
 </footer>

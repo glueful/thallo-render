@@ -67,6 +67,13 @@ final class TemplateLinter
             if ($targets !== null) {
                 $violations = array_merge($violations, TargetLint::lint($module, $targets));
             }
+            // Slot rules (visual builder spec §5.4): a type with blocks fields names each slot's
+            // element, unless it renders its children's data inline.
+            $slots = $this->styleRegistry?->regionsFor($m[1]) ?? [];
+            $inline = ($this->styleRegistry?->flagsFor($m[1])['renders_children_inline'] ?? false) === true;
+            if ($slots !== [] && !$inline) {
+                $violations = array_merge($violations, SlotLint::lint($module, $slots));
+            }
         }
         usort($violations, static fn (array $a, array $b): int => $a['line'] <=> $b['line']);
         return $violations;

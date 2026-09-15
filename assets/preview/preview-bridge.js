@@ -1057,6 +1057,7 @@
       }
     }
     advanceDisplayed(fetched)
+    markEmptySlots()
     post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',
@@ -1132,6 +1133,7 @@
     var next = { epoch: data.epoch, revision: data.revision }
     if (typeof data.style_generation === 'number') next.style_generation = data.style_generation
     advanceDisplayed(next)
+    markEmptySlots()
     post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',
@@ -1141,6 +1143,17 @@
 
   // A swapped-in wrapper is server markup: custom elements tore themselves down with the
   // old subtree, and the runtime enhances the new one (canvas-skipping modules stay no-ops).
+  // Empty slots (visual builder spec §5.4): a slot element holding no wrapper is marked so the
+  // placeholder paints; re-marked after every load, patch and swap.
+  function markEmptySlots() {
+    var slots = document.querySelectorAll('[data-thallo-slot]')
+    for (var i = 0; i < slots.length; i++) {
+      var slot = slots[i]
+      if (slot.querySelector('[data-thallo-block]')) slot.removeAttribute('data-thallo-slot-empty')
+      else slot.setAttribute('data-thallo-slot-empty', '')
+    }
+  }
+
   function enhanceInserted(el) {
     if (window.ThalloRuntime && typeof window.ThalloRuntime.enhance === 'function') {
       try { window.ThalloRuntime.enhance(el) } catch (e) { /* a module fault never breaks the swap */ }
@@ -1337,6 +1350,7 @@
         post('scroll', { y: window.scrollY || 0 })
       }, 250)
     })
+    markEmptySlots()
     post('blocks-index', { ids: idsIndex() })
   }
 

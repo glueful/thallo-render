@@ -307,6 +307,11 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('style_classes', $this->styleClasses(...)),
             new TwigFunction('style_attrs', $this->styleAttrs(...), ['is_safe' => ['html']]),
             new TwigFunction('token_class', $this->tokenClass(...)),
+            // Slot geometry (visual builder spec §5.4): the element a template renders a blocks
+            // field into names its slot in canvas mode, so the bridge derives drop zones from
+            // real slot elements, never the display-contents wrappers.
+            new TwigFunction('slot_attrs', $this->slotAttrs(...), ['is_safe' => ['html']]),
+            new TwigFunction('is_canvas', fn (): bool => $this->annotateBlocks),
             // Storefront-v1 spec §5: soft-bound wishlist seam (see the $wishlist constructor
             // doc). Both null-safe — capability off or seam unbound means null, never a throw.
             new TwigFunction('shop_wishlist_scope', $this->shopWishlistScope(...)),
@@ -406,6 +411,15 @@ final class RenderContextExtension extends AbstractExtension
             $this->classRefsFor($frame['settings']['classes'] ?? null),
         );
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
+    }
+
+    /** `data-thallo-slot="<field>"` in canvas mode, nothing otherwise (spec §5.4); leading space. */
+    public function slotAttrs(string $slot): string
+    {
+        if (!$this->annotateBlocks) {
+            return '';
+        }
+        return ' data-thallo-slot="' . htmlspecialchars($slot, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
     }
 
     /** The attributes `$target` owns (anchor, `data-*`, accessibility label), escaped, leading space. */
