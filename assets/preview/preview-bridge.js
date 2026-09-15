@@ -16,7 +16,7 @@
   var anchorEl = null
   var editing = null // { id, field, kind, region, debounce }
   var lastPointer = null // { x, y } of the granting double-click (caret placement)
-  var drag = null // { wrapper, originalNext, lastY }
+  var drag = null // { session, blocks, wrapper, external, zone, legal, indicator, ghost, scrollTimer }
   var suppressClick = false // one-shot: the click after a completed drag
   var linkPanel = null // { root, input } — child of the current bubble
   var savedLinkRange = null // session-scoped (link-panel spec); cleared by closeLinkPanel
@@ -640,30 +640,128 @@
     post('edit-start', { id: id })
   }
 
-  // ── Free drag (free-drag spec §1): live reorder, ONE intent on pointerup ────
-  function siblingWrapperFrom(el, dir) {
-    // Nearest sibling WRAPPER scanning outward — skips non-wrapper nodes and,
-    // by construction, the dragged wrapper itself (review caution).
-    var cur = dir > 0 ? el.nextElementSibling : el.previousElementSibling
-    while (cur && !(cur.hasAttribute && cur.hasAttribute('data-thallo-block'))) {
-      cur = dir > 0 ? cur.nextElementSibling : cur.previousElementSibling
-    }
-    return cur
+  // ── Proposal drag (visual builder spec §5.3, §5.4): the tree is untouched until drop ───
+  // Movement derives a drop zone from the real slot element under the pointer — parent, slot,
+  // index, layout — and posts it as a proposal; the parent answers its legality, the indicator
+  // shows it; pointerup posts the drop, Escape and pointercancel post a cancel. A parent-
+  // originated drag (palette, outline) drives the same zones through drag-begin / drag-hover /
+  // drag-end. Nothing reorders here: the parent applies the operation and the stage patches.
+  function newSession() {
+    return 'd' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
   }
-
+  function layoutOf(el) {
+    var cs = window.getComputedStyle ? window.getComputedStyle(el) : null
+    if (!cs) return 'linear-vertical'
+    var display = cs.display || ''
+    if (display.indexOf('grid') !== -1) return 'other'
+    if (display.indexOf('flex') !== -1) {
+      var dir = cs.flexDirection || 'row'
+      var wrap = cs.flexWrap || 'nowrap'
+      if (dir.indexOf('reverse') !== -1 || wrap !== 'nowrap') return 'other'
+      if (dir === 'row') return (cs.direction || 'ltr') === 'rtl' ? 'other' : 'linear-horizontal'
+      return 'linear-vertical'
+    }
+    return 'linear-vertical'
+  }
+  function childWrappersOf(slotEl, exclude) {
+    var out = []
+    for (var i = 0; i < slotEl.children.length; i++) {
+      var el = slotEl.children[i]
+      if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
+      if (exclude && (el === exclude || exclude.contains(el))) continue
+      out.push(el)
+    }
+    return out
+  }
+  /** The drop zone at a viewport point: null outside every slot or inside the dragged subtree. */
+  function zoneAt(x, y, exclude) {
+    var hit = document.elementFromPoint ? document.elementFromPoint(x, y) : null
+    var slotEl = hit && hit.closest ? hit.closest('[data-thallo-slot]') : null
+    if (!slotEl) return null
+    if (exclude && exclude.contains(slotEl)) return null
+    var owner = slotEl.parentElement ? slotEl.parentElement.closest('[data-thallo-block]') : null
+    var layout = layoutOf(slotEl)
+    var kids = childWrappersOf(slotEl, exclude)
+    var index = kids.length
+    if (layout !== 'other') {
+      for (var i = 0; i < kids.length; i++) {
+        var host = firstVisualChild(kids[i])
+        if (!host) continue
+        var r = host.getBoundingClientRect()
+        var before = layout === 'linear-horizontal' ? x < r.left + r.width / 2 : y < r.top + r.height / 2
+        if (before) { index = i; break }
+      }
+    }
+    return {
+      parent: owner ? owner.getAttribute('data-thallo-block') : null,
+      slot: slotEl.getAttribute('data-thallo-slot'),
+      index: index,
+      layout: layout,
+      element: slotEl,
+      children: kids
+    }
+  }
+  function sameZone(a, b) {
+    if (!a || !b) return a === b
+    return a.parent === b.parent && a.slot === b.slot && a.index === b.index
+  }
+  function removeIndicator() {
+    if (drag && drag.indicator && drag.indicator.parentNode) {
+      drag.indicator.parentNode.removeChild(drag.indicator)
+    }
+    if (drag) drag.indicator = null
+  }
+  /** The insertion line: a real element placed where the block would land (no inline geometry). */
+  function showIndicator(zone) {
+    removeIndicator()
+    var line = document.createElement('div')
+    line.className = 'thallo-canvas-drop-line'
+    if (zone.layout === 'linear-horizontal') line.className += ' thallo-canvas-drop-line--horizontal'
+    if (zone.layout === 'other') {
+      line.className += ' thallo-canvas-drop-line--other'
+      line.setAttribute('data-hint', 'Placed last here; set the exact position in the outline')
+    }
+    var beforeEl = zone.children[zone.index] || null
+    zone.element.insertBefore(line, beforeEl)
+    drag.indicator = line
+    applyLegality()
+  }
+  function applyLegality() {
+    if (!drag || !drag.indicator) return
+    var line = drag.indicator
+    line.classList.remove('thallo-canvas-drop-line--refused')
+    line.removeAttribute('title')
+    if (drag.legal === false) {
+      line.classList.add('thallo-canvas-drop-line--refused')
+      if (drag.reason) line.setAttribute('title', drag.reason)
+    }
+  }
+  function wireZone(zone) {
+    if (sameZone(zone, drag.zone)) return
+    drag.zone = zone
+    drag.legal = null
+    drag.reason = ''
+    if (!zone) {
+      removeIndicator()
+      return
+    }
+    showIndicator(zone)
+    post('drag-propose', {
+      session: drag.session,
+      blocks: drag.blocks,
+      zone: { parent: zone.parent, slot: zone.slot, index: zone.index, layout: zone.layout }
+    })
+  }
   function onGripDown(e) {
     if (editing || drag || selectedId === null) return
     var w = findBlock(selectedId)
     if (!w || !w.parentNode) return
     e.preventDefault()
     drag = {
-      wrapper: w, originalNext: w.nextElementSibling, lastY: e.clientY,
-      ghost: null, scrollTimer: null, scrollDir: 0
+      session: newSession(), blocks: [selectedId], wrapper: w, external: false,
+      ghost: null, scrollTimer: null, scrollDir: 0, zone: null, legal: null, reason: '', indicator: null
     }
     w.classList.add('thallo-canvas-dragging')
-    // currentTarget (review P3): the listener sits on the grip BUTTON, but
-    // e.target is often the nested svg/path — capture must attach to the
-    // element that owns the listener.
     var captureEl = e.currentTarget
     if (captureEl && captureEl.setPointerCapture && typeof e.pointerId === 'number') {
       try { captureEl.setPointerCapture(e.pointerId) } catch (err) { /* jsdom / old engines */ }
@@ -673,34 +771,6 @@
     document.addEventListener('pointercancel', onDragCancel)
     document.addEventListener('keydown', onDragKeydown, true)
   }
-
-  /**
-   * FLIP the given wrappers' first children through a reorder (drag-feel
-   * amendment): measure, mutate, animate the delta to zero via the Web
-   * Animations API — script-driven, so the CSP no-inline-styles pin holds.
-   * Engines without element.animate (jsdom) just get the instant move.
-   */
-  function flipReorder(kids, w, mutate) {
-    var before = []
-    for (var i = 0; i < kids.length; i++) {
-      var el = kids[i]
-      if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
-      var h = firstVisualChild(el)
-      if (h && h.animate) before.push({ host: h, top: h.getBoundingClientRect().top })
-    }
-    mutate()
-    for (var k = 0; k < before.length; k++) {
-      var entry = before[k]
-      var dy = entry.top - entry.host.getBoundingClientRect().top
-      if (dy !== 0) {
-        entry.host.animate(
-          [{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }],
-          { duration: 150, easing: 'ease' }
-        )
-      }
-    }
-  }
-
   /**
    * Cursor-following drag ghost (polish batch §2): a compact, stripped clone
    * of the dragged host, built on the FIRST pointermove (a click without
@@ -718,12 +788,10 @@
     document.body.appendChild(ghostEl)
     return ghostEl
   }
-
   // Edge auto-scroll (polish batch §3): one interval at a time; zone
   // membership re-evaluated per pointermove; cleared on exit and endDrag.
   var EDGE_ZONE = 48
   var EDGE_STEP = 12
-
   function updateEdgeScroll(clientY) {
     if (!drag) return
     var vh = window.innerHeight || 0
@@ -744,121 +812,82 @@
       }, 16)
     }
   }
-
   function onDragMove(e) {
-    if (!drag) return
+    if (!drag || drag.external) return
     var w = drag.wrapper
-    if (!w.parentNode) return
     if (!drag.ghost) drag.ghost = buildDragGhost(w)
     if (drag.ghost) {
       drag.ghost.style.transform =
         'translate(' + ((e.clientX || 0) + 12) + 'px, ' + ((e.clientY || 0) + 12) + 'px)'
     }
     updateEdgeScroll(e.clientY)
-    // Direction gating (drag-feel amendment): live moves re-shift sibling
-    // midpoints under the pointer, so undirected swaps can oscillate near a
-    // boundary with unequal block heights. Only swap in the direction the
-    // pointer is actually travelling.
-    var dirDown = e.clientY > drag.lastY
-    var dirUp = e.clientY < drag.lastY
-    drag.lastY = e.clientY
-    if (!dirDown && !dirUp) return
-    var kids = w.parentNode.children
-    var target = null
-    for (var i = 0; i < kids.length; i++) {
-      var el = kids[i]
-      if (el === w) continue
-      if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
-      // Same-parent guard (review caution): mirror-move's rule on the live path.
-      if (el.parentNode !== w.parentNode) continue
-      var host = firstVisualChild(el)
-      if (!host) continue
-      var r = host.getBoundingClientRect()
-      if (e.clientY < r.top + r.height / 2) {
-        target = el
-        break
-      }
-    }
-    if (target) {
-      if (w.nextElementSibling === target) return
-      // The computed slot is above w's current position -> an UP move; only
-      // take it when the pointer travels up (and vice versa for down).
-      var movingUp = isBefore(target, w)
-      if ((movingUp && !dirUp) || (!movingUp && !dirDown)) return
-      flipReorder(kids, w, function () { w.parentNode.insertBefore(w, target) })
-    } else {
-      // Below every midpoint: move to the end of the sibling wrappers.
-      if (!dirDown) return
-      var lastWrap = null
-      for (var j = kids.length - 1; j >= 0; j--) {
-        var cand = kids[j]
-        if (cand !== w && cand.hasAttribute && cand.hasAttribute('data-thallo-block')) {
-          lastWrap = cand
-          break
-        }
-      }
-      if (lastWrap && lastWrap.nextSibling !== w) {
-        flipReorder(kids, w, function () { w.parentNode.insertBefore(w, lastWrap.nextSibling) })
-      }
-    }
+    wireZone(zoneAt(e.clientX || 0, e.clientY || 0, w))
   }
-
-  /** True when a precedes b in document order (same parent assumed). */
-  function isBefore(a, b) {
-    return !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
-  }
-
   function onDragUp() {
     if (!drag) return
-    var w = drag.wrapper
-    if (w.nextElementSibling !== drag.originalNext) {
-      var next = siblingWrapperFrom(w, 1)
-      var prev = siblingWrapperFrom(w, -1)
-      if (next) {
-        post('block-move-to', {
-          id: w.getAttribute('data-thallo-block'),
-          beforeId: next.getAttribute('data-thallo-block')
-        })
-      } else if (prev) {
-        post('block-move-to', {
-          id: w.getAttribute('data-thallo-block'),
-          afterId: prev.getAttribute('data-thallo-block')
-        })
-      }
+    if (drag.zone && drag.legal !== false) {
+      post('block-drop', {
+        session: drag.session,
+        blocks: drag.blocks,
+        zone: { parent: drag.zone.parent, slot: drag.zone.slot, index: drag.zone.index, layout: drag.zone.layout }
+      })
       suppressClick = true // the click that follows a completed drag
+    } else {
+      post('drag-cancel', { session: drag.session })
     }
     endDrag()
   }
-
   function onDragCancel() {
-    rollbackDrag()
+    cancelDrag()
   }
-
   function onDragKeydown(e) {
     if (e.key === 'Escape' && drag) {
       e.preventDefault()
-      rollbackDrag()
+      cancelDrag()
     }
   }
-
-  function rollbackDrag() {
-    // Full rollback (review caution): restore order, clear state, no suppressor.
+  /** Cancel: the tree never changed, so only the session and its visuals end. */
+  function cancelDrag() {
     if (!drag) return
-    var w = drag.wrapper
-    if (w.parentNode) w.parentNode.insertBefore(w, drag.originalNext) // null -> append
+    post('drag-cancel', { session: drag.session })
     endDrag()
   }
-
   function endDrag() {
     if (!drag) return
+    removeIndicator()
     if (drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost)
     if (drag.scrollTimer) clearInterval(drag.scrollTimer)
-    drag.wrapper.classList.remove('thallo-canvas-dragging')
+    if (drag.wrapper) drag.wrapper.classList.remove('thallo-canvas-dragging')
     document.removeEventListener('pointermove', onDragMove)
     document.removeEventListener('pointerup', onDragUp)
     document.removeEventListener('pointercancel', onDragCancel)
     document.removeEventListener('keydown', onDragKeydown, true)
     drag = null
+  }
+  // Parent-originated drags (palette, outline): the parent owns the session and the pointer;
+  // the stage answers hovers with proposals and paints the indicator.
+  function onExternalDragBegin(data) {
+    if (drag) endDrag()
+    var blocks = Array.isArray(data.blocks) ? data.blocks : []
+    var w = blocks.length === 1 ? findBlock(blocks[0]) : null
+    drag = {
+      session: data.session, blocks: blocks, wrapper: w, external: true,
+      ghost: null, scrollTimer: null, scrollDir: 0, zone: null, legal: null, reason: '', indicator: null
+    }
+  }
+  function onExternalDragHover(data) {
+    if (!drag || !drag.external || drag.session !== data.session) return
+    wireZone(zoneAt(data.x || 0, data.y || 0, drag.wrapper))
+  }
+  function onExternalDragEnd(data) {
+    if (!drag || drag.session !== data.session) return
+    endDrag()
+  }
+  function onDragLegality(data) {
+    if (!drag || drag.session !== data.session) return
+    drag.legal = data.legal === true
+    drag.reason = typeof data.reason === 'string' ? data.reason : ''
+    applyLegality()
   }
 
   // ── Stage keyboard shortcuts (keyboard-shortcuts spec §1/§2) ────────────────
@@ -930,6 +959,9 @@
     })
     Array.prototype.forEach.call(root.querySelectorAll('.thallo-canvas-shim'), function (el) {
       el.parentNode.removeChild(el) // bridge-owned anchor shims never survive cloning
+    })
+    Array.prototype.forEach.call(root.querySelectorAll('.thallo-canvas-drop-line'), function (el) {
+      el.parentNode.removeChild(el) // the drop indicator is drag state, never content
     })
     var classes = [
       'thallo-canvas-anchor', 'thallo-canvas-selected', 'thallo-canvas-hover',
@@ -1392,6 +1424,10 @@
     if (data.type === 'thallo:restore-scroll' && typeof data.y === 'number') {
       window.scrollTo(0, data.y) // instant — a reload restore must not visibly travel
     }
+    if (data.type === 'thallo:drag-begin' && typeof data.session === 'string') onExternalDragBegin(data)
+    if (data.type === 'thallo:drag-hover' && typeof data.session === 'string') onExternalDragHover(data)
+    if (data.type === 'thallo:drag-legality' && typeof data.session === 'string') onDragLegality(data)
+    if (data.type === 'thallo:drag-end' && typeof data.session === 'string') onExternalDragEnd(data)
     if (data.type === 'thallo:stage-refresh') {
       onStageRefresh(typeof data.refresh_id === 'string' ? data.refresh_id : '')
     }
