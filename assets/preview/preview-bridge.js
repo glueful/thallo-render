@@ -1392,11 +1392,8 @@
           post('block-delete-request', { id: selectedId, rect: { x: dr.left, y: dr.bottom } })
         }
         if (action === 'add-after') {
-          // Anchor for the parent's picker (iframe-viewport coordinates): the
-          // parent translates through the iframe's own offset so the panel
-          // opens AT the + button instead of floating top-center.
-          var r = btn.getBoundingClientRect()
-          post('block-add-after', { id: selectedId, rect: { x: r.left, y: r.bottom } })
+          // The Blocks tab arms "after this block" (Phase C.1): no anchor needed.
+          post('block-add-after', { id: selectedId })
         }
         return
       }
