@@ -17,6 +17,7 @@
   var editing = null // { id, field, kind, region, debounce }
   var lastPointer = null // { x, y } of the granting double-click (caret placement)
   var drag = null // { session, blocks, wrapper, external, zone, legal, indicator, ghost, scrollTimer }
+  var selectedIds = [] // the parent's sibling multi-selection (highlight ids); selectedId is its anchor
   var suppressClick = false // one-shot: the click after a completed drag
   var linkPanel = null // { root, input } — child of the current bubble
   var savedLinkRange = null // session-scoped (link-panel spec); cleared by closeLinkPanel
@@ -148,6 +149,7 @@
     detachToolbar()
     w.classList.add('thallo-canvas-selected')
     selectedId = w.getAttribute('data-thallo-block')
+    selectedIds = [selectedId]
     var host = firstVisualChild(w)
     if (host && NO_CHILD_HOSTS[host.tagName]) {
       // hr/img/… render no children: anchor a shim sibling instead.
@@ -170,6 +172,18 @@
     clearClass('thallo-canvas-selected')
     detachToolbar()
     selectedId = null
+    selectedIds = []
+  }
+  /** Ring the parent's whole selection (visual builder spec §5.5): the anchor keeps the toolbar. */
+  function ringSelection(ids) {
+    selectedIds = []
+    for (var i = 0; i < ids.length; i++) {
+      var w = findBlock(ids[i])
+      if (!w) continue
+      w.classList.add('thallo-canvas-selected')
+      selectedIds.push(ids[i])
+    }
+    if (selectedId !== null && selectedIds.indexOf(selectedId) === -1) selectedIds.unshift(selectedId)
   }
 
   // ── Edit-in-place session (edit-in-place spec §3) ───────────────────────────
@@ -663,22 +677,38 @@
     }
     return 'linear-vertical'
   }
+  function excluded(el, exclude) {
+    for (var i = 0; i < exclude.length; i++) {
+      if (exclude[i] === el || exclude[i].contains(el)) return true
+    }
+    return false
+  }
   function childWrappersOf(slotEl, exclude) {
     var out = []
     for (var i = 0; i < slotEl.children.length; i++) {
       var el = slotEl.children[i]
       if (!(el.hasAttribute && el.hasAttribute('data-thallo-block'))) continue
-      if (exclude && (el === exclude || exclude.contains(el))) continue
+      if (excluded(el, exclude)) continue
       out.push(el)
     }
     return out
   }
-  /** The drop zone at a viewport point: null outside every slot or inside the dragged subtree. */
+  /** The wrappers of the session's blocks: the zones under them are refused locally. */
+  function draggedWrappers() {
+    var out = []
+    if (!drag) return out
+    for (var i = 0; i < drag.blocks.length; i++) {
+      var w = findBlock(drag.blocks[i])
+      if (w) out.push(w)
+    }
+    return out
+  }
+  /** The drop zone at a viewport point: null outside every slot or inside a dragged subtree. */
   function zoneAt(x, y, exclude) {
     var hit = document.elementFromPoint ? document.elementFromPoint(x, y) : null
     var slotEl = hit && hit.closest ? hit.closest('[data-thallo-slot]') : null
     if (!slotEl) return null
-    if (exclude && exclude.contains(slotEl)) return null
+    if (excluded(slotEl, exclude)) return null
     var owner = slotEl.parentElement ? slotEl.parentElement.closest('[data-thallo-block]') : null
     var layout = layoutOf(slotEl)
     var kids = childWrappersOf(slotEl, exclude)
@@ -757,11 +787,15 @@
     var w = findBlock(selectedId)
     if (!w || !w.parentNode) return
     e.preventDefault()
+    var blocks = selectedIds.indexOf(selectedId) !== -1 ? selectedIds.slice() : [selectedId]
     drag = {
-      session: newSession(), blocks: [selectedId], wrapper: w, external: false,
+      session: newSession(), blocks: blocks, wrapper: w, external: false,
       ghost: null, scrollTimer: null, scrollDir: 0, zone: null, legal: null, reason: '', indicator: null
     }
-    w.classList.add('thallo-canvas-dragging')
+    for (var bi = 0; bi < blocks.length; bi++) {
+      var bw = findBlock(blocks[bi])
+      if (bw) bw.classList.add('thallo-canvas-dragging')
+    }
     var captureEl = e.currentTarget
     if (captureEl && captureEl.setPointerCapture && typeof e.pointerId === 'number') {
       try { captureEl.setPointerCapture(e.pointerId) } catch (err) { /* jsdom / old engines */ }
@@ -821,7 +855,7 @@
         'translate(' + ((e.clientX || 0) + 12) + 'px, ' + ((e.clientY || 0) + 12) + 'px)'
     }
     updateEdgeScroll(e.clientY)
-    wireZone(zoneAt(e.clientX || 0, e.clientY || 0, w))
+    wireZone(zoneAt(e.clientX || 0, e.clientY || 0, draggedWrappers()))
   }
   function onDragUp() {
     if (!drag) return
@@ -857,7 +891,7 @@
     removeIndicator()
     if (drag.ghost && drag.ghost.parentNode) drag.ghost.parentNode.removeChild(drag.ghost)
     if (drag.scrollTimer) clearInterval(drag.scrollTimer)
-    if (drag.wrapper) drag.wrapper.classList.remove('thallo-canvas-dragging')
+    clearClass('thallo-canvas-dragging')
     document.removeEventListener('pointermove', onDragMove)
     document.removeEventListener('pointerup', onDragUp)
     document.removeEventListener('pointercancel', onDragCancel)
@@ -877,7 +911,7 @@
   }
   function onExternalDragHover(data) {
     if (!drag || !drag.external || drag.session !== data.session) return
-    wireZone(zoneAt(data.x || 0, data.y || 0, drag.wrapper))
+    wireZone(zoneAt(data.x || 0, data.y || 0, draggedWrappers()))
   }
   function onExternalDragEnd(data) {
     if (!drag || drag.session !== data.session) return
@@ -1369,7 +1403,11 @@
       e.preventDefault()
       e.stopPropagation()
       selectWrapper(w)
-      post('block-select', { id: w.getAttribute('data-thallo-block') })
+      post('block-select', {
+        id: w.getAttribute('data-thallo-block'),
+        shift: !!e.shiftKey,
+        meta: !!(e.metaKey || e.ctrlKey)
+      })
     }, true)
     document.addEventListener('keydown', onCanvasKeydown, true)
     // Scroll preservation (auto-apply spec §3): trailing-throttled reports;
@@ -1401,6 +1439,7 @@
       var el = findBlock(data.id)
       if (el) selectWrapper(el)
       else clearSelection()
+      if (el && Array.isArray(data.ids)) ringSelection(data.ids)
     }
     if (data.type === 'thallo:scroll-to') {
       var t = findBlock(data.id)
