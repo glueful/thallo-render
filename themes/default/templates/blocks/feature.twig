@@ -4,6 +4,7 @@
    Fields (all optional but title): icon, title, description, url,
      marker (icon|number|none — what shows before the title), number (the badge's text),
      marker_background / marker_color (theme colour tokens; unset keeps the marker's default),
+     marker_size (sm|md|lg|xl; unset is md),
      variant (plain|outline|soft|subtle — plain is the inline leaf, the rest are cards),
      orientation (horizontal|vertical — the marker beside the text, or above it). #}
 {% set url = data.url|default('')|safe_url %}
@@ -13,9 +14,11 @@
 {% set colorTokens = {transparent: 1, surface: 1, 'surface-2': 1, accent: 1, text: 1, muted: 1, 'accent-contrast': 1, background: 1} %}
 {% set markerBg = data.marker_background|default('') %}
 {% set markerFg = data.marker_color|default('') %}
+{% set markerSize = {sm: 'sm', md: 'md', lg: 'lg', xl: 'xl'}[data.marker_size|default('')] ?? null %}
 {% set markerClass = 'thallo-block-feature__marker thallo-block-feature__marker--' ~ marker
   ~ (colorTokens[markerBg] is defined ? ' thallo-block-feature__marker--bg-' ~ markerBg : '')
-  ~ (colorTokens[markerFg] is defined ? ' thallo-block-feature__marker--fg-' ~ markerFg : '') %}
+  ~ (colorTokens[markerFg] is defined ? ' thallo-block-feature__marker--fg-' ~ markerFg : '')
+  ~ (markerSize ? ' thallo-block-feature__marker--size-' ~ markerSize : '') %}
 {% set rootClass = [
   'thallo-block thallo-block-feature',
   'thallo-block-feature--' ~ variant,

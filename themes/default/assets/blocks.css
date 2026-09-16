@@ -512,6 +512,13 @@
 .thallo-block-feature__marker--fg-muted { color: var(--muted); }
 .thallo-block-feature__marker--fg-accent-contrast { color: var(--accent-ink); }
 .thallo-block-feature__marker--fg-background { color: var(--bg); }
+/* size: the icon glyph, and the badge's box and text, on one scale (md is the base) */
+.thallo-block-feature__marker--icon.thallo-block-feature__marker--size-sm { font-size: 1.1rem; }
+.thallo-block-feature__marker--icon.thallo-block-feature__marker--size-lg { font-size: 1.8rem; }
+.thallo-block-feature__marker--icon.thallo-block-feature__marker--size-xl { font-size: 2.4rem; }
+.thallo-block-feature__marker--number.thallo-block-feature__marker--size-sm { min-width: 2rem; height: 2rem; font-size: 0.75rem; }
+.thallo-block-feature__marker--number.thallo-block-feature__marker--size-lg { min-width: 3rem; height: 3rem; font-size: 1rem; }
+.thallo-block-feature__marker--number.thallo-block-feature__marker--size-xl { min-width: 3.75rem; height: 3.75rem; font-size: 1.25rem; }
 .thallo-block-feature__body { min-width: 0; flex: 1; }
 .thallo-block-feature__title { margin: 0; font-size: 1.05rem; text-wrap: pretty; }
 .thallo-block-feature__title a { color: inherit; text-decoration: none; }
