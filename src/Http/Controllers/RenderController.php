@@ -473,7 +473,7 @@ final class RenderController
     /**
      * The site custom stylesheet (custom-css spec §3): the ACTIVE theme's
      * DB-backed custom.css row — DB-only, no filesystem fallback. The layout
-     * links it as /custom.css?v={version_uuid}, so the immutable year-long
+     * links it as /_thallo/custom.css?v={version_uuid}, so the immutable year-long
      * cache is safe: every save changes the URL. Absent or empty → plain 404
      * (the layout emits no link in that state; a stale reference downgrades
      * gracefully to unstyled).

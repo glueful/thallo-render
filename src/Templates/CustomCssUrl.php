@@ -27,6 +27,6 @@ final class CustomCssUrl
         if ($row === null || trim((string) $row['source']) === '') {
             return null;
         }
-        return '/custom.css?v=' . $row['version_uuid'];
+        return '/_thallo/custom.css?v=' . $row['version_uuid'];
     }
 }

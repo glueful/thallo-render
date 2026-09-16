@@ -55,8 +55,11 @@ $router->get(RenderController::PREVIEW_BRIDGE_PATH, [RenderController::class, 'p
 
 // Site custom CSS (custom-css spec §3): DB-backed stylesheet, immutable-cached —
 // the layout links it with ?v={version_uuid}, so every save changes the URL.
+// Under /_thallo/ with the other PHP-served assets: a web server's static-file rule
+// that answers every .css from disk 404s a root-level path, and the documented
+// nginx block already hands /_thallo/* to PHP.
 // Static route: wins over the '*' page catch-all by router bucketing.
-$router->get('/custom.css', [RenderController::class, 'customCss'])
+$router->get('/_thallo/custom.css', [RenderController::class, 'customCss'])
     ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
 
 // Theme runtime (theme-runtime spec §2.3): the package-owned behavior runtime,

@@ -23,7 +23,7 @@ use Thallo\Render\Templates\RuntimeAssetMap;
  *     file and is itself never cached (no explicit `Cache-Control`), so it always
  *     re-resolves after a deploy.
  *  2. The exact FINGERPRINTED filename (`runtime-{hash}.js`) — served with the
- *     immutable-asset header this codebase already uses for `/custom.css`
+ *     immutable-asset header this codebase already uses for `/_thallo/custom.css`
  *     ({@see \Thallo\Render\Http\Controllers\RenderController::customCss()}), safe here for
  *     the same reason: the content hash IN the URL is the cache-buster.
  */
