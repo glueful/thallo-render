@@ -142,11 +142,10 @@ Functions:
   occupies — where a dragged block may land, which layout the slot has (a flex row splits
   left/right, a column splits top/bottom, a grid takes the end), and where an empty slot sits.
   Outside the canvas it renders nothing. The slot name must be a constant string and must be one
-  of the block type's `blocks` fields. On the canvas every slot ends in a dashed placeholder
-  (painted by the preview stylesheet; an empty slot is also marked `data-thallo-slot-empty`) with
-  a + that opens the editor's Blocks tab at the end of that slot and the hint "Drag a block
-  here", so the next block's place is always in view; render the wrapper even when the list is
-  empty — `is_canvas()` says whether you are on the
+  of the block type's `blocks` fields. On the canvas a dashed placeholder (painted by the preview
+  stylesheet) with a + that opens the editor's Blocks tab at the end of that slot and the hint
+  "Drag a block here" ends every page-level slot, and fills a block's slot while it is empty
+  (also marked `data-thallo-slot-empty`); render the wrapper even when the list is empty — `is_canvas()` says whether you are on the
   canvas, so a wrapper the published page omits can still exist there.
 - `is_canvas()` — true while rendering for the editor's canvas.
 - `icon(name)` — render an icon.

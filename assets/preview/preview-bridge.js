@@ -1239,22 +1239,28 @@
 
   // A swapped-in wrapper is server markup: custom elements tore themselves down with the
   // old subtree, and the runtime enhances the new one (canvas-skipping modules stay no-ops).
-  // Slot placeholders (visual builder spec §5.4): every slot ENDS in the same placeholder — "the
-  // next block goes here" — and an empty one is also marked data-thallo-slot-empty. Re-marked
-  // after every load, patch, swap and mirror so the placeholder stays last.
+  // Slot placeholders (visual builder spec §5.4): the page's own slots (no owning block) always
+  // END in the placeholder — "the next block goes here" — while a slot inside a block carries
+  // it only while empty, so it never trails every nested block on the page. An empty slot is
+  // also marked data-thallo-slot-empty. Re-marked after every load, patch, swap and mirror.
   function markEmptySlots() {
     var slots = document.querySelectorAll('[data-thallo-slot]')
     for (var i = 0; i < slots.length; i++) {
       var slot = slots[i]
       var placeholder = slot.querySelector(':scope > .thallo-slot-placeholder')
-      if (!placeholder) {
-        placeholder = buildPlaceholder(slot.getAttribute('data-thallo-slot'))
-        slot.appendChild(placeholder)
-      } else if (placeholder !== slot.lastElementChild) {
-        slot.appendChild(placeholder) // a mirror appended past it: the placeholder stays last
+      var empty = slot.querySelector('[data-thallo-block]') === null
+      var owned = !!(slot.parentElement && slot.parentElement.closest('[data-thallo-block]'))
+      if (empty) slot.setAttribute('data-thallo-slot-empty', '')
+      else slot.removeAttribute('data-thallo-slot-empty')
+      if (empty || !owned) {
+        if (!placeholder) {
+          slot.appendChild(buildPlaceholder(slot.getAttribute('data-thallo-slot')))
+        } else if (placeholder !== slot.lastElementChild) {
+          slot.appendChild(placeholder) // a mirror appended past it: the placeholder stays last
+        }
+      } else if (placeholder) {
+        slot.removeChild(placeholder)
       }
-      if (slot.querySelector('[data-thallo-block]')) slot.removeAttribute('data-thallo-slot-empty')
-      else slot.setAttribute('data-thallo-slot-empty', '')
     }
   }
   // The placeholder: a dashed frame with one + (arms the parent's Blocks tab into this slot)
