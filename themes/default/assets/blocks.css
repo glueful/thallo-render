@@ -180,6 +180,17 @@
 }
 .thallo-block-section--vertical .thallo-block-section__links { justify-content: center; }
 
+/* per-part header alignment (authored): a set value beats the orientation's default */
+.thallo-block-section .thallo-block-section__headline--start,
+.thallo-block-section .thallo-block-section__title--start { text-align: start; }
+.thallo-block-section .thallo-block-section__headline--center,
+.thallo-block-section .thallo-block-section__title--center { text-align: center; }
+.thallo-block-section .thallo-block-section__headline--end,
+.thallo-block-section .thallo-block-section__title--end { text-align: end; }
+.thallo-block-section .thallo-block-section__description--start { margin-inline: 0; text-align: start; }
+.thallo-block-section .thallo-block-section__description--center { margin-inline: auto; text-align: center; }
+.thallo-block-section .thallo-block-section__description--end { margin-inline: auto 0; text-align: end; }
+
 /* reverse: content leads, header follows (order-only, orientation-agnostic) */
 .thallo-block-section--reverse .thallo-block-section__content { order: -1; }
 
