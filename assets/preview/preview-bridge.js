@@ -1285,9 +1285,15 @@
   }
   // A block that paints nothing (a feature without title, marker or description) would be
   // invisible on the canvas yet still in the document — and still validated at publish. Such a
-  // wrapper is marked and its visual child labelled, so the stylesheet paints a stub. Empty means:
-  // no text, no media, no controls, no nested block or slot (a container's slot placeholder
-  // is content). Bridge state: stripped before any comparison or clone.
+  // wrapper is marked and its visual child labelled, so the stylesheet paints a stub. Empty means
+  // BOTH: nothing in the DOM (no text, media, controls, nested block or slot — a container's slot
+  // placeholder is content) AND no painted box — a separator's line or a spacer's height is
+  // drawn by CSS alone and must never read as empty. Bridge state: stripped before any
+  // comparison or clone.
+  function paintsNothing(host) {
+    if (typeof host.getBoundingClientRect !== 'function') return true
+    return host.getBoundingClientRect().height === 0
+  }
   function markEmptyBlocks() {
     var wrappers = document.querySelectorAll('[data-thallo-block]')
     for (var i = 0; i < wrappers.length; i++) {
@@ -1295,6 +1301,7 @@
       var host = firstVisualChild(w)
       var empty = !!host && (host.textContent || '').trim() === ''
         && !host.querySelector('img,svg,video,audio,iframe,picture,canvas,input,textarea,select,button,[data-thallo-block],[data-thallo-slot]')
+        && paintsNothing(host)
       if (empty) {
         w.setAttribute('data-thallo-block-empty', '')
         host.setAttribute('data-thallo-empty-label', 'Empty ' + blockKindOf(host))
