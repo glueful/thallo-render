@@ -534,23 +534,88 @@
 
 /* tabs — CSS-only radio tabs (Tabs pill recipe; authoring cap: 12 — theme-runtime spec §4) */
 :where(.thallo-block-tabs, thallo-tabs) { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
+/* The strip's colours are four variables: the variant sets them, a chosen token overrides one. */
+.thallo-block-tabs {
+  --tabs-list-bg: var(--surface);
+  --tabs-tab-fg: var(--muted);
+  --tabs-active-bg: var(--bg);
+  --tabs-active-fg: var(--ink);
+  --shadow-tabs-active: var(--shadow);
+  --tabs-active-underline: transparent;
+}
 .thallo-block-tabs__radio { position: absolute; opacity: 0; pointer-events: none; }
 .thallo-block-tabs__list {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   gap: var(--space-1, 0.25rem);
+  width: fit-content;
   padding: 0.25rem;
-  background: var(--surface);
+  border-radius: var(--radius-md);
+  background: var(--tabs-list-bg);
 }
 .thallo-block-tabs__label {
   padding: 0.4rem 0.9rem;
+  border-bottom: 2px solid transparent;
+  border-radius: var(--radius-sm);
   font-size: 0.95rem;
   font-weight: 500;
-  color: var(--muted);
+  color: var(--tabs-tab-fg);
   cursor: pointer;
 }
 .thallo-block-tabs__panels { margin-top: var(--space-4); }
 .thallo-block-tabs__panel { display: none; }
+/* alignment of the strip */
+.thallo-block-tabs--align-center .thallo-block-tabs__list { margin-inline: auto; }
+.thallo-block-tabs--align-end .thallo-block-tabs__list { margin-inline-start: auto; }
+.thallo-block-tabs--align-stretch .thallo-block-tabs__list { width: 100%; }
+.thallo-block-tabs--align-stretch .thallo-block-tabs__label { flex: 1; text-align: center; }
+/* underline: bare labels on a rule, the active one underlined in the accent */
+.thallo-block-tabs--underline {
+  --tabs-list-bg: transparent;
+  --tabs-active-bg: transparent;
+  --tabs-active-fg: var(--ink);
+  --shadow-tabs-active: none;
+  --tabs-active-underline: var(--accent);
+}
+.thallo-block-tabs--underline .thallo-block-tabs__list { padding: 0; gap: 0; border-radius: 0; border-bottom: 1px solid var(--line); }
+.thallo-block-tabs--underline .thallo-block-tabs__label { border-radius: 0; padding-block: 0.6rem; margin-bottom: -1px; }
+/* boxed: labels as boxes sitting on the panel */
+.thallo-block-tabs--boxed {
+  --tabs-list-bg: transparent;
+  --tabs-active-bg: var(--surface);
+  --tabs-active-fg: var(--ink);
+  --shadow-tabs-active: none;
+}
+.thallo-block-tabs--boxed .thallo-block-tabs__list { padding: 0; gap: 0; border-radius: 0; }
+.thallo-block-tabs--boxed .thallo-block-tabs__label { border: 1px solid var(--line); border-bottom: 0; border-radius: var(--radius-sm) var(--radius-sm) 0 0; margin-inline-end: -1px; }
+.thallo-block-tabs--boxed .thallo-block-tabs__panels { margin-top: 0; border: 1px solid var(--line); border-radius: 0 var(--radius-md) var(--radius-md) var(--radius-md); background: var(--surface); }
+/* chosen colours (theme tokens) override the variant's */
+.thallo-block-tabs--list-bg-transparent { --tabs-list-bg: transparent; }
+.thallo-block-tabs--list-bg-surface { --tabs-list-bg: var(--surface); }
+.thallo-block-tabs--list-bg-surface-2 { --tabs-list-bg: var(--surface-2); }
+.thallo-block-tabs--list-bg-accent { --tabs-list-bg: var(--accent); }
+.thallo-block-tabs--list-bg-text { --tabs-list-bg: var(--ink); }
+.thallo-block-tabs--list-bg-background { --tabs-list-bg: var(--bg); }
+.thallo-block-tabs--tab-fg-accent { --tabs-tab-fg: var(--accent); }
+.thallo-block-tabs--tab-fg-text { --tabs-tab-fg: var(--ink); }
+.thallo-block-tabs--tab-fg-muted { --tabs-tab-fg: var(--muted); }
+.thallo-block-tabs--tab-fg-accent-contrast { --tabs-tab-fg: var(--accent-ink); }
+.thallo-block-tabs--tab-fg-background { --tabs-tab-fg: var(--bg); }
+.thallo-block-tabs--active-bg-transparent { --tabs-active-bg: transparent; }
+.thallo-block-tabs--active-bg-surface { --tabs-active-bg: var(--surface); }
+.thallo-block-tabs--active-bg-surface-2 { --tabs-active-bg: var(--surface-2); }
+.thallo-block-tabs--active-bg-accent { --tabs-active-bg: var(--accent); }
+.thallo-block-tabs--active-bg-text { --tabs-active-bg: var(--ink); }
+.thallo-block-tabs--active-bg-background { --tabs-active-bg: var(--bg); }
+.thallo-block-tabs--active-fg-accent { --tabs-active-fg: var(--accent); }
+.thallo-block-tabs--active-fg-text { --tabs-active-fg: var(--ink); }
+.thallo-block-tabs--active-fg-muted { --tabs-active-fg: var(--muted); }
+.thallo-block-tabs--active-fg-accent-contrast { --tabs-active-fg: var(--accent-ink); }
+.thallo-block-tabs--active-fg-background { --tabs-active-fg: var(--bg); }
+/* space inside the panels area */
+.thallo-block-tabs--panel-pad-sm .thallo-block-tabs__panels { padding: var(--space-3); }
+.thallo-block-tabs--panel-pad-md .thallo-block-tabs__panels { padding: var(--space-5); }
+.thallo-block-tabs--panel-pad-lg .thallo-block-tabs__panels { padding: var(--space-7, var(--space-6)); }
 /* nth radio checked -> nth label active + nth panel visible (cap: 12) */
 .thallo-block-tabs__radio:nth-of-type(1):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(1),
 .thallo-block-tabs__radio:nth-of-type(2):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(2),
@@ -564,9 +629,10 @@
 .thallo-block-tabs__radio:nth-of-type(10):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(10),
 .thallo-block-tabs__radio:nth-of-type(11):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(11),
 .thallo-block-tabs__radio:nth-of-type(12):checked ~ .thallo-block-tabs__list .thallo-block-tabs__label:nth-of-type(12) {
-  background: var(--bg);
-  color: var(--ink);
-  box-shadow: var(--shadow);
+  background: var(--tabs-active-bg);
+  color: var(--tabs-active-fg);
+  box-shadow: var(--shadow-tabs-active);
+  border-bottom: 2px solid var(--tabs-active-underline);
 }
 .thallo-block-tabs__radio:nth-of-type(1):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(1),
 .thallo-block-tabs__radio:nth-of-type(2):checked ~ .thallo-block-tabs__panels .thallo-block-tabs__panel:nth-of-type(2),

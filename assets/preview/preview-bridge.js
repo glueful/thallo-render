@@ -144,7 +144,20 @@
     }
   }
 
+  /** A block inside a hidden tab panel: check that panel's radio so the selection is in view. */
+  function revealTabPanels(w) {
+    var panel = w.parentElement ? w.parentElement.closest('.thallo-block-tabs__panel') : null
+    while (panel) {
+      var root = panel.closest('.thallo-block-tabs')
+      var panels = root ? Array.prototype.slice.call(root.querySelectorAll(':scope > .thallo-block-tabs__panels > .thallo-block-tabs__panel')) : []
+      var radios = root ? Array.prototype.slice.call(root.querySelectorAll(':scope > .thallo-block-tabs__radio')) : []
+      var radio = radios[panels.indexOf(panel)]
+      if (radio) radio.checked = true
+      panel = root && root.parentElement ? root.parentElement.closest('.thallo-block-tabs__panel') : null
+    }
+  }
   function selectWrapper(w) {
+    revealTabPanels(w)
     clearClass('thallo-canvas-selected')
     detachToolbar()
     w.classList.add('thallo-canvas-selected')
@@ -1487,6 +1500,27 @@
         if (action === 'add-after') {
           // The Blocks tab arms "after this block" (Phase C.1): no anchor needed.
           post('block-add-after', { id: selectedId })
+        }
+        return
+      }
+      // A tabs label: the runtime's tabs module skips the canvas, so the CSS radio floor drives
+      // the panels — let the click reach its radio (every other in-block click is inert), then
+      // select the tab block that panel shows, so the inspector edits the tab just switched to.
+      var tabLabel = e.target && e.target.closest ? e.target.closest('label.thallo-block-tabs__label[for]') : null
+      if (tabLabel) {
+        e.preventDefault()
+        e.stopPropagation()
+        var radio = document.getElementById(tabLabel.getAttribute('for'))
+        if (radio) radio.checked = true
+        var tabsRoot = tabLabel.closest('.thallo-block-tabs')
+        var labels = tabsRoot ? Array.prototype.slice.call(tabsRoot.querySelectorAll(':scope > .thallo-block-tabs__list > .thallo-block-tabs__label')) : []
+        var panels = tabsRoot ? Array.prototype.slice.call(tabsRoot.querySelectorAll(':scope > .thallo-block-tabs__panels > .thallo-block-tabs__panel')) : []
+        var panel = panels[labels.indexOf(tabLabel)]
+        var tabWrapper = panel ? panel.querySelector('[data-thallo-block]') : null
+        var target = tabWrapper || wrapperFor(tabLabel)
+        if (target) {
+          selectWrapper(target)
+          post('block-select', { id: target.getAttribute('data-thallo-block'), shift: false, meta: false })
         }
         return
       }

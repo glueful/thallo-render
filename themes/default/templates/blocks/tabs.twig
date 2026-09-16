@@ -1,4 +1,4 @@
-{# tabs — maps to refs.md `tabs` (pill variant, size md). CSS-only radio-tabs
+{# tabs — maps to refs.md `tabs`. CSS-only radio-tabs
    FLOOR: the __radio / __list / __label / __panels / __panel structural classes
    are behaviour hooks the theme CSS selects (checked-sibling → active label +
    shown panel) — keep them, plus the per-instance name="tabs-{id}" /
@@ -8,9 +8,33 @@
    arrow keys) on enhancement and marks the root data-thallo-enhanced~="tabs".
    Authoring cap: 12 items, server-enforced at save (theme-runtime spec §4) —
    the floor's enumerated CSS pairs exactly that many, and over-cap content
-   cannot exist (pre-launch decision, no legacy-overflow rules). Fields:
-   items — each a block with item.data.label; panel body renders the item itself. #}
-<div class="thallo-block thallo-block-tabs{{ style_classes('root') }}"{{ style_attrs('root') }}>
+   cannot exist (pre-launch decision, no legacy-overflow rules).
+   Fields: items — each a block with item.data.label; panel body renders the item itself.
+     variant (pill|underline|boxed), align (start|center|end|stretch),
+     list_background / tab_color / active_background / active_color (theme colour tokens;
+     unset keeps the variant's own), panel_padding (none|sm|md|lg).
+   Style targets: root (spacing, visibility) and `panels` — the one content area, whichever
+   tab is shown — for colours, radius, border and shadow. #}
+{% set variant = {pill: 'pill', underline: 'underline', boxed: 'boxed'}[data.variant|default('')] ?? 'pill' %}
+{% set align = {start: 'start', center: 'center', end: 'end', stretch: 'stretch'}[data.align|default('')] ?? 'start' %}
+{% set panelPad = {none: 'none', sm: 'sm', md: 'md', lg: 'lg'}[data.panel_padding|default('')] ?? 'none' %}
+{% set bgTokens = {transparent: 1, surface: 1, 'surface-2': 1, accent: 1, text: 1, background: 1} %}
+{% set fgTokens = {accent: 1, text: 1, muted: 1, 'accent-contrast': 1, background: 1} %}
+{% set listBg = data.list_background|default('') %}
+{% set tabFg = data.tab_color|default('') %}
+{% set activeBg = data.active_background|default('') %}
+{% set activeFg = data.active_color|default('') %}
+{% set rootClass = [
+  'thallo-block thallo-block-tabs',
+  'thallo-block-tabs--' ~ variant,
+  'thallo-block-tabs--align-' ~ align,
+  'thallo-block-tabs--panel-pad-' ~ panelPad,
+  bgTokens[listBg] is defined ? 'thallo-block-tabs--list-bg-' ~ listBg : '',
+  fgTokens[tabFg] is defined ? 'thallo-block-tabs--tab-fg-' ~ tabFg : '',
+  bgTokens[activeBg] is defined ? 'thallo-block-tabs--active-bg-' ~ activeBg : '',
+  fgTokens[activeFg] is defined ? 'thallo-block-tabs--active-fg-' ~ activeFg : '',
+]|join(' ')|trim %}
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% for item in data.items|default([]) %}
   <input class="thallo-block-tabs__radio" type="radio" name="tabs-{{ block.id }}" id="tabs-{{ block.id }}-{{ loop.index }}"{% if loop.first %} checked{% endif %}>
   {% endfor %}
@@ -19,7 +43,7 @@
     <label class="thallo-block-tabs__label" for="tabs-{{ block.id }}-{{ loop.index }}">{{ item.data.label|default('') }}</label>
     {% endfor %}
   </div>
-  <div class="thallo-block-tabs__panels">
+  <div class="thallo-block-tabs__panels{{ style_classes('panels') }}"{{ style_attrs('panels') }}>
     {% for item in data.items|default([]) %}
     <div class="thallo-block-tabs__panel">{{ blocks([item]) }}</div>
     {% endfor %}
