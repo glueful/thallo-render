@@ -1101,6 +1101,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .layout--full .thallo-block-shortcode,
 .layout--full .thallo-block-rich_text,
 .layout--full .thallo-block-form,
+.layout--full .thallo-block-separator,
 .layout--full .entry-content {
   max-width: none;
 }
@@ -1113,8 +1114,11 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 
 /* separator — a horizontal rule with an optional centered label/icon (replaces
    the legacy divider). Line style ← --type, thickness ← --size. */
+/* A page-level separator spans the page's width, not the viewport: the same clamp the other
+   self-governed leaves carry (button, tabs, video…); nested, it fills its parent. */
 .thallo-block-separator {
-  display: flex; align-items: center; width: 100%; margin-block: var(--space-4);
+  display: flex; align-items: center; margin-block: var(--space-4);
+  max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4);
 }
 .thallo-block-separator__line { flex: 1 1 auto; border-top: 1px solid var(--line); }
 .thallo-block-separator--type-dashed .thallo-block-separator__line { border-top-style: dashed; }
