@@ -143,9 +143,10 @@ Functions:
   left/right, a column splits top/bottom, a grid takes the end), and where an empty slot sits.
   Outside the canvas it renders nothing. The slot name must be a constant string and must be one
   of the block type's `blocks` fields. An empty slot on the canvas shows a dashed placeholder
-  naming the slot (`data-thallo-slot-empty`, painted by the preview stylesheet) so there is
-  always somewhere to drop; render the wrapper even when the list is empty — `is_canvas()` says
-  whether you are on the canvas, so a wrapper the published page omits can still exist there.
+  (`data-thallo-slot-empty`, painted by the preview stylesheet) with a + that opens the editor's
+  Blocks tab on that slot and the hint "Drag a block here", so there is always somewhere to add;
+  render the wrapper even when the list is empty — `is_canvas()` says whether you are on the
+  canvas, so a wrapper the published page omits can still exist there.
 - `is_canvas()` — true while rendering for the editor's canvas.
 - `icon(name)` — render an icon.
 - `menu('main')` — items for a named menu.

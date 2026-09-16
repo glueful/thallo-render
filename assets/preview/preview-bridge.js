@@ -1021,6 +1021,12 @@
     Array.prototype.forEach.call(root.querySelectorAll('.thallo-canvas-drop-line'), function (el) {
       el.parentNode.removeChild(el) // the drop indicator is drag state, never content
     })
+    Array.prototype.forEach.call(root.querySelectorAll('.thallo-slot-placeholder'), function (el) {
+      el.parentNode.removeChild(el) // the empty-slot placeholder is bridge UI, never content
+    })
+    Array.prototype.forEach.call(root.querySelectorAll('[data-thallo-slot-empty]'), function (el) {
+      el.removeAttribute('data-thallo-slot-empty')
+    })
     var classes = [
       'thallo-canvas-anchor', 'thallo-canvas-selected', 'thallo-canvas-hover',
       'thallo-canvas-selected-target', 'thallo-canvas-hover-target', 'thallo-canvas-dragging'
@@ -1239,9 +1245,32 @@
     var slots = document.querySelectorAll('[data-thallo-slot]')
     for (var i = 0; i < slots.length; i++) {
       var slot = slots[i]
-      if (slot.querySelector('[data-thallo-block]')) slot.removeAttribute('data-thallo-slot-empty')
-      else slot.setAttribute('data-thallo-slot-empty', '')
+      var placeholder = slot.querySelector(':scope > .thallo-slot-placeholder')
+      if (slot.querySelector('[data-thallo-block]')) {
+        slot.removeAttribute('data-thallo-slot-empty')
+        if (placeholder) slot.removeChild(placeholder)
+      } else {
+        slot.setAttribute('data-thallo-slot-empty', '')
+        if (!placeholder) slot.appendChild(buildPlaceholder(slot.getAttribute('data-thallo-slot')))
+      }
     }
+  }
+  // The placeholder: a dashed frame with one + (arms the parent's Blocks tab into this slot)
+  // and the drag hint. Bridge-owned, never content: stripped before any comparison or clone.
+  function buildPlaceholder(slotName) {
+    var box = document.createElement('div')
+    box.className = 'thallo-slot-placeholder'
+    var add = document.createElement('button')
+    add.type = 'button'
+    add.setAttribute('data-slot-add', '')
+    add.setAttribute('aria-label', 'Add a block to ' + slotName)
+    add.textContent = '+'
+    var hint = document.createElement('span')
+    hint.className = 'thallo-slot-placeholder__hint'
+    hint.textContent = 'Drag a block here'
+    box.appendChild(add)
+    box.appendChild(hint)
+    return box
   }
 
   function enhanceInserted(el) {
@@ -1417,6 +1446,19 @@
           // The Blocks tab arms "after this block" (Phase C.1): no anchor needed.
           post('block-add-after', { id: selectedId })
         }
+        return
+      }
+      // The empty-slot + asks the parent to arm its Blocks tab into that slot (never a selection).
+      var addBtn = e.target && e.target.closest ? e.target.closest('[data-thallo-slot] [data-slot-add]') : null
+      if (addBtn) {
+        e.preventDefault()
+        e.stopPropagation()
+        var slotEl = addBtn.closest('[data-thallo-slot]')
+        var ownerEl = slotEl.parentElement ? slotEl.parentElement.closest('[data-thallo-block]') : null
+        post('slot-add', {
+          parent: ownerEl ? ownerEl.getAttribute('data-thallo-block') : null,
+          slot: slotEl.getAttribute('data-thallo-slot')
+        })
         return
       }
       var w = wrapperFor(e.target)

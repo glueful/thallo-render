@@ -3,19 +3,50 @@
    display:contents elements paint no boxes, so rings go on the wrapper's
    CHILDREN via > *; the -target classes are the first-child fallback. */
 .thallo-preview-block { display: contents; }
-/* Empty slots (visual builder spec §5.4): a labelled placeholder in canvas mode only — geometry
-   with no id and no document presence. The bridge marks a slot empty when it holds no wrapper. */
+/* Empty slots (visual builder spec §5.4): a placeholder in canvas mode only — geometry with no
+   id and no document presence. The bridge marks a slot empty when it holds no wrapper and mounts
+   the placeholder: a dashed frame, one + that arms the Blocks tab into the slot, the drag hint. */
 [data-thallo-slot][data-thallo-slot-empty] {
-  min-height: 2.5rem;
-  outline: 1px dashed rgba(37, 99, 235, 0.5);
+  min-height: 5rem;
+  outline: 1px dashed rgba(37, 99, 235, 0.45);
   outline-offset: -4px;
 }
-[data-thallo-slot][data-thallo-slot-empty]::before {
-  content: attr(data-thallo-slot) ' — drop blocks here';
-  display: block;
-  padding: 0.5rem 0.75rem;
+.thallo-slot-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 5rem;
+  padding: 1rem;
+  box-sizing: border-box;
   font: 12px/1.4 system-ui, sans-serif;
-  color: rgba(37, 99, 235, 0.8);
+}
+.thallo-slot-placeholder [data-slot-add] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(37, 99, 235, 0.5);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(37, 99, 235, 0.9);
+  font: 18px/1 system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+.thallo-slot-placeholder [data-slot-add]:hover,
+.thallo-slot-placeholder [data-slot-add]:focus-visible {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.9);
+  outline: none;
+}
+.thallo-slot-placeholder__hint {
+  color: rgba(100, 116, 139, 0.9);
+  font-style: italic;
+  pointer-events: none;
 }
 [data-thallo-block].thallo-canvas-hover > *,
 .thallo-canvas-hover-target { outline: 2px dashed rgba(37, 99, 235, 0.6); outline-offset: 2px; }
