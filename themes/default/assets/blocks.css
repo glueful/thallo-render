@@ -492,11 +492,45 @@
 
 /* feature — a compact icon + title + description leaf (drop several into a grid) */
 .thallo-block-feature { display: flex; align-items: flex-start; gap: var(--space-3); margin-block: 0; }
-.thallo-block-feature__icon { font-size: 1.4rem; line-height: 1.3; display: inline-block; }
-.thallo-block-feature__title { margin: 0; font-size: 1.05rem; }
+/* the marker: the icon inline, or a number badge; colours from the theme's tokens when chosen */
+.thallo-block-feature__marker { flex: none; color: var(--accent); }
+.thallo-block-feature__marker--icon { font-size: 1.4rem; line-height: 1.3; display: inline-flex; align-items: center; justify-content: center; }
+.thallo-block-feature__marker--number {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2.5rem; height: 2.5rem; padding-inline: var(--space-2);
+  border-radius: var(--radius-md); background: var(--surface-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.875rem; font-weight: 600;
+}
+.thallo-block-feature__marker--bg-transparent { background: transparent; }
+.thallo-block-feature__marker--bg-surface { background: var(--surface); }
+.thallo-block-feature__marker--bg-surface-2 { background: var(--surface-2); }
+.thallo-block-feature__marker--bg-accent { background: var(--accent); }
+.thallo-block-feature__marker--bg-text { background: var(--ink); }
+.thallo-block-feature__marker--icon[class*="--bg-"] { padding: var(--space-2); border-radius: var(--radius-md); }
+.thallo-block-feature__marker--fg-accent { color: var(--accent); }
+.thallo-block-feature__marker--fg-text { color: var(--ink); }
+.thallo-block-feature__marker--fg-muted { color: var(--muted); }
+.thallo-block-feature__marker--fg-accent-contrast { color: var(--accent-ink); }
+.thallo-block-feature__marker--fg-background { color: var(--bg); }
+.thallo-block-feature__body { min-width: 0; flex: 1; }
+.thallo-block-feature__title { margin: 0; font-size: 1.05rem; text-wrap: pretty; }
 .thallo-block-feature__title a { color: inherit; text-decoration: none; }
 .thallo-block-feature__title a:hover { color: var(--accent); }
-.thallo-block-feature__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; }
+.thallo-block-feature__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; text-wrap: pretty; }
+/* vertical: the marker above the text */
+.thallo-block-feature--vertical { flex-direction: column; }
+.thallo-block-feature--vertical .thallo-block-feature__body { flex: none; width: 100%; }
+.thallo-block-feature--vertical .thallo-block-feature__title { font-size: 1.25rem; }
+.thallo-block-feature--vertical .thallo-block-feature__marker { margin-bottom: var(--space-3); }
+/* cards (the card block's variant names): padded, rounded, filling their grid cell */
+.thallo-block-feature--outline,
+.thallo-block-feature--soft,
+.thallo-block-feature--subtle {
+  height: 100%; box-sizing: border-box; padding: var(--space-5); border-radius: var(--radius-lg);
+}
+.thallo-block-feature--outline { background: var(--bg); border: 1px solid var(--line); }
+.thallo-block-feature--soft { background: var(--surface); }
+.thallo-block-feature--subtle { background: var(--surface); border: 1px solid var(--line); }
 
 /* tabs — CSS-only radio tabs (Tabs pill recipe; authoring cap: 12 — theme-runtime spec §4) */
 :where(.thallo-block-tabs, thallo-tabs) { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }

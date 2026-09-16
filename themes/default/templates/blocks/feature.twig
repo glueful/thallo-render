@@ -1,10 +1,30 @@
-{# feature — maps to refs.md `pageFeature`. A compact icon + title + description leaf block;
-   drop several into a `grid`. Authored in the theme's BEM/hand-authored-CSS convention
-   (see navigation.twig / separator.twig) — the matching rules live in assets/blocks.css.
-   Fields (all optional): icon, title, description, url. #}
+{# feature — maps to refs.md `pageFeature`. A marker + title + description leaf block; drop
+   several into a `grid`. Authored in the theme's BEM/hand-authored-CSS convention (see
+   navigation.twig / separator.twig) — the matching rules live in assets/blocks.css.
+   Fields (all optional but title): icon, title, description, url,
+     marker (icon|number|none — what shows before the title), number (the badge's text),
+     marker_background / marker_color (theme colour tokens; unset keeps the marker's default),
+     variant (plain|outline|soft|subtle — plain is the inline leaf, the rest are cards),
+     orientation (horizontal|vertical — the marker beside the text, or above it). #}
 {% set url = data.url|default('')|safe_url %}
-<div class="thallo-block thallo-block-feature{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  {% if data.icon %}<span class="thallo-block-feature__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
-  {% if data.title %}<h3 class="thallo-block-feature__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>{% endif %}
-  {% if data.description %}<p class="thallo-block-feature__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+{% set variant = {plain: 'plain', outline: 'outline', soft: 'soft', subtle: 'subtle'}[data.variant|default('')] ?? 'plain' %}
+{% set orientation = {horizontal: 'horizontal', vertical: 'vertical'}[data.orientation|default('')] ?? 'horizontal' %}
+{% set marker = {icon: 'icon', number: 'number', none: 'none'}[data.marker|default('')] ?? 'icon' %}
+{% set colorTokens = {transparent: 1, surface: 1, 'surface-2': 1, accent: 1, text: 1, muted: 1, 'accent-contrast': 1, background: 1} %}
+{% set markerBg = data.marker_background|default('') %}
+{% set markerFg = data.marker_color|default('') %}
+{% set markerClass = 'thallo-block-feature__marker thallo-block-feature__marker--' ~ marker
+  ~ (colorTokens[markerBg] is defined ? ' thallo-block-feature__marker--bg-' ~ markerBg : '')
+  ~ (colorTokens[markerFg] is defined ? ' thallo-block-feature__marker--fg-' ~ markerFg : '') %}
+{% set rootClass = [
+  'thallo-block thallo-block-feature',
+  'thallo-block-feature--' ~ variant,
+  'thallo-block-feature--' ~ orientation,
+]|join(' ') %}
+<div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {% if marker == 'number' and data.number|default('') %}<span class="{{ markerClass }}">{{ data.number }}</span>{% elseif marker == 'icon' and data.icon %}<span class="{{ markerClass }} thallo-block-feature__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
+  <div class="thallo-block-feature__body">
+    {% if data.title %}<h3 class="thallo-block-feature__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>{% endif %}
+    {% if data.description %}<p class="thallo-block-feature__description">{{ data.description|editable_text('description') }}</p>{% endif %}
+  </div>
 </div>

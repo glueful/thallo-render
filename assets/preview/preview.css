@@ -8,6 +8,11 @@
    also marked data-thallo-slot-empty): a dashed frame, one + that arms the Blocks tab at the end
    of the slot, the drag hint. */
 .thallo-slot-placeholder {
+  /* The full row of its slot, whatever the slot's layout: a grid cell or a flex item would
+     otherwise leave it as one narrow column beside the blocks. */
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
