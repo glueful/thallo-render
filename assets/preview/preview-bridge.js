@@ -1027,6 +1027,12 @@
     Array.prototype.forEach.call(root.querySelectorAll('[data-thallo-slot-empty]'), function (el) {
       el.removeAttribute('data-thallo-slot-empty')
     })
+    Array.prototype.forEach.call(root.querySelectorAll('[data-thallo-block-empty]'), function (el) {
+      el.removeAttribute('data-thallo-block-empty')
+    })
+    Array.prototype.forEach.call(root.querySelectorAll('[data-thallo-empty-label]'), function (el) {
+      el.removeAttribute('data-thallo-empty-label')
+    })
     var classes = [
       'thallo-canvas-anchor', 'thallo-canvas-selected', 'thallo-canvas-hover',
       'thallo-canvas-selected-target', 'thallo-canvas-hover-target', 'thallo-canvas-dragging'
@@ -1262,6 +1268,33 @@
         slot.removeChild(placeholder)
       }
     }
+    markEmptyBlocks()
+  }
+  // A block that paints nothing (a feature without title, marker or description) would be
+  // invisible on the canvas yet still in the document — and still validated at publish. Such a
+  // wrapper is marked and its visual child labelled, so the stylesheet paints a stub. Empty means:
+  // no text, no media, no controls, no nested block or slot (a container's slot placeholder
+  // is content). Bridge state: stripped before any comparison or clone.
+  function markEmptyBlocks() {
+    var wrappers = document.querySelectorAll('[data-thallo-block]')
+    for (var i = 0; i < wrappers.length; i++) {
+      var w = wrappers[i]
+      var host = firstVisualChild(w)
+      var empty = !!host && (host.textContent || '').trim() === ''
+        && !host.querySelector('img,svg,video,audio,iframe,picture,canvas,input,textarea,select,button,[data-thallo-block],[data-thallo-slot]')
+      if (empty) {
+        w.setAttribute('data-thallo-block-empty', '')
+        host.setAttribute('data-thallo-empty-label', 'Empty ' + blockKindOf(host))
+      } else {
+        w.removeAttribute('data-thallo-block-empty')
+        if (host) host.removeAttribute('data-thallo-empty-label')
+      }
+    }
+  }
+  /** "feature" from a theme root's thallo-block-feature class; "block" when the theme names none. */
+  function blockKindOf(host) {
+    var m = /(?:^|\s)thallo-block-([a-z0-9_-]+)/.exec(host.className || '')
+    return m ? m[1].replace(/_/g, ' ') : 'block'
   }
   // The placeholder: a dashed frame with one + (arms the parent's Blocks tab into this slot)
   // and the drag hint. Bridge-owned, never content: stripped before any comparison or clone.

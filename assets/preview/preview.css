@@ -52,6 +52,22 @@
   font-style: italic;
   pointer-events: none;
 }
+/* Empty blocks: a block that paints nothing is still in the document (and validated at publish);
+   the bridge labels its visual child so it has a box to select and a name. */
+[data-thallo-block][data-thallo-block-empty] > [data-thallo-empty-label] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  outline: 1px dashed rgba(217, 119, 6, 0.7);
+  outline-offset: -4px;
+}
+[data-thallo-block][data-thallo-block-empty] > [data-thallo-empty-label]::before {
+  content: attr(data-thallo-empty-label) ' — select it to add content, or delete it';
+  padding: 0.5rem 0.75rem;
+  font: 12px/1.4 system-ui, sans-serif;
+  color: rgba(180, 83, 9, 0.95);
+}
 [data-thallo-block].thallo-canvas-hover > *,
 .thallo-canvas-hover-target { outline: 2px dashed rgba(37, 99, 235, 0.6); outline-offset: 2px; }
 [data-thallo-block].thallo-canvas-selected > *,
