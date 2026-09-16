@@ -269,8 +269,16 @@
 }
 .thallo-block-cta--vertical .thallo-block-cta__wrapper { text-align: center; }
 .thallo-block-cta--vertical .thallo-block-cta__links { justify-content: center; }
+/* a chosen links alignment beats the orientation's default */
+.thallo-block-cta--links-start .thallo-block-cta__links { justify-content: flex-start; }
+.thallo-block-cta--links-center .thallo-block-cta__links { justify-content: center; }
+.thallo-block-cta--links-end .thallo-block-cta__links { justify-content: flex-end; }
 .thallo-block-cta__title { margin: 0; font-size: clamp(1.6rem, 1.3rem + 1.2vw, 2.25rem); letter-spacing: -0.02em; }
-.thallo-block-cta__description { margin: var(--space-3) 0 0; max-width: var(--content); color: var(--muted); }
+.thallo-block-cta__description {
+  margin: var(--space-3) 0 0; max-width: var(--content);
+  /* softened from the panel's text colour (the Style tab's), not pinned to a theme token */
+  color: color-mix(in srgb, currentColor 72%, transparent);
+}
 .thallo-block-cta--vertical .thallo-block-cta__description { margin-inline: auto; }
 .thallo-block-cta__links {
   display: flex;
@@ -280,7 +288,6 @@
 }
 /* variants — solid (inverted band), outline (ring), soft (tint), subtle (tint+ring), naked */
 .thallo-block-cta--solid .thallo-block-cta__inner { background: var(--ink); color: var(--bg); }
-.thallo-block-cta--solid .thallo-block-cta__description { color: color-mix(in srgb, var(--bg) 75%, var(--ink)); }
 .thallo-block-cta--outline .thallo-block-cta__inner { background: var(--bg); border: 1px solid var(--line); box-shadow: var(--shadow); }
 .thallo-block-cta--soft .thallo-block-cta__inner { background: var(--surface); }
 .thallo-block-cta--subtle .thallo-block-cta__inner { background: var(--surface); border: 1px solid var(--line); }

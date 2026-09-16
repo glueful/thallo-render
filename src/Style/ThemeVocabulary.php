@@ -42,6 +42,7 @@ final class ThemeVocabulary
                 "theme \"{$name}\" vocabulary is missing " . implode(', ', Vocabulary::all()),
             );
         }
+        $vocabulary += Vocabulary::LITERAL_DEFAULTS; // a theme's own mapping wins; the literal fills a gap
         $missing = [];
         foreach (Vocabulary::all() as $token) {
             if (!array_key_exists($token, $vocabulary)) {

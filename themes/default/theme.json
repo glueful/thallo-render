@@ -31,6 +31,7 @@
     "color.accent": "var(--accent)",
     "color.accent-contrast": "var(--accent-ink)",
     "color.transparent": "transparent",
+    "color.white": "#ffffff",
     "shadow.none": "var(--shadow-none)",
     "shadow.xs": "var(--shadow-xs)",
     "shadow.sm": "var(--shadow-sm)",
