@@ -3,37 +3,36 @@
    display:contents elements paint no boxes, so rings go on the wrapper's
    CHILDREN via > *; the -target classes are the first-child fallback. */
 .thallo-preview-block { display: contents; }
-/* Empty slots (visual builder spec §5.4): a placeholder in canvas mode only — geometry with no
-   id and no document presence. The bridge marks a slot empty when it holds no wrapper and mounts
-   the placeholder: a dashed frame, one + that arms the Blocks tab into the slot, the drag hint. */
-[data-thallo-slot][data-thallo-slot-empty] {
-  min-height: 5rem;
-  outline: 1px dashed rgba(37, 99, 235, 0.45);
-  outline-offset: -4px;
-}
+/* Slot placeholders (visual builder spec §5.4): canvas mode only — geometry with no id and no
+   document presence. The bridge mounts one after the last block of every slot (an empty slot is
+   also marked data-thallo-slot-empty): a dashed frame, one + that arms the Blocks tab at the end
+   of the slot, the drag hint. */
 .thallo-slot-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 5rem;
-  padding: 1rem;
+  gap: 0.25rem;
+  min-height: 3.5rem;
+  margin: 0.25rem 0;
+  padding: 0.5rem;
   box-sizing: border-box;
+  border: 1px dashed rgba(37, 99, 235, 0.45);
+  border-radius: 4px;
   font: 12px/1.4 system-ui, sans-serif;
 }
 .thallo-slot-placeholder [data-slot-add] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   padding: 0;
   border: 1px solid rgba(37, 99, 235, 0.5);
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.9);
   color: rgba(37, 99, 235, 0.9);
-  font: 18px/1 system-ui, sans-serif;
+  font: 16px/1 system-ui, sans-serif;
   cursor: pointer;
   transition: background 120ms, border-color 120ms;
 }

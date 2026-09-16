@@ -1239,20 +1239,22 @@
 
   // A swapped-in wrapper is server markup: custom elements tore themselves down with the
   // old subtree, and the runtime enhances the new one (canvas-skipping modules stay no-ops).
-  // Empty slots (visual builder spec §5.4): a slot element holding no wrapper is marked so the
-  // placeholder paints; re-marked after every load, patch and swap.
+  // Slot placeholders (visual builder spec §5.4): every slot ENDS in the same placeholder — "the
+  // next block goes here" — and an empty one is also marked data-thallo-slot-empty. Re-marked
+  // after every load, patch, swap and mirror so the placeholder stays last.
   function markEmptySlots() {
     var slots = document.querySelectorAll('[data-thallo-slot]')
     for (var i = 0; i < slots.length; i++) {
       var slot = slots[i]
       var placeholder = slot.querySelector(':scope > .thallo-slot-placeholder')
-      if (slot.querySelector('[data-thallo-block]')) {
-        slot.removeAttribute('data-thallo-slot-empty')
-        if (placeholder) slot.removeChild(placeholder)
-      } else {
-        slot.setAttribute('data-thallo-slot-empty', '')
-        if (!placeholder) slot.appendChild(buildPlaceholder(slot.getAttribute('data-thallo-slot')))
+      if (!placeholder) {
+        placeholder = buildPlaceholder(slot.getAttribute('data-thallo-slot'))
+        slot.appendChild(placeholder)
+      } else if (placeholder !== slot.lastElementChild) {
+        slot.appendChild(placeholder) // a mirror appended past it: the placeholder stays last
       }
+      if (slot.querySelector('[data-thallo-block]')) slot.removeAttribute('data-thallo-slot-empty')
+      else slot.setAttribute('data-thallo-slot-empty', '')
     }
   }
   // The placeholder: a dashed frame with one + (arms the parent's Blocks tab into this slot)
@@ -1329,6 +1331,7 @@
       var prev = findBlock(afterId)
       if (prev && prev.parentNode === w.parentNode) prev.parentNode.insertBefore(w, prev.nextSibling)
     }
+    markEmptySlots()
   }
 
   function mirrorRemove(id) {
