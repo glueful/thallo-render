@@ -390,6 +390,10 @@
   /* Inert unless the root is a column flex box (a band with a min height), where the inner area
      takes the remaining height inside root's padding. */
   flex: 1 1 auto;
+  /* As a flex item its inline margins are the gutter's `auto`, which stops the cross-axis stretch
+     a block-level box gets for free — without this a boxed content area shrink-wraps its text
+     inside a tall band instead of filling the measure. */
+  width: 100%;
 }
 
 /* containment release (spec §3.6) */
@@ -502,68 +506,18 @@
 .lg\:t-display-reset > .thallo-preview-block:last-child > .thallo-block { margin-bottom: 0; }
 }
 /* A rich text contributes no outer paragraph margin of its own; the margins between its own
-   paragraphs are untouched. */
-.thallo-block-rich_text > :first-child { margin-top: 0; }
-.thallo-block-rich_text > :last-child { margin-bottom: 0; }
-.thallo-block-container--contained .thallo-block-container__inner {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-}
-.thallo-block-container--narrow .thallo-block-container__inner {
-  max-width: var(--content);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-}
-/* Padding, margin, corners, border, shadow and colours are settings (t-p*, t-m*, t-radius-*,
-   t-bw-*/t-bs-*, t-shadow-*, t-bg-*/t-fg-*/t-bc-*). */
-.thallo-block-container--h-half { min-height: 50vh; }
-.thallo-block-container--h-full { min-height: 100vh; }
-/* Block-mode vertical centering (scoped away from flex mode, which owns __inner's
-   flex behaviour). */
-.thallo-block-container--h-half:not(.thallo-block-container--layout-flex) .thallo-block-container__inner,
-.thallo-block-container--h-full:not(.thallo-block-container--layout-flex) .thallo-block-container__inner {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: inherit;
-}
-/* content_align overrides the default centering (only visible once the flex column
-   above is in effect, i.e. a min_height is set — and not in flex layout mode). */
-.thallo-block-container--align-top:not(.thallo-block-container--layout-flex) .thallo-block-container__inner { justify-content: flex-start; }
-.thallo-block-container--align-bottom:not(.thallo-block-container--layout-flex) .thallo-block-container__inner { justify-content: flex-end; }
-
-/* Flex layout mode: __inner lays its child blocks out as flex items. Direction /
-   justify / align / wrap come from the modifier classes; gap from the token class below. */
-.thallo-block-container--layout-flex .thallo-block-container__inner {
-  display: flex;
-  gap: 0;
-  min-height: inherit;
-}
-.thallo-block-container--dir-row .thallo-block-container__inner { flex-direction: row; }
-.thallo-block-container--dir-column .thallo-block-container__inner { flex-direction: column; }
-.thallo-block-container--dir-row-reverse .thallo-block-container__inner { flex-direction: row-reverse; }
-.thallo-block-container--dir-column-reverse .thallo-block-container__inner { flex-direction: column-reverse; }
-.thallo-block-container--justify-start .thallo-block-container__inner { justify-content: flex-start; }
-.thallo-block-container--justify-center .thallo-block-container__inner { justify-content: center; }
-.thallo-block-container--justify-end .thallo-block-container__inner { justify-content: flex-end; }
-.thallo-block-container--justify-between .thallo-block-container__inner { justify-content: space-between; }
-.thallo-block-container--justify-around .thallo-block-container__inner { justify-content: space-around; }
-.thallo-block-container--justify-evenly .thallo-block-container__inner { justify-content: space-evenly; }
-.thallo-block-container--items-start .thallo-block-container__inner { align-items: flex-start; }
-.thallo-block-container--items-center .thallo-block-container__inner { align-items: center; }
-.thallo-block-container--items-end .thallo-block-container__inner { align-items: flex-end; }
-.thallo-block-container--items-stretch .thallo-block-container__inner { align-items: stretch; }
-.thallo-block-container--wrap .thallo-block-container__inner { flex-wrap: wrap; }
-/* gap — a spacing token in data (spec §1.7): the theme maps the name to the compiled variable. */
-.thallo-block-container--gap-none .thallo-block-container__inner { gap: var(--t-spacing-none); }
-.thallo-block-container--gap-xs .thallo-block-container__inner { gap: var(--t-spacing-xs); }
-.thallo-block-container--gap-sm .thallo-block-container__inner { gap: var(--t-spacing-sm); }
-.thallo-block-container--gap-md .thallo-block-container__inner { gap: var(--t-spacing-md); }
-.thallo-block-container--gap-lg .thallo-block-container__inner { gap: var(--t-spacing-lg); }
-.thallo-block-container--gap-xl .thallo-block-container__inner { gap: var(--t-spacing-xl); }
-.thallo-block-container--gap-2xl .thallo-block-container__inner { gap: var(--t-spacing-2xl); }
-.thallo-block-container--gap-3xl .thallo-block-container__inner { gap: var(--t-spacing-3xl); }
+   paragraphs are untouched. On the stage the body sits inside an edit region, so the outermost
+   element is one level deeper — without that form the page and the canvas would space a rich text
+   differently. */
+.thallo-block-rich_text > :first-child,
+.thallo-block-rich_text > .thallo-edit-region > :first-child { margin-top: 0; }
+.thallo-block-rich_text > :last-child,
+.thallo-block-rich_text > .thallo-edit-region > :last-child { margin-bottom: 0; }
+/* The container's width, height, alignment, flex mode and gap were modifier classes driven by
+   data fields; they are layout SETTINGS now (container-layout spec §4), so the rules that served
+   them are gone. What replaces them lives in the compiled settings layer, over the layout defaults
+   above. Padding, margin, corners, border, shadow and colours remain settings too (t-p*, t-m*,
+   t-radius-*, t-bw-*/t-bs-*, t-shadow-*, t-bg-*/t-fg-*/t-bc-*). */
 /* background_video — a muted looping cover layer behind the overlay, over any
    background_image. z-index 0 sits under __inner (z-index 1). */
 .thallo-block-container__video {

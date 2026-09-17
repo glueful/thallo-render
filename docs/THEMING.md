@@ -668,6 +668,42 @@ or a `<style>` element — the lint refuses both at save and before render; the 
 inline style emitters are `theme_colors_style()`, `theme_style_scope()` and
 `font_faces_style()` (variables and `@font-face`, no selectors).
 
+### 12.3a The container's layout (what a theme must keep)
+
+A container is two elements: `root`, the band, and `__inner`, the content area. Its
+layout is settings, not data — there are no `--layout-flex`, `--gap-*` or `--contained`
+modifier classes to style. Four theme defaults carry the contract, and a theme that
+restyles the container keeps all four:
+
+```css
+.thallo-block-container {
+  --thallo-root-layout: block;          /* min height sets this, never `display` */
+  display: var(--thallo-root-layout);
+  flex-direction: column;
+}
+.thallo-block-container__inner {
+  --thallo-default-gutter: 0px;          /* the content-width utility sets it */
+  padding-inline: var(--thallo-default-gutter);
+  flex: 1 1 auto;                        /* fills a tall band */
+  width: 100%;                           /* auto inline margins cancel the stretch */
+}
+```
+
+Routing the band's display through a variable is what lets a minimum height size it
+while managed visibility keeps sole authority over `display`: a hidden band stays
+hidden however tall it is told to be. The gutter is initialised on the element itself
+so a boxed ancestor's gutter never reaches a full-width container nested inside it.
+
+Two more defaults govern what happens to the children. Blocks that clamp themselves to
+the page measure have that clamp released inside a container, so a block in a cell does
+not carry a second gutter; the release names exactly the blocks that have one
+(`tests/fixtures/layout/containment-inventory.json` records them, and a test holds the
+two in step). And the children's default vertical margins stand down in flex and grid
+modes, where the gaps own the spacing, while block mode keeps them with the first and
+last edges released so the container's own padding governs its boundary. Authored
+values always win over all of this: a margin, a padding or a width an author set is a
+setting in the layer above.
+
 ### 12.4 Style classes (the class layer)
 
 A style class is a site-owned, theme-independent record: a name and a `style` in the
