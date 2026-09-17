@@ -1272,8 +1272,21 @@
       if (empty) slot.setAttribute('data-thallo-slot-empty', '')
       else slot.removeAttribute('data-thallo-slot-empty')
       if (empty || !owned) {
+        // An offered container shows the picker instead of the ordinary placeholder; a container
+        // that has gained a child is not empty, so it shows neither.
+        var offer = empty ? offerFor(slot) : null
+        var wanted = offer ? offer.id : ''
+        var shown = placeholder ? placeholder.getAttribute('data-structure-offer') || '' : ''
+        if (placeholder && shown !== wanted) {
+          slot.removeChild(placeholder)
+          placeholder = null
+        }
         if (!placeholder) {
-          slot.appendChild(buildPlaceholder(slot.getAttribute('data-thallo-slot')))
+          slot.appendChild(
+            offer
+              ? buildStructureTiles(offer.id, offer.presets)
+              : buildPlaceholder(slot.getAttribute('data-thallo-slot'))
+          )
         } else if (placeholder !== slot.lastElementChild) {
           slot.appendChild(placeholder) // a mirror appended past it: the placeholder stays last
         }
@@ -1331,6 +1344,73 @@
     hint.textContent = 'Drag a block here'
     box.appendChild(add)
     box.appendChild(hint)
+    return box
+  }
+
+  // ── The structure picker (container-layout spec §6.2) ──────────────────────
+  // The parent publishes the COMPLETE list of live offers every time, so an offer that has been
+  // consumed simply stops being named and its tiles come off. The stage holds no opinion about
+  // when an offer ends; it renders what the last message said.
+  var structureOffers = []
+
+  function onStructureOffer(data) {
+    if (!data || !Array.isArray(data.offers)) return
+    structureOffers = data.offers.filter(function (offer) {
+      return offer && typeof offer.id === 'string' && Array.isArray(offer.presets)
+    })
+    markEmptySlots()
+  }
+
+  /** The offer for a container, or null: only its own empty content slot shows tiles. */
+  function offerFor(slot) {
+    if (slot.getAttribute('data-thallo-slot') !== 'content') return null
+    var wrapper = slot.closest('[data-thallo-block]')
+    if (!wrapper) return null
+    var id = wrapper.getAttribute('data-thallo-block')
+    for (var i = 0; i < structureOffers.length; i++) {
+      if (structureOffers[i].id === id) return structureOffers[i]
+    }
+    return null
+  }
+
+  /**
+   * The tiles, in place of the ordinary placeholder: one per preset, plus Skip. A disabled tile
+   * carries its reason as the title, so the author reads why before clicking rather than after.
+   * Clicking posts the intent and nothing else — in particular it does not select the container,
+   * which would take the inspector away from the choice being made.
+   */
+  function buildStructureTiles(id, presets) {
+    var box = document.createElement('div')
+    box.className = 'thallo-slot-placeholder thallo-structure-picker'
+    box.setAttribute('data-structure-offer', id)
+    var title = document.createElement('span')
+    title.className = 'thallo-structure-picker__title'
+    title.textContent = 'Choose a structure'
+    box.appendChild(title)
+    var grid = document.createElement('div')
+    grid.className = 'thallo-structure-picker__tiles'
+    for (var i = 0; i < presets.length; i++) {
+      var preset = presets[i]
+      if (!preset || typeof preset.key !== 'string') continue
+      var tile = document.createElement('button')
+      tile.type = 'button'
+      tile.className = 'thallo-structure-tile'
+      tile.setAttribute('data-structure-tile', preset.key)
+      tile.textContent = preset.label || preset.key
+      if (preset.enabled === false) {
+        tile.disabled = true
+        tile.setAttribute('data-structure-disabled', '')
+        if (preset.reason) tile.title = preset.reason
+      }
+      grid.appendChild(tile)
+    }
+    box.appendChild(grid)
+    var skip = document.createElement('button')
+    skip.type = 'button'
+    skip.className = 'thallo-structure-picker__skip'
+    skip.setAttribute('data-structure-skip', '')
+    skip.textContent = 'Skip'
+    box.appendChild(skip)
     return box
   }
 
@@ -1531,6 +1611,22 @@
         }
         return
       }
+      // The structure picker (spec §6.2): a tile or Skip posts the intent and nothing else. In
+      // particular it does not select the container, which would swap the inspector out from under
+      // the choice being made. A disabled tile posts nothing at all.
+      var pickerEl = e.target && e.target.closest ? e.target.closest('[data-structure-offer]') : null
+      if (pickerEl) {
+        var tile = e.target.closest('[data-structure-tile]')
+        var skipBtn = e.target.closest('[data-structure-skip]')
+        if (tile || skipBtn) {
+          e.preventDefault()
+          e.stopPropagation()
+          var offerId = pickerEl.getAttribute('data-structure-offer')
+          if (skipBtn) post('structure-skip', { id: offerId })
+          else if (!tile.disabled) post('structure-choose', { id: offerId, preset: tile.getAttribute('data-structure-tile') })
+          return
+        }
+      }
       // The empty-slot + asks the parent to arm its Blocks tab into that slot (never a selection).
       var addBtn = e.target && e.target.closest ? e.target.closest('[data-thallo-slot] [data-slot-add]') : null
       if (addBtn) {
@@ -1617,6 +1713,7 @@
     if (data.type === 'thallo:stage-refresh') {
       onStageRefresh(typeof data.refresh_id === 'string' ? data.refresh_id : '')
     }
+    if (data.type === 'thallo:structure-offer') onStructureOffer(data)
     if (data.type === 'thallo:fragments') onFragments(data)
     if (data.type === 'thallo:mirror-move') mirrorMove(data.id, data.beforeId, data.afterId)
     if (data.type === 'thallo:mirror-remove') mirrorRemove(data.id)
