@@ -34,6 +34,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Twig\Environment;
+use Thallo\Render\Style\PageStyle;
 use Thallo\Render\Style\ThemeStylesheetArtifact;
 use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
@@ -875,8 +876,10 @@ final class RenderController
      * v1 note: settings come from the boot-active theme; themed preview
      * sessions inherit them.
      *
+     * `style_classes` is the page's own style frame (PageStyle) as utility classes for <main>.
+     *
      * @param array<string,mixed>|null $override the raw per-page _presentation
-     * @return array{show_title: bool, layout: string, header: string, footer: string}
+     * @return array{show_title: bool, layout: string, header: string, footer: string, style_classes: string}
      */
     private function presentationContext(?string $typeSlug, ?array $override): array
     {
@@ -894,6 +897,7 @@ final class RenderController
             'layout' => $layout === 'full' ? 'full' : 'centered',
             'header' => $header === 'hidden' ? 'hidden' : 'default',
             'footer' => $footer === 'hidden' ? 'hidden' : 'default',
+            'style_classes' => PageStyle::classes(is_array($override['style'] ?? null) ? $override['style'] : null),
         ];
     }
 
