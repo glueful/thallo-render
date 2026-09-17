@@ -34,13 +34,34 @@ final class ClassNames
         'colors.border' => 'bc',
         'border.width' => 'bw',
         'border.style' => 'bs',
+        // Layout (container-layout spec §3.2).
+        'layout.display' => 'display',
+        'layout.direction' => 'dir',
+        'layout.wrap' => 'wrap',
+        'layout.align_items' => 'items',
+        'layout.columns' => 'cols',
+        'layout.gap.column' => 'gapx',
+        'layout.gap.row' => 'gapy',
+        'layout.content_width' => 'cw',
+        'layout.gutter' => 'gutter',
+        'layout.min_height' => 'minh',
+        'layout.overflow' => 'overflow',
+        'layout.span' => 'span',
+        'layout.basis' => 'basis',
+        'layout.grow' => 'grow',
+        'layout.shrink' => 'shrink',
+        'layout.align_self' => 'aself',
     ];
 
-    /** `spacing.lg` → `lg`, a choice value stays itself. */
+    /**
+     * `spacing.lg` → `lg`; a choice value stays itself, except that a fraction becomes a class-safe
+     * name: `layout.basis` `1/3` → `1-3`.
+     */
     public static function valueName(string $value): string
     {
         $pos = strrpos($value, '.');
-        return $pos === false ? $value : substr($value, $pos + 1);
+        $name = $pos === false ? $value : substr($value, $pos + 1);
+        return str_replace('/', '-', $name);
     }
 
     /** The class for a property, a token or choice value, and a breakpoint. */

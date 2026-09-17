@@ -40,13 +40,29 @@ final class BlockStyleEmitter
                 continue;
             }
             $resolved = $this->resolver->resolve($path, $classDefinitions, $instance, $def);
+            // Layout is emitted RESOLVED: a class at every breakpoint the property resolves to a
+            // value or a reset, not only where it is declared (container-layout spec §3.3). The
+            // compiled rules for dormancy and for span pairing read the parent's mode and track
+            // count at each breakpoint, so a breakpoint that inherited its state must still carry
+            // a class. Every other property keeps exact-only emission: its cascade is the CSS
+            // media order.
+            $resolvedEmission = self::emitsResolved($path);
             foreach ($resolved as $breakpoint => $resolution) {
-                if (!$resolution->exact) {
+                if (!$resolution->exact && !($resolvedEmission && $resolution->state !== 'theme-default')) {
                     continue;
                 }
                 $classes[] = $resolution->state === 'reset'
                     ? ClassNames::reset($path, $breakpoint)
                     : ClassNames::for($path, (string) ($resolution->value['value'] ?? ''), $breakpoint);
+            }
+            // A container that declares no track count still needs a track class at every
+            // breakpoint: a span pairs with it, and `auto` is the default track state (one track).
+            if ($path === 'layout.columns') {
+                foreach ($resolved as $breakpoint => $resolution) {
+                    if ($resolution->state === 'theme-default') {
+                        $classes[] = ClassNames::for($path, 'auto', $breakpoint);
+                    }
+                }
             }
         }
         if (in_array('advanced.css_classes', $targets->advancedPathsFor($target), true)) {
@@ -57,6 +73,14 @@ final class BlockStyleEmitter
             }
         }
         return $classes;
+    }
+
+    /** Which properties are emitted at every breakpoint they resolve (spec §3.3). */
+    private static function emitsResolved(string $path): bool
+    {
+        $def = StyleSchema::property($path);
+        return $def !== null && ($def->group === 'layout' || $def->group === 'layout.item'
+            || $path === 'alignment.content');
     }
 
     /**
