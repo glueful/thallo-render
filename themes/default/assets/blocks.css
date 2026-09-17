@@ -338,6 +338,12 @@
 .thallo-block-container {
   position: relative;
   isolation: isolate;
+  /* Min height sets --thallo-root-layout (never `display`), so managed visibility stays the one
+     authority over display; the local initialisation stops a nested container inheriting an
+     ancestor's flex sizing (container-layout spec §3.5). */
+  --thallo-root-layout: block;
+  display: var(--thallo-root-layout);
+  flex-direction: column;
 }
 /* background_image — a positioned <img> layer (srcset, priority-image contract), never a
    background-image style. z-index 0 sits under __inner (z-index 1). */
@@ -371,7 +377,134 @@
 .thallo-block-container--overlay-25 .thallo-block-container__overlay { opacity: 0.25; }
 .thallo-block-container--overlay-50 .thallo-block-container__overlay { opacity: 0.5; }
 .thallo-block-container--overlay-75 .thallo-block-container__overlay { opacity: 0.75; }
-.thallo-block-container__inner { position: relative; z-index: 1; }
+/* Layout defaults (container-layout spec §3.4–§3.8). Everything here is a THEME default: the
+   compiled settings layer outranks it, so an authored or class-supplied value always wins and a
+   reset (revert-layer) lands back on these rules. */
+.thallo-block-container__inner {
+  position: relative;
+  z-index: 1;
+  /* Initialised locally: a boxed ancestor's gutter must not reach a full-width nested container.
+     The content-width utility sets this variable on the element that carries it. */
+  --thallo-default-gutter: 0px;
+  padding-inline: var(--thallo-default-gutter);
+  /* Inert unless the root is a column flex box (a band with a min height), where the inner area
+     takes the remaining height inside root's padding. */
+  flex: 1 1 auto;
+}
+
+/* containment release (spec §3.6) */
+.thallo-block-container__inner > .thallo-block-columns,
+.thallo-block-container__inner > .thallo-block-image,
+.thallo-block-container__inner > .thallo-block-rich_text,
+.thallo-block-container__inner > .thallo-block-heading,
+.thallo-block-container__inner > .thallo-block-grid,
+.thallo-block-container__inner > .thallo-block-tabs,
+.thallo-block-container__inner > .thallo-block-button,
+.thallo-block-container__inner > .thallo-block-carousel,
+.thallo-block-container__inner > .thallo-block-logo,
+.thallo-block-container__inner > .thallo-block-icon,
+.thallo-block-container__inner > .thallo-block-video,
+.thallo-block-container__inner > .thallo-block-audio,
+.thallo-block-container__inner > .thallo-block-file,
+.thallo-block-container__inner > .thallo-block-html,
+.thallo-block-container__inner > .thallo-block-shortcode,
+.thallo-block-container__inner > .thallo-block-separator,
+.thallo-block-container__inner > .thallo-block-form,
+.thallo-block-container__inner > .thallo-block-gallery,
+.thallo-block-container__inner > .thallo-block-code,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-columns,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-image,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-rich_text,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-heading,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-grid,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-tabs,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-button,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-carousel,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-logo,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-icon,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-video,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-audio,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-file,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-html,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-shortcode,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-separator,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-form,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-gallery,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-code {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+/* end containment release */
+
+/* Spacing normalization (spec §3.8): flex and grid children are spaced by the gaps alone; block
+   mode keeps the theme rhythm with its outer edges released. Reset and absence are one state —
+   the theme default, block — so each rule names the reset class too, and block mode restores the
+   default margin explicitly rather than relying on a class being absent. */
+.thallo-block-container__inner > :first-child,
+.thallo-block-container__inner > .thallo-preview-block:first-child > .thallo-block {
+  margin-top: 0;
+}
+.thallo-block-container__inner > :last-child,
+.thallo-block-container__inner > .thallo-preview-block:last-child > .thallo-block {
+  margin-bottom: 0;
+}
+.t-display-flex > .thallo-block,
+.t-display-flex > .thallo-preview-block > .thallo-block,
+.t-display-grid > .thallo-block,
+.t-display-grid > .thallo-preview-block > .thallo-block { margin-block: 0; }
+.t-display-block > .thallo-block,
+.t-display-block > .thallo-preview-block > .thallo-block,
+.t-display-reset > .thallo-block,
+.t-display-reset > .thallo-preview-block > .thallo-block { margin-block: var(--space-5); }
+.t-display-block > :first-child,
+.t-display-block > .thallo-preview-block:first-child > .thallo-block,
+.t-display-reset > :first-child,
+.t-display-reset > .thallo-preview-block:first-child > .thallo-block { margin-top: 0; }
+.t-display-block > :last-child,
+.t-display-block > .thallo-preview-block:last-child > .thallo-block,
+.t-display-reset > :last-child,
+.t-display-reset > .thallo-preview-block:last-child > .thallo-block { margin-bottom: 0; }
+@media (min-width: 768px) {
+.md\:t-display-flex > .thallo-block,
+.md\:t-display-flex > .thallo-preview-block > .thallo-block,
+.md\:t-display-grid > .thallo-block,
+.md\:t-display-grid > .thallo-preview-block > .thallo-block { margin-block: 0; }
+.md\:t-display-block > .thallo-block,
+.md\:t-display-block > .thallo-preview-block > .thallo-block,
+.md\:t-display-reset > .thallo-block,
+.md\:t-display-reset > .thallo-preview-block > .thallo-block { margin-block: var(--space-5); }
+.md\:t-display-block > :first-child,
+.md\:t-display-block > .thallo-preview-block:first-child > .thallo-block,
+.md\:t-display-reset > :first-child,
+.md\:t-display-reset > .thallo-preview-block:first-child > .thallo-block { margin-top: 0; }
+.md\:t-display-block > :last-child,
+.md\:t-display-block > .thallo-preview-block:last-child > .thallo-block,
+.md\:t-display-reset > :last-child,
+.md\:t-display-reset > .thallo-preview-block:last-child > .thallo-block { margin-bottom: 0; }
+}
+@media (min-width: 1024px) {
+.lg\:t-display-flex > .thallo-block,
+.lg\:t-display-flex > .thallo-preview-block > .thallo-block,
+.lg\:t-display-grid > .thallo-block,
+.lg\:t-display-grid > .thallo-preview-block > .thallo-block { margin-block: 0; }
+.lg\:t-display-block > .thallo-block,
+.lg\:t-display-block > .thallo-preview-block > .thallo-block,
+.lg\:t-display-reset > .thallo-block,
+.lg\:t-display-reset > .thallo-preview-block > .thallo-block { margin-block: var(--space-5); }
+.lg\:t-display-block > :first-child,
+.lg\:t-display-block > .thallo-preview-block:first-child > .thallo-block,
+.lg\:t-display-reset > :first-child,
+.lg\:t-display-reset > .thallo-preview-block:first-child > .thallo-block { margin-top: 0; }
+.lg\:t-display-block > :last-child,
+.lg\:t-display-block > .thallo-preview-block:last-child > .thallo-block,
+.lg\:t-display-reset > :last-child,
+.lg\:t-display-reset > .thallo-preview-block:last-child > .thallo-block { margin-bottom: 0; }
+}
+/* A rich text contributes no outer paragraph margin of its own; the margins between its own
+   paragraphs are untouched. */
+.thallo-block-rich_text > :first-child { margin-top: 0; }
+.thallo-block-rich_text > :last-child { margin-bottom: 0; }
 .thallo-block-container--contained .thallo-block-container__inner {
   max-width: var(--container);
   margin-inline: auto;
