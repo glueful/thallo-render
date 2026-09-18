@@ -982,6 +982,16 @@
   }
 
   function onCanvasKeydown(e) {
+    // Undo and redo are the editor's, and a click on the stage leaves focus here — so the intent
+    // is forwarded, selection or none (a Fill or a + selects nothing). Never while text is being
+    // edited or from a theme's form field: there ⌘Z is the browser's undo of what was typed.
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && (e.key === 'z' || e.key === 'Z')) {
+      if (editing || drag || keyTargetIsFormish(e.target)) return
+      e.preventDefault()
+      e.stopPropagation()
+      post('history', { direction: e.shiftKey ? 'redo' : 'undo' })
+      return
+    }
     if (selectedId === null || editing || drag) return
     var t = e.target
     if (t && t.closest && t.closest('.thallo-canvas-toolbar')) return
