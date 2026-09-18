@@ -121,124 +121,6 @@
 .thallo-block-hero__links .thallo-block-button__link { padding: 0.85rem 1.9rem; font-size: 1.05rem; }
 .thallo-block-cta__links .thallo-block-button__link { padding: 0.7rem 1.6rem; font-size: 1rem; }
 
-/* section — full-bleed band with contained content */
-.thallo-block-section { padding-block: var(--space-7); }
-.thallo-block-section__inner {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-/* background — schema enum: none | muted | subtle | inverted */
-.thallo-block-section--none { background: transparent; }
-.thallo-block-section--muted { background: var(--surface-2); }
-.thallo-block-section--subtle { background: var(--surface); }
-.thallo-block-section--inverted { background: var(--ink); color: var(--accent-ink); }
-.thallo-block-section--inverted .thallo-block-section__title { color: var(--accent-ink); }
-.thallo-block-section--inverted .thallo-block-section__description {
-  color: color-mix(in srgb, var(--accent-ink) 72%, transparent);
-}
-
-/* header */
-.thallo-block-section__header { margin: 0; }
-.thallo-block-section__headline {
-  margin: 0 0 var(--space-2);
-  font-weight: 600;
-  color: var(--accent);
-}
-.thallo-block-section__title {
-  margin: 0;
-  font-size: 2rem;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  font-weight: 700;
-  color: var(--ink);
-}
-.thallo-block-section__description {
-  margin: var(--space-4) 0 0;
-  max-width: var(--content);
-  font-size: 1.125rem;
-  color: var(--muted);
-}
-
-/* child content + links */
-.thallo-block-section__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-5);
-}
-
-/* vertical (default): centered band */
-.thallo-block-section--vertical .thallo-block-section__headline,
-.thallo-block-section--vertical .thallo-block-section__title { text-align: center; }
-.thallo-block-section--vertical .thallo-block-section__description {
-  margin-inline: auto;
-  text-align: center;
-}
-.thallo-block-section--vertical .thallo-block-section__links { justify-content: center; }
-
-/* per-part header alignment (authored): a set value beats the orientation's default */
-.thallo-block-section .thallo-block-section__headline--start,
-.thallo-block-section .thallo-block-section__title--start { text-align: start; }
-.thallo-block-section .thallo-block-section__headline--center,
-.thallo-block-section .thallo-block-section__title--center { text-align: center; }
-.thallo-block-section .thallo-block-section__headline--end,
-.thallo-block-section .thallo-block-section__title--end { text-align: end; }
-.thallo-block-section .thallo-block-section__description--start { margin-inline: 0; text-align: start; }
-.thallo-block-section .thallo-block-section__description--center { margin-inline: auto; text-align: center; }
-.thallo-block-section .thallo-block-section__description--end { margin-inline: auto 0; text-align: end; }
-
-/* reverse: content leads, header follows (order-only, orientation-agnostic) */
-.thallo-block-section--reverse .thallo-block-section__content { order: -1; }
-
-/* horizontal: header beside content on wide viewports */
-@media (min-width: 64rem) {
-  .thallo-block-section--horizontal .thallo-block-section__inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    column-gap: var(--space-6);
-  }
-}
-
-/* columns — cards with hover lift */
-.thallo-block-columns {
-  display: grid;
-  gap: var(--space-4);
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-}
-.thallo-block-columns--2 { grid-template-columns: repeat(2, 1fr); }
-.thallo-block-columns--3 { grid-template-columns: repeat(3, 1fr); }
-/* Width presets (columns-sizing spec §2): one rule per allowlisted token. */
-.thallo-block-columns--w-50-50 { grid-template-columns: 1fr 1fr; }
-.thallo-block-columns--w-33-67 { grid-template-columns: 1fr 2fr; }
-.thallo-block-columns--w-67-33 { grid-template-columns: 2fr 1fr; }
-.thallo-block-columns--w-25-75 { grid-template-columns: 1fr 3fr; }
-.thallo-block-columns--w-75-25 { grid-template-columns: 3fr 1fr; }
-.thallo-block-columns--w-33-33-33 { grid-template-columns: 1fr 1fr 1fr; }
-.thallo-block-columns--w-25-50-25 { grid-template-columns: 1fr 2fr 1fr; }
-.thallo-block-columns--w-50-25-25 { grid-template-columns: 2fr 1fr 1fr; }
-.thallo-block-columns--w-25-25-50 { grid-template-columns: 1fr 1fr 2fr; }
-/* Vertical alignment (default = stretch, the base grid behavior). */
-.thallo-block-columns--align-top { align-items: start; }
-.thallo-block-columns--align-center { align-items: center; }
-.thallo-block-columns--align-bottom { align-items: end; }
-@media (max-width: 40rem) {
-  .thallo-block-columns--2, .thallo-block-columns--3,
-  [class*="thallo-block-columns--w-"] { grid-template-columns: 1fr; }
-}
-/* A column is a pure layout slot — no card chrome (background/border/radius/shadow/
-   hover). Spacing between columns is the grid gap; the grid's padding-inline insets
-   the band; vertical rhythm inside a column is the nested blocks' own margins. */
-.thallo-block-columns__col .thallo-block { margin-block: var(--space-3); }
-.thallo-block-columns__col .thallo-block:first-child { margin-top: 0; }
-.thallo-block-columns__col .thallo-block:last-child { margin-bottom: 0; }
-
 /* spacer */
 .thallo-block-spacer { margin: 0; }
 .thallo-block-spacer--small { height: var(--space-3); }
@@ -397,11 +279,9 @@
 }
 
 /* containment release (spec §3.6) */
-.thallo-block-container__inner > .thallo-block-columns,
 .thallo-block-container__inner > .thallo-block-image,
 .thallo-block-container__inner > .thallo-block-rich_text,
 .thallo-block-container__inner > .thallo-block-heading,
-.thallo-block-container__inner > .thallo-block-grid,
 .thallo-block-container__inner > .thallo-block-tabs,
 .thallo-block-container__inner > .thallo-block-button,
 .thallo-block-container__inner > .thallo-block-carousel,
@@ -416,11 +296,9 @@
 .thallo-block-container__inner > .thallo-block-form,
 .thallo-block-container__inner > .thallo-block-gallery,
 .thallo-block-container__inner > .thallo-block-code,
-.thallo-block-container__inner > .thallo-preview-block > .thallo-block-columns,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-image,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-rich_text,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-heading,
-.thallo-block-container__inner > .thallo-preview-block > .thallo-block-grid,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-tabs,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-button,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-carousel,
@@ -551,37 +429,6 @@
   min-height: 100%;
   transform: translate(-50%, -50%);
   border: 0;
-}
-
-/* grid — wrapping grid (equal rows) or masonry (CSS columns) */
-.thallo-block-grid {
-  max-width: var(--container);
-  margin-inline: auto;
-  padding-inline: var(--space-4);
-}
-.thallo-block-grid--gap-small .thallo-block-grid__items { gap: var(--space-3); }
-.thallo-block-grid--gap-medium .thallo-block-grid__items { gap: var(--space-4); }
-.thallo-block-grid--gap-large .thallo-block-grid__items { gap: var(--space-5); }
-.thallo-block-grid--grid .thallo-block-grid__items { display: grid; grid-template-columns: 1fr; }
-@media (min-width: 40rem) {
-  .thallo-block-grid--grid.thallo-block-grid--cols-2 .thallo-block-grid__items,
-  .thallo-block-grid--grid.thallo-block-grid--cols-3 .thallo-block-grid__items,
-  .thallo-block-grid--grid.thallo-block-grid--cols-4 .thallo-block-grid__items { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 64rem) {
-  .thallo-block-grid--grid.thallo-block-grid--cols-3 .thallo-block-grid__items { grid-template-columns: repeat(3, 1fr); }
-  .thallo-block-grid--grid.thallo-block-grid--cols-4 .thallo-block-grid__items { grid-template-columns: repeat(4, 1fr); }
-}
-.thallo-block-grid--grid .thallo-block-grid__items > * { margin-block: 0; }
-.thallo-block-grid--masonry .thallo-block-grid__items { columns: 1; column-gap: var(--space-4); }
-@media (min-width: 40rem) { .thallo-block-grid--masonry .thallo-block-grid__items { columns: 2; } }
-@media (min-width: 64rem) {
-  .thallo-block-grid--masonry.thallo-block-grid--cols-3 .thallo-block-grid__items { columns: 3; }
-  .thallo-block-grid--masonry.thallo-block-grid--cols-4 .thallo-block-grid__items { columns: 4; }
-}
-.thallo-block-grid--masonry .thallo-block-grid__items > * {
-  break-inside: avoid;
-  margin-block: 0 var(--space-4);
 }
 
 /* feature — a compact icon + title + description leaf (drop several into a grid) */
@@ -1173,7 +1020,6 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
    width and radius box controls, so the layout mode must not clamp its width or
    impose a radius over the author's setting. */
 .layout--centered .thallo-block-hero,
-.layout--centered .thallo-block-section,
 .layout--centered .thallo-block-cta {
   max-width: var(--container);
   margin-inline: auto;
@@ -1187,7 +1033,6 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
    each block's own padding-inline. Additive/scoped: dormant unless <main>
    carries .layout--full. */
 .layout--full .thallo-block-hero__inner,
-.layout--full .thallo-block-section__inner,
 .layout--full .thallo-block-cta__inner,
 .layout--full .thallo-block-container__inner,
 .layout--full .thallo-block-image,
