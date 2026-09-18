@@ -26,6 +26,42 @@
   border-radius: 4px;
   font: 12px/1.4 system-ui, sans-serif;
 }
+/* In an EMPTY GRID slot the placeholder takes one cell, the first, so the tracks the stage
+   outlines beside it can be seen (container-layout spec §11.2). The bridge marks the slot —
+   CSS cannot read a computed display. The structure picker's tiles keep the full row. */
+[data-thallo-slot-grid][data-thallo-slot-empty] > .thallo-slot-placeholder:not([data-structure-offer]) {
+  grid-column: auto;
+  width: auto;
+  /* The outlined cell is its frame: a second dashed border just inside it reads as a smudge. */
+  margin: 0;
+  border-color: transparent;
+}
+
+/* The grid outline: the body's, over the page, never inside a slot — so no structural selector,
+   no empty-slot marking and no grid placement can see it — and it takes no pointer events. Its
+   cells are placed by the bridge (CSSOM geometry only); everything they look like is here. */
+.thallo-grid-outline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+}
+.thallo-grid-outline__cell {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 1px dashed rgba(37, 99, 235, 0.45);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.thallo-grid-outline__cell--free {
+  background: rgba(37, 99, 235, 0.04);
+}
+
 .thallo-slot-placeholder [data-slot-add] {
   display: inline-flex;
   align-items: center;

@@ -179,6 +179,7 @@
       host.classList.add('thallo-canvas-anchor')
       host.insertBefore(ensureToolbar(), host.firstChild)
     }
+    refreshGridOutline()
   }
 
   function clearSelection() {
@@ -186,6 +187,7 @@
     detachToolbar()
     selectedId = null
     selectedIds = []
+    refreshGridOutline()
   }
   /** Ring the parent's whole selection (visual builder spec §5.5): the anchor keeps the toolbar. */
   function ringSelection(ids) {
@@ -789,6 +791,7 @@
       // The parent's strip and remembered zone clear with the indicator: one null proposal per
       // leave (sameZone above swallows the repeats while the pointer stays outside every slot).
       post('drag-propose', { session: drag.session, blocks: drag.blocks, zone: null })
+      refreshGridOutline() // left the grid: its tracks go with the indicator
       return
     }
     showIndicator(zone)
@@ -797,6 +800,7 @@
       blocks: drag.blocks,
       zone: { parent: zone.parent, slot: zone.slot, index: zone.index, layout: zone.layout }
     })
+    refreshGridOutline() // a drag over a grid shows its tracks (spec §11.2)
   }
   function onGripDown(e) {
     if (editing || drag || selectedId === null) return
@@ -915,6 +919,7 @@
     document.removeEventListener('pointercancel', onDragCancel)
     document.removeEventListener('keydown', onDragKeydown, true)
     drag = null
+    refreshGridOutline()
   }
   // Parent-originated drags (palette, outline): the parent owns the session and the pointer;
   // the stage answers hovers with proposals and paints the indicator.
@@ -1256,6 +1261,125 @@
     }, displayed))
   }
 
+  // ── The grid on the stage (container-layout spec §11.2) ─────────────────────
+  // Choosing Grid and a track count changes nothing an author can see in an empty container, so
+  // the stage draws the tracks: dashed cells from the slot's RESOLVED tracks and gaps — the
+  // breakpoint being edited decides the count, and a 1-2-1 preset outlines those proportions.
+  // Shown while the grid is empty, while it or a block inside it is selected, and while a drag is
+  // over it. The layer is the body's and never a child of the slot, so no `:first-child` rule,
+  // no empty-slot marking and no grid placement can see it; it takes no pointer events. CSP pin:
+  // appearance is preview.css's, geometry is CSSOM property assignment only.
+  var gridOutline = null
+  function px(value) {
+    var n = parseFloat(value)
+    return isFinite(n) ? n : 0
+  }
+  function tracksOf(value) {
+    if (!value || value === 'none') return []
+    var out = []
+    var parts = String(value).split(/\s+/)
+    for (var i = 0; i < parts.length; i++) {
+      if (/px$/.test(parts[i])) out.push(px(parts[i]))
+    }
+    return out
+  }
+  /** Whether the slot's container, or a block inside it, is the selection or holds the drag. */
+  function gridInPlay(slot) {
+    var owner = slot.parentElement ? slot.parentElement.closest('[data-thallo-block]') : null
+    if (drag && drag.zone && drag.zone.element && (drag.zone.element === slot || slot.contains(drag.zone.element))) {
+      return true
+    }
+    if (selectedId === null || !owner) return false
+    var selected = findBlock(selectedId)
+    return !!selected && (selected === owner || owner.contains(selected))
+  }
+  function removeGridOutline() {
+    if (gridOutline && gridOutline.parentNode) gridOutline.parentNode.removeChild(gridOutline)
+    gridOutline = null
+  }
+  /** Mark grid slots, and draw the outline of the one that is empty or in play (innermost wins). */
+  function refreshGridOutline() {
+    var slots = document.querySelectorAll('[data-thallo-slot]')
+    var target = null
+    for (var i = 0; i < slots.length; i++) {
+      var slot = slots[i]
+      var isGrid = String(window.getComputedStyle(slot).display).indexOf('grid') !== -1
+      if (isGrid) slot.setAttribute('data-thallo-slot-grid', '')
+      else slot.removeAttribute('data-thallo-slot-grid')
+      if (!isGrid) continue
+      var play = gridInPlay(slot)
+      if (!play && !slot.hasAttribute('data-thallo-slot-empty')) continue
+      // A grid in play outranks one that is merely empty; among equals the deeper one wins.
+      if (!target || play || !target.play) target = { slot: slot, play: play }
+    }
+    removeGridOutline()
+    if (!target) return
+    var cells = gridCells(target.slot)
+    if (cells.length === 0) return
+    var layer = document.createElement('div')
+    layer.className = 'thallo-grid-outline'
+    layer.setAttribute('aria-hidden', 'true')
+    document.body.appendChild(layer)
+    // Cells are placed against the layer's own box, wherever the body puts it.
+    var origin = layer.getBoundingClientRect()
+    for (var c = 0; c < cells.length; c++) {
+      var cell = document.createElement('div')
+      cell.className = 'thallo-grid-outline__cell thallo-grid-outline__cell--'
+        + (cells[c].free ? 'free' : 'occupied')
+      cell.style.width = cells[c].width + 'px'
+      cell.style.height = cells[c].height + 'px'
+      cell.style.transform = 'translate(' + (cells[c].left - origin.left) + 'px, '
+        + (cells[c].top - origin.top) + 'px)'
+      layer.appendChild(cell)
+    }
+    gridOutline = layer
+  }
+  /**
+   * The cells of a grid slot, in reading order: one per block — across every track it covers —
+   * and one per track cell no block covers.
+   */
+  function gridCells(slot) {
+    var style = window.getComputedStyle(slot)
+    var cols = tracksOf(style.gridTemplateColumns)
+    var rows = tracksOf(style.gridTemplateRows)
+    if (cols.length === 0 || rows.length === 0) return []
+    var box = slot.getBoundingClientRect()
+    var x0 = box.left + px(style.borderLeftWidth) + px(style.paddingLeft)
+    var y0 = box.top + px(style.borderTopWidth) + px(style.paddingTop)
+    var colGap = px(style.columnGap)
+    var rowGap = px(style.rowGap)
+    var blocks = []
+    var kids = childWrappersOf(slot, [])
+    for (var k = 0; k < kids.length; k++) {
+      var host = firstVisualChild(kids[k])
+      if (host) blocks.push(host.getBoundingClientRect())
+    }
+    var out = []
+    var y = y0
+    for (var r = 0; r < rows.length; r++) {
+      var x = x0
+      var open = null // the block cell being extended across the tracks it covers
+      for (var col = 0; col < cols.length; col++) {
+        var cx = x + cols[col] / 2
+        var owner = -1
+        for (var b = 0; b < blocks.length; b++) {
+          if (cx >= blocks[b].left && cx <= blocks[b].right
+            && blocks[b].top < y + rows[r] && blocks[b].bottom > y) { owner = b; break }
+        }
+        if (owner !== -1 && open && open.owner === owner) {
+          open.cell.width = x + cols[col] - open.cell.left
+        } else {
+          var cell = { left: x, top: y, width: cols[col], height: rows[r], free: owner === -1 }
+          out.push(cell)
+          open = owner === -1 ? null : { owner: owner, cell: cell }
+        }
+        x += cols[col] + colGap
+      }
+      y += rows[r] + rowGap
+    }
+    return out
+  }
+
   // A swapped-in wrapper is server markup: custom elements tore themselves down with the
   // old subtree, and the runtime enhances the new one (canvas-skipping modules stay no-ops).
   // Slot placeholders (visual builder spec §5.4): the page's own slots (no owning block) always
@@ -1295,6 +1419,7 @@
       }
     }
     markEmptyBlocks()
+    refreshGridOutline()
   }
   // A block that paints nothing (a feature without title, marker or description) would be
   // invisible on the canvas yet still in the document — and still validated at publish. Such a
@@ -1662,6 +1787,24 @@
         post('scroll', { y: window.scrollY || 0 })
       }, 250)
     })
+    // The grid outline is drawn from measured rectangles, so anything that moves the grid has to
+    // redraw it: a resize (across a breakpoint the track count changes too), a scroll inside the
+    // stage, late content — an image that finishes loading pushes everything below it down — and
+    // any other change of the page's size. Coalesced to one redraw a frame.
+    var outlineFrame = null
+    var redrawOutline = function () {
+      if (outlineFrame !== null) return
+      outlineFrame = (window.requestAnimationFrame || setTimeout)(function () {
+        outlineFrame = null
+        refreshGridOutline()
+      }, 16)
+    }
+    window.addEventListener('resize', redrawOutline)
+    window.addEventListener('scroll', redrawOutline, true)
+    document.addEventListener('load', redrawOutline, true) // images and frames; load does not bubble
+    if (typeof window.ResizeObserver === 'function') {
+      new window.ResizeObserver(redrawOutline).observe(document.documentElement)
+    }
     markEmptySlots()
     post('blocks-index', { ids: idsIndex() })
   }
