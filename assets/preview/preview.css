@@ -130,6 +130,32 @@
   cursor: pointer;
 }
 
+/* Fill empty cells (container-layout spec §11.3): drawn only while the parent says so. It reads as
+   one of the structure tiles, because it is the same kind of answer — containers, in one change. */
+.thallo-slot-placeholder [data-grid-fill] {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(37, 99, 235, 0.95);
+  font: 11px/1.3 system-ui, sans-serif;
+  cursor: pointer;
+}
+.thallo-slot-placeholder [data-grid-fill]:hover:not(:disabled),
+.thallo-slot-placeholder [data-grid-fill]:focus-visible {
+  background: rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+/* Disabled stays visible and says why on hover; busy is the same button, waiting. */
+.thallo-slot-placeholder [data-grid-fill]:disabled {
+  border-color: rgba(100, 116, 139, 0.3);
+  color: rgba(100, 116, 139, 0.6);
+  cursor: not-allowed;
+}
+.thallo-slot-placeholder [data-grid-fill][aria-busy='true'] {
+  cursor: progress;
+}
+
 .thallo-slot-placeholder__hint {
   color: rgba(100, 116, 139, 0.9);
   font-style: italic;

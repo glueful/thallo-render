@@ -1414,6 +1414,7 @@
         } else if (placeholder !== slot.lastElementChild) {
           slot.appendChild(placeholder) // a mirror appended past it: the placeholder stays last
         }
+        syncGridFill(slot, offer ? null : fillStateFor(slot))
       } else if (placeholder) {
         slot.removeChild(placeholder)
       }
@@ -1484,6 +1485,58 @@
       return offer && typeof offer.id === 'string' && Array.isArray(offer.presets)
     })
     markEmptySlots()
+  }
+
+  // ── Fill empty cells (container-layout spec §11.3) ─────────────────────────
+  // The stage button has no state of its own. The parent publishes the COMPLETE list — built from
+  // the same availability the inspector's button reads — and the stage draws exactly that: a
+  // container that is not named has no button, a disabled entry carries its reason, a preparing
+  // one is busy. So the stage can never offer a fill the inspector refuses.
+  var gridFillStates = []
+
+  function onGridFillState(data) {
+    if (!data || !Array.isArray(data.states)) return
+    gridFillStates = data.states.filter(function (state) {
+      return state && typeof state.id === 'string'
+    })
+    markEmptySlots()
+  }
+
+  /** The published state for the container owning this EMPTY content slot, or null. */
+  function fillStateFor(slot) {
+    if (slot.getAttribute('data-thallo-slot') !== 'content') return null
+    if (!slot.hasAttribute('data-thallo-slot-empty')) return null
+    var wrapper = slot.parentElement ? slot.parentElement.closest('[data-thallo-block]') : null
+    if (!wrapper) return null
+    var id = wrapper.getAttribute('data-thallo-block')
+    for (var i = 0; i < gridFillStates.length; i++) {
+      if (gridFillStates[i].id === id) return gridFillStates[i]
+    }
+    return null
+  }
+
+  /** Bring the slot's placeholder in line with the published state: one button, or none. */
+  function syncGridFill(slot, state) {
+    var placeholder = slot.querySelector(':scope > .thallo-slot-placeholder')
+    if (!placeholder) return
+    var fill = placeholder.querySelector('[data-grid-fill]')
+    if (!state) {
+      if (fill) placeholder.removeChild(fill)
+      return
+    }
+    if (!fill) {
+      fill = document.createElement('button')
+      fill.type = 'button'
+      fill.setAttribute('data-grid-fill', '')
+      fill.textContent = 'Fill empty cells'
+      placeholder.appendChild(fill)
+    }
+    var busy = state.preparing === true
+    fill.disabled = busy || state.enabled !== true
+    if (busy) fill.setAttribute('aria-busy', 'true')
+    else fill.removeAttribute('aria-busy')
+    if (!busy && state.enabled !== true && typeof state.reason === 'string') fill.setAttribute('title', state.reason)
+    else fill.removeAttribute('title')
   }
 
   /** The offer for a container, or null: only its own empty content slot shows tiles. */
@@ -1752,6 +1805,16 @@
           return
         }
       }
+      // Fill empty cells (spec §11.3): the intent and nothing else — never a selection, and a
+      // disabled or busy button posts nothing. The parent re-checks everything before it commits.
+      var fillBtn = e.target && e.target.closest ? e.target.closest('[data-grid-fill]') : null
+      if (fillBtn) {
+        e.preventDefault()
+        e.stopPropagation()
+        var fillOwner = fillBtn.closest('[data-thallo-block]')
+        if (!fillBtn.disabled && fillOwner) post('grid-fill', { id: fillOwner.getAttribute('data-thallo-block') })
+        return
+      }
       // The empty-slot + asks the parent to arm its Blocks tab into that slot (never a selection).
       var addBtn = e.target && e.target.closest ? e.target.closest('[data-thallo-slot] [data-slot-add]') : null
       if (addBtn) {
@@ -1857,6 +1920,7 @@
       onStageRefresh(typeof data.refresh_id === 'string' ? data.refresh_id : '')
     }
     if (data.type === 'thallo:structure-offer') onStructureOffer(data)
+    if (data.type === 'thallo:grid-fill-state') onGridFillState(data)
     if (data.type === 'thallo:fragments') onFragments(data)
     if (data.type === 'thallo:mirror-move') mirrorMove(data.id, data.beforeId, data.afterId)
     if (data.type === 'thallo:mirror-remove') mirrorRemove(data.id)
