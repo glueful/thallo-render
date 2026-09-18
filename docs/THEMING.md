@@ -743,6 +743,18 @@ each declaration lands only where the block has the capability and is dormant
 elsewhere. Themes never see classes as such — only the utilities the cascade
 resolves to — so a theme needs nothing new for them.
 
+A class may carry layout as well as styling — a mode, a direction, tracks, gaps, a width,
+the item settings — and the rule is the same one: the cascade resolves **per property**.
+So a class's settings are not tied to the mode that class sets. A class that sets Grid
+and also declares a direction contributes that direction to any block whose *effective*
+layout is Flex, because the block itself or a later class set it so; the item settings
+likewise follow the mode of whatever parent the block ends up in. This is why the class
+editor labels each group by where it applies rather than hiding the ones its own mode
+does not use, and why a theme should not assume that a utility for direction only ever
+arrives alongside the flex display utility. An explicit reset in a class is a
+declaration too: it returns the property to the theme's value from that breakpoint up,
+over whatever a lower layer supplied.
+
 Every class write increments the site's style generation, which names the exact set
 of class records a render resolved through. The page-cache key carries it
 (`…-g<generation>`), and the canvas page carries it on `<main>` as
