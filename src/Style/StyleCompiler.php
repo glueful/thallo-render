@@ -18,7 +18,8 @@ use Thallo\Contracts\Style\Vocabulary;
 final class StyleCompiler
 {
     // 2: colors.surface compiles to the background shorthand (a theme gradient yields to it).
-    public const VERSION = 3;
+    // 4: layout.display compiles flex and grid only (container-layout spec §11.1).
+    public const VERSION = 4;
 
     private const MEDIA = ['md' => 768, 'lg' => 1024];
 
@@ -42,7 +43,7 @@ final class StyleCompiler
         // Layout (container-layout spec §3.2). `layout.columns`, `layout.min_height`,
         // `layout.content_width` and `layout.span` are compiled by hand below: their declarations
         // are not one property = one value.
-        'layout.display' => ['display' => ['block' => 'block', 'flex' => 'flex', 'grid' => 'grid']],
+        'layout.display' => ['display' => ['flex' => 'flex', 'grid' => 'grid']],
         'layout.direction' => ['flex-direction' => [
             'row' => 'row', 'column' => 'column', 'row-reverse' => 'row-reverse',
             'column-reverse' => 'column-reverse',
@@ -204,9 +205,15 @@ final class StyleCompiler
     private static function declarations(string $path, string $value): string
     {
         if ($path === 'width') {
+            // `width` means "fill the available space, up to this maximum" (spec §11.4): it asks
+            // for the width as well as limiting it. A block box fills its container unasked, but a
+            // flex item whose inline margins are `auto` (Placement) shrinks to its content, so
+            // inside a flex column a placed child would be as wide as its text. In a flex row this
+            // is the item's starting size under `flex-basis: auto`. It renders as `auto` did in
+            // block flow only under border-box sizing, which is the theme's to provide.
             return $value === 'width.full'
                 ? 'max-width: none; width: 100%;'
-                : 'max-width: var(' . self::variable($value) . ');';
+                : 'max-width: var(' . self::variable($value) . '); width: 100%;';
         }
         // The content width also carries the gutter's default, so an absent gutter resolves to
         // the width's own default on this element and never to an ancestor's (spec §3.4).

@@ -276,6 +276,12 @@
      a block-level box gets for free — without this a boxed content area shrink-wraps its text
      inside a tall band instead of filling the measure. */
   width: 100%;
+  /* The default mode (spec §3.8, §11.1): a flex column whose gaps are --space-5, the margin they
+     replace — so a container nobody has touched stacks its children at the distances block flow
+     gave them, and `none` is a choice rather than where a new row or grid starts. */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
 /* containment release (spec §3.6) */
@@ -319,70 +325,11 @@
 }
 /* end containment release */
 
-/* Spacing normalization (spec §3.8): flex and grid children are spaced by the gaps alone; block
-   mode keeps the theme rhythm with its outer edges released. Reset and absence are one state —
-   the theme default, block — so each rule names the reset class too, and block mode restores the
-   default margin explicitly rather than relying on a class being absent. */
-.thallo-block-container__inner > :first-child,
-.thallo-block-container__inner > .thallo-preview-block:first-child > .thallo-block {
-  margin-top: 0;
-}
-.thallo-block-container__inner > :last-child,
-.thallo-block-container__inner > .thallo-preview-block:last-child > .thallo-block {
-  margin-bottom: 0;
-}
-.t-display-flex > .thallo-block,
-.t-display-flex > .thallo-preview-block > .thallo-block,
-.t-display-grid > .thallo-block,
-.t-display-grid > .thallo-preview-block > .thallo-block { margin-block: 0; }
-.t-display-block > .thallo-block,
-.t-display-block > .thallo-preview-block > .thallo-block,
-.t-display-reset > .thallo-block,
-.t-display-reset > .thallo-preview-block > .thallo-block { margin-block: var(--space-5); }
-.t-display-block > :first-child,
-.t-display-block > .thallo-preview-block:first-child > .thallo-block,
-.t-display-reset > :first-child,
-.t-display-reset > .thallo-preview-block:first-child > .thallo-block { margin-top: 0; }
-.t-display-block > :last-child,
-.t-display-block > .thallo-preview-block:last-child > .thallo-block,
-.t-display-reset > :last-child,
-.t-display-reset > .thallo-preview-block:last-child > .thallo-block { margin-bottom: 0; }
-@media (min-width: 768px) {
-.md\:t-display-flex > .thallo-block,
-.md\:t-display-flex > .thallo-preview-block > .thallo-block,
-.md\:t-display-grid > .thallo-block,
-.md\:t-display-grid > .thallo-preview-block > .thallo-block { margin-block: 0; }
-.md\:t-display-block > .thallo-block,
-.md\:t-display-block > .thallo-preview-block > .thallo-block,
-.md\:t-display-reset > .thallo-block,
-.md\:t-display-reset > .thallo-preview-block > .thallo-block { margin-block: var(--space-5); }
-.md\:t-display-block > :first-child,
-.md\:t-display-block > .thallo-preview-block:first-child > .thallo-block,
-.md\:t-display-reset > :first-child,
-.md\:t-display-reset > .thallo-preview-block:first-child > .thallo-block { margin-top: 0; }
-.md\:t-display-block > :last-child,
-.md\:t-display-block > .thallo-preview-block:last-child > .thallo-block,
-.md\:t-display-reset > :last-child,
-.md\:t-display-reset > .thallo-preview-block:last-child > .thallo-block { margin-bottom: 0; }
-}
-@media (min-width: 1024px) {
-.lg\:t-display-flex > .thallo-block,
-.lg\:t-display-flex > .thallo-preview-block > .thallo-block,
-.lg\:t-display-grid > .thallo-block,
-.lg\:t-display-grid > .thallo-preview-block > .thallo-block { margin-block: 0; }
-.lg\:t-display-block > .thallo-block,
-.lg\:t-display-block > .thallo-preview-block > .thallo-block,
-.lg\:t-display-reset > .thallo-block,
-.lg\:t-display-reset > .thallo-preview-block > .thallo-block { margin-block: var(--space-5); }
-.lg\:t-display-block > :first-child,
-.lg\:t-display-block > .thallo-preview-block:first-child > .thallo-block,
-.lg\:t-display-reset > :first-child,
-.lg\:t-display-reset > .thallo-preview-block:first-child > .thallo-block { margin-top: 0; }
-.lg\:t-display-block > :last-child,
-.lg\:t-display-block > .thallo-preview-block:last-child > .thallo-block,
-.lg\:t-display-reset > :last-child,
-.lg\:t-display-reset > .thallo-preview-block:last-child > .thallo-block { margin-bottom: 0; }
-}
+/* Spacing (spec §3.8): the gaps are the one source of spacing between a container's children, so
+   no child carries a default vertical margin — in either mode, at any breakpoint, after a reset.
+   No rule here names a mode: there is no mode in which the margin comes back. */
+.thallo-block-container__inner > .thallo-block,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block { margin-block: 0; }
 /* A rich text contributes no outer paragraph margin of its own; the margins between its own
    paragraphs are untouched. On the stage the body sits inside an edit region, so the outermost
    element is one level deeper — without that form the page and the canvas would space a rich text

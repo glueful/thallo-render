@@ -672,8 +672,9 @@ inline style emitters are `theme_colors_style()`, `theme_style_scope()` and
 
 A container is two elements: `root`, the band, and `__inner`, the content area. Its
 layout is settings, not data — there are no `--layout-flex`, `--gap-*` or `--contained`
-modifier classes to style. Four theme defaults carry the contract, and a theme that
-restyles the container keeps all four:
+modifier classes to style. It arranges its children in one of two modes, Flex or Grid;
+there is no block mode. These theme defaults carry the contract, and a theme that
+restyles the container keeps all of them:
 
 ```css
 .thallo-block-container {
@@ -686,7 +687,12 @@ restyles the container keeps all four:
   padding-inline: var(--thallo-default-gutter);
   flex: 1 1 auto;                        /* fills a tall band */
   width: 100%;                           /* auto inline margins cancel the stretch */
+  display: flex;                         /* the default mode: a flex column … */
+  flex-direction: column;
+  gap: var(--space-5);                   /* … spaced by the margin the gap replaces */
 }
+.thallo-block-container__inner > .thallo-block,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block { margin-block: 0; }
 ```
 
 Routing the band's display through a variable is what lets a minimum height size it
@@ -698,11 +704,23 @@ Two more defaults govern what happens to the children. Blocks that clamp themsel
 the page measure have that clamp released inside a container, so a block in a cell does
 not carry a second gutter; the release names exactly the blocks that have one
 (`tests/fixtures/layout/containment-inventory.json` records them, and a test holds the
-two in step). And the children's default vertical margins stand down in flex and grid
-modes, where the gaps own the spacing, while block mode keeps them with the first and
-last edges released so the container's own padding governs its boundary. Authored
-values always win over all of this: a margin, a padding or a width an author set is a
-setting in the layer above.
+two in step). And the gaps are the one source of spacing between a container's
+children: no child carries a default vertical margin, in either mode, at any breakpoint
+or after a reset, and the container's own padding governs its boundary. The default
+for both gaps is `--space-5` — the margin it replaces — so a container nobody has
+touched stacks its children at the distances block flow gave them, and a row or a grid
+starts spaced rather than touching; `none` is a choice an author makes. No rule names a
+mode, because there is no mode in which the margin comes back. Authored values always
+win over all of this: a margin, a padding, a gap or a width an author set is a setting
+in the layer above.
+
+An authored **width** means "fill the available space, up to this maximum": the
+compiled utility sets `width: 100%` beside its `max-width`. That relies on
+`box-sizing: border-box`, which the default theme sets on every element — under
+content-box a padded block with an authored width would overflow its container, so a
+theme that changes the sizing model must account for it. In a flex row the width is
+the item's starting size (`flex-basis: auto` reads it), so it sizes items and can wrap
+them; an explicit basis takes its place.
 
 ### 12.4 Style classes (the class layer)
 
