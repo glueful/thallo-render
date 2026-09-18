@@ -714,6 +714,15 @@ mode, because there is no mode in which the margin comes back. Authored values a
 win over all of this: a margin, a padding, a gap or a width an author set is a setting
 in the layer above.
 
+A theme that ships its own `blocks.css` therefore has three things to provide, and the
+contract has nothing to fall back on if it does not: the content area's `display: flex`
+with `flex-direction: column`, its `gap`, and the release of the children's vertical
+margin. Leave out the first and an untouched container falls back to block flow with
+neither margins nor gap, so its children touch; leave out the gap and the same happens
+in every mode. Nothing else is asked of a theme here — the Design view's grid outline
+and its Fill empty cells button are the editor's own, drawn from the tracks and gaps the
+browser resolved, and never reach a public page.
+
 An authored **width** means "fill the available space, up to this maximum": the
 compiled utility sets `width: 100%` beside its `max-width`. That relies on
 `box-sizing: border-box`, which the default theme sets on every element — under
