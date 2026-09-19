@@ -1768,7 +1768,7 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 .thallo-block-code__pre {
   margin: 0; padding: var(--space-3) var(--space-4);
   white-space: pre-wrap; overflow-wrap: anywhere;
-  color: var(--fg);
+  color: var(--ink);
   font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.875rem; line-height: 1.6;
   tab-size: 2;
 }

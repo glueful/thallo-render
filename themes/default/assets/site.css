@@ -38,6 +38,12 @@
   --shadow: var(--shadow-md);
   --radius: 12px;
   --radius-lg: 20px;
+  /* The rest of the radius scale, as the Style tab's tokens name it (theme.json: radius.sm = 6px,
+     radius.md = var(--radius)). Blocks read these for their own default corners — a badge, the
+     tabs' strip — and until they were defined here `var(--radius-md)` was an invalid declaration:
+     those corners shipped square while the stylesheet said rounded. */
+  --radius-sm: 6px;
+  --radius-md: var(--radius);
   --container: 72rem;
   --content: 46rem;
   --space-1: 0.25rem;
