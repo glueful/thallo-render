@@ -199,7 +199,12 @@ classes/attributes you must keep stable are ones your **own `blocks.js`** select
 have a standalone template for when one is dropped on its own. The single source
 of truth for this set is `core/src/Content/Blocks/StarterBlockTypes.php` (schema) — the
 template set mirrors it one-to-one. `code` ships `block-code.js` for its Copy button
-(the floor is the plain `<pre><code>`); `shortcode` renders `shortcodes/{name}.twig`, and the
+(the floor is the plain `<pre><code>`). The button copies the code element's **text**, which is
+why a `bash` snippet's prompt is never text: `blocks/code.twig` renders each line as a
+`thallo-block-code__line`, takes a leading `$ ` off and marks the line `--prompt` for the theme
+to draw it with generated content, marks a `#` line `--comment`, and puts the newline inside
+every line but the last so nothing pasted into a terminal runs by itself. Other languages stay one
+text node under `language-*`, for a highlighter; `shortcode` renders `shortcodes/{name}.twig`, and the
 default theme ships `copyright` and `thallo-version` (the running install's version as
 `site.version`, styled as a pill; recolour it from custom CSS through `--version-fg`,
 `--version-bg` and `--version-dot` on `.thallo-shortcode-version`).

@@ -4,7 +4,15 @@
    land where the theme paints them. The no-JS floor is the plain <pre><code>; the Copy
    button is created by block-code.js (data-copy="1"), so nothing dead ships in the markup.
    The language rides as a data attribute and a language-* class for a highlighter to pick
-   up (phase 2c). Long lines wrap; the snippet never scrolls sideways. #}
+   up (phase 2c). Long lines wrap; the snippet never scrolls sideways.
+
+   A shell snippet reads as a terminal, and one rule shapes how: the Copy button copies the code
+   element's TEXT, so the prompt must never be text. An author writes `$ composer install` as
+   they always have; a line that starts with "$ " has the marker taken off and is marked for the
+   theme to DRAW it (generated content is neither copied nor selected), and a line that starts
+   with "#" is marked as a comment. The newline sits inside every line but the last: what is
+   copied ends without one, because pasted into a terminal a trailing newline runs the command.
+   Every other language stays one text node, for a highlighter to pick up. #}
 {% set languages = ['text', 'bash', 'php', 'json', 'yaml', 'html', 'css', 'javascript', 'typescript', 'twig', 'sql'] %}
 {% set language = data.language|default('text') in languages ? data.language|default('text') : 'text' %}
 {% set copy = data.copy ?? true %}
@@ -15,7 +23,19 @@
       <span class="thallo-block-code__label">{{ label ?: language }}</span>
       <span class="thallo-block-code__actions"></span>
     </figcaption>
+    {%- if language == 'bash' %}
+    <pre class="thallo-block-code__pre"><code class="language-bash">
+      {%- for raw_line in data.code|default('')|split("\n") -%}
+        {%- set line = raw_line|trim("\r", 'right') -%}
+        {%- set kind = line starts with '$ ' ? 'prompt' : (line|trim starts with '#' ? 'comment' : '') -%}
+        <span class="thallo-block-code__line{{ kind ? ' thallo-block-code__line--' ~ kind }}">
+          {{- kind == 'prompt' ? line|slice(2) : line }}{{ loop.last ? '' : "\n" -}}
+        </span>
+      {%- endfor -%}
+    </code></pre>
+    {%- else %}
     <pre class="thallo-block-code__pre"><code class="language-{{ language }}">{{ data.code|default('') }}</code></pre>
+    {%- endif %}
   </figure>
 </div>
 {{ block_script('code') }}

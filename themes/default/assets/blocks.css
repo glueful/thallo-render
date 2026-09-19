@@ -1744,16 +1744,25 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 }
 .thallo-block-code__panel {
   margin: 0; border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden;
-  background: var(--surface);
+  background: var(--bg);
 }
+/* The title bar of a window: tinted, over a light body, with its three lights. */
 .thallo-block-code__caption {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--line);
-  background: var(--surface-2, var(--surface));
+  background: var(--surface);
   font-size: 0.8125rem; color: var(--muted);
 }
 .thallo-block-code__label { font-family: var(--font-mono, ui-monospace, monospace); text-transform: lowercase; }
+/* Three lights, drawn: one gradient tile repeated three times. Decoration, so never in the
+   markup — and not box-shadow, which in this theme is elevation and comes from the shadow tokens. */
+.thallo-block-code__label::before {
+  content: ""; display: inline-block; vertical-align: middle;
+  width: 2.8125rem; height: 0.5625rem; margin-inline-end: var(--space-2);
+  background: radial-gradient(circle at 0.28125rem 50%, var(--line) 0 0.28125rem, transparent 0.3rem)
+    0 0 / 0.9375rem 100% repeat-x;
+}
 /* Long lines wrap (pre-wrap, breaking inside a long token when nothing else fits): the snippet
    never scrolls sideways, so every line is readable and copyable in place. */
 .thallo-block-code__pre {
@@ -1763,8 +1772,18 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
   font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.875rem; line-height: 1.6;
   tab-size: 2;
 }
+/* A shell snippet's lines (blocks/code.twig). Each is a block holding its own newline: that
+   newline adds no second line, and gives an empty line its height (both held by the browser
+   proof `code-shell-lines`). */
+.thallo-block-code__line { display: block; }
+/* The prompt is DRAWN: generated content is in neither the text the Copy button takes nor a
+   selection, so what leaves the page is a command that can be pasted. The hanging indent puts it
+   in the margin of its own line, and a long command wraps under the command, not under the "$". */
+.thallo-block-code__line--prompt { padding-inline-start: 2ch; text-indent: -2ch; }
+.thallo-block-code__line--prompt::before { content: "$ "; color: var(--accent); }
+.thallo-block-code__line--comment { color: var(--muted); }
 .thallo-block-code__copy {
-  font: inherit; color: inherit; background: transparent; border: 1px solid var(--line);
-  border-radius: var(--radius-md); padding: 0.125rem var(--space-2); cursor: pointer;
+  font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 6px); padding: 0.125rem var(--space-2); cursor: pointer;
 }
 .thallo-block-code__copy:hover, .thallo-block-code__copy:focus-visible { border-color: var(--accent); color: var(--accent); }
