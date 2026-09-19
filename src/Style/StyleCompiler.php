@@ -19,7 +19,20 @@ final class StyleCompiler
 {
     // 2: colors.surface compiles to the background shorthand (a theme gradient yields to it).
     // 4: layout.display compiles flex and grid only (container-layout spec §11.1).
-    public const VERSION = 6;
+    // 7: a background utility names its colour (--t-surface) for the opacity utility to mix.
+    public const VERSION = 7;
+
+    /** `backdrop.blur` radii. */
+    private const BLUR = ['none' => 'none', 'sm' => 'blur(4px)', 'md' => 'blur(12px)', 'lg' => 'blur(24px)'];
+
+    /**
+     * Modifiers: properties that adjust what ANOTHER property declares — the border's sides, the
+     * surface's opacity. Theirs is the later rule, so they win over the utility they modify; and
+     * their reset rule is EMPTY, because reverting the declarations they share would undo that
+     * utility too. Absent, reset, or `all`: the modified property stands as it is — but every
+     * class the emitter can write has a rule, so the empty ones are written.
+     */
+    private const MODIFIERS = ['border.sides', 'colors.surface_opacity'];
 
     private const MEDIA = ['md' => 768, 'lg' => 1024];
 
@@ -119,6 +132,11 @@ final class StyleCompiler
             $out .= '  ' . self::variable($token) . ': ' . $value . ";\n";
         }
         $out .= "}\n";
+        // The surface variables do not inherit: a child given only an opacity must not mix its
+        // PARENT's colour.
+        foreach (['--t-surface', '--t-surface-default'] as $name) {
+            $out .= "@property {$name} { syntax: '*'; inherits: false; }\n";
+        }
         $out .= self::rules('base');
         foreach (self::MEDIA as $bp => $min) {
             $out .= "@media (min-width: {$min}px) {\n" . self::rules($bp) . "}\n";
@@ -147,7 +165,9 @@ final class StyleCompiler
                 $declarations = self::declarations($path, $value);
                 $out .= ClassNames::selector(ClassNames::for($path, $value, $bp)) . ' { ' . $declarations . " }\n";
             }
-            if ($def->accepts(ValueKind::Reset)) {
+            if ($def->accepts(ValueKind::Reset) && in_array($path, self::MODIFIERS, true)) {
+                $out .= ClassNames::selector(ClassNames::reset($path, $bp)) . " { }\n";
+            } elseif ($def->accepts(ValueKind::Reset)) {
                 $reset = implode(' ', array_map(
                     static fn (string $property): string => "{$property}: revert-layer;",
                     self::cssProperties($path),
@@ -248,6 +268,29 @@ final class StyleCompiler
             $layout = $value === 'auto' ? 'block' : 'flex';
             return "min-height: {$height}; --thallo-root-layout: {$layout};";
         }
+        if ($path === 'border.sides' && $value === 'all') {
+            return ''; // what the width utility declares already
+        }
+        if ($path === 'border.sides') {
+            $others = array_diff(['top', 'right', 'bottom', 'left'], [$value]);
+            return implode(' ', array_map(static fn (string $side): string => "border-{$side}-width: 0;", $others));
+        }
+        // The colour the element shows is the one chosen for it, else the one the theme names for
+        // it (--t-surface-default), else none — so an opacity alone changes nothing a theme did
+        // not paint.
+        if ($path === 'colors.surface_opacity') {
+            return 'background: color-mix(in srgb, var(--t-surface, var(--t-surface-default, transparent)) '
+                . $value . '%, transparent);';
+        }
+        if ($path === 'backdrop.blur') {
+            $blur = self::BLUR[$value];
+            return "backdrop-filter: {$blur}; -webkit-backdrop-filter: {$blur};";
+        }
+        // A background names its colour as well as painting it: the opacity utility mixes from it.
+        if ($path === 'colors.surface') {
+            $colour = 'var(' . self::variable($value) . ')';
+            return "--t-surface: {$colour}; background: {$colour};";
+        }
         if (isset(self::TOKEN_PROPERTY[$path])) {
             return self::TOKEN_PROPERTY[$path] . ': var(' . self::variable($value) . ');';
         }
@@ -274,6 +317,9 @@ final class StyleCompiler
         }
         if ($path === 'layout.span') {
             return ['grid-column'];
+        }
+        if ($path === 'backdrop.blur') {
+            return ['backdrop-filter', '-webkit-backdrop-filter'];
         }
         if (isset(self::TOKEN_PROPERTY[$path])) {
             return [self::TOKEN_PROPERTY[$path]];
