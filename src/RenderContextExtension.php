@@ -7,6 +7,7 @@ namespace Thallo\Render;
 use Glueful\Bootstrap\ApplicationContext;
 use Thallo\Contracts\Billing\PlanCheckoutUrlResolver;
 use Thallo\Contracts\Style\BlockStyleRegistry;
+use Thallo\Contracts\Style\RegionStyle;
 use Thallo\Contracts\Style\StyleClassProvider;
 use Thallo\Contracts\Style\StyleSchema;
 use Thallo\Contracts\Style\StyleTargets;
@@ -277,6 +278,7 @@ final class RenderContextExtension extends AbstractExtension
                 'needs_context' => true,
             ]),
             new TwigFunction('region_settings', $this->regionSettings(...)),
+            new TwigFunction('region_style_classes', $this->regionStyleClasses(...)),
             new TwigFunction('site_favicon', $this->siteFavicon(...)),
             new TwigFunction('custom_css', $this->customCss(...)),
             new TwigFunction('color_mode_enabled', $this->colorModeEnabled(...)),
@@ -717,6 +719,27 @@ final class RenderContextExtension extends AbstractExtension
     public function regionSettings(string $slug): array
     {
         return $this->regions?->settings($slug) ?? [];
+    }
+
+    /**
+     * The utility classes a region's own style (its Style tab) puts on `$target` — `root`, the
+     * bar, or `inner`, its content (RegionStyle) — with a leading space; '' for an unstyled region,
+     * so an untouched header renders the classes it always had.
+     *
+     * @throws RuntimeError for a target a region does not have
+     */
+    public function regionStyleClasses(string $slug, string $target = 'root'): string
+    {
+        $targets = RegionStyle::targets();
+        if (!in_array($target, $targets->names(), true)) {
+            throw new RuntimeError("region_style_classes(): a region has no \"{$target}\" target.");
+        }
+        $style = $this->regionSettings($slug)['style'] ?? null;
+        if (!is_array($style) || $style === []) {
+            return '';
+        }
+        $classes = $this->styleEmitter->classesFor(['style' => $style], $targets, $target);
+        return $classes === [] ? '' : ' ' . implode(' ', $classes);
     }
 
     /**

@@ -100,6 +100,9 @@ img { max-width: 100%; display: block; }
   position: sticky;
   top: 0;
   z-index: 10;
+  /* The colour this bar is painted with, named for the Style tab's Background opacity: with no
+     colour chosen, that setting mixes THIS one (THEMING.md §12.3). */
+  --t-surface-default: var(--bg);
   background: var(--bg);
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(12px);
@@ -125,7 +128,9 @@ html[data-theme="dark"] .site-name--has-dark .site-logo--light { display: none; 
 html[data-theme="dark"] .site-name--has-dark .site-logo--dark { display: block; }
 
 /* Region-backed chrome (global-regions spec): modifier classes from region settings. */
-.thallo-region-header--sticky { position: sticky; top: 0; z-index: 40; background: var(--bg); }
+/* Sticky raises the bar; it does not repaint it. (It once set a solid background here, after the
+   translucent one above, so switching Sticky on cost the header its blur.) */
+.thallo-region-header--sticky { position: sticky; top: 0; z-index: 40; }
 .thallo-region-header--full .site-header__inner,
 .thallo-region-footer--full .site-footer__inner { max-width: none; }
 .thallo-region .site-header__inner,
@@ -182,6 +187,7 @@ main { min-height: 60vh; padding-block: var(--space-5) var(--space-7); }
 .site-footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
+  --t-surface-default: var(--surface);
   background: var(--surface);
 }
 .site-footer__inner {

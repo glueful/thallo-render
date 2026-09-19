@@ -102,8 +102,10 @@
       {contained: 'thallo-region-header--contained', full: 'thallo-region-header--full'}[hs.width|default('contained')] ?? 'thallo-region-header--contained',
       hs.sticky|default(false) ? 'thallo-region-header--sticky' : ''
     ]|join(' ')|trim %}
-    <header class="{{ headerClass }}">
-      <div class="site-header__inner">{{ headerHtml }}</div>
+    {#- The region's own style (the Regions page's Style tab): the bar takes everything but the
+        padding, which lands on the inner element — where the theme pads. Unstyled, both are ''. -#}
+    <header class="{{ headerClass }}{{ region_style_classes('header') }}">
+      <div class="site-header__inner{{ region_style_classes('header', 'inner') }}">{{ headerHtml }}</div>
     </header>
   {% elseif not headerHidden %}
   <header class="site-header">
@@ -153,8 +155,8 @@
   {% set footerHtml = footerHidden ? null : region_blocks('footer') %}
   {% if footerHtml %}
     {% set fs = region_settings('footer') %}
-    <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ fs.width|default('contained') }}">
-      <div class="site-footer__inner">{{ footerHtml }}</div>
+    <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ fs.width|default('contained') }}{{ region_style_classes('footer') }}">
+      <div class="site-footer__inner{{ region_style_classes('footer', 'inner') }}">{{ footerHtml }}</div>
     </footer>
   {% elseif not footerHidden %}
   <footer class="site-footer">

@@ -84,7 +84,7 @@ final class TemplatePolicy
 
     public const FUNCTIONS = [
         'menu', 'path', 'asset', 'facets', 'blocks', 'media', 'site_logo', 'video_embed', 'icon',
-        'region_blocks', 'region_settings', 'site_favicon', 'custom_css', 'form_render',
+        'region_blocks', 'region_settings', 'region_style_classes', 'site_favicon', 'custom_css', 'form_render',
         'runtime_script', 'seo_head', 'font_faces_style',
         'shop_wishlist_scope', 'shop_wishlist_url', 'layers_stylesheet_url', 'theme_stylesheet_url',
         'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
