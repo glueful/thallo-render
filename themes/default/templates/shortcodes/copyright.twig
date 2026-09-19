@@ -1,6 +1,7 @@
 {# Dynamic copyright line: the year is server-rendered, so it rolls over
    automatically. params: name (defaults to the site name), since (optional
-   start year -> "© 2020–2026 Name"). #}
+   start year -> "© 2020–2026 Name"). `style` is the block's `content` target, handed down by
+   blocks/shortcode.twig: the Style tab's colours, border, radius and shadow land on this line. #}
 {% set year = "now"|date("Y") %}
 {% set holder = params.name|default(site.name|default('')) %}
-<p class="thallo-shortcode-copyright">© {% if params.since|default('') and params.since != year %}{{ params.since }}–{% endif %}{{ year }}{% if holder %} {{ holder }}{% endif %}</p>
+<p class="thallo-shortcode-copyright{{ style.classes|default('') }}">© {% if params.since|default('') and params.since != year %}{{ params.since }}–{% endif %}{{ year }}{% if holder %} {{ holder }}{% endif %}</p>

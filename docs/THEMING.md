@@ -204,6 +204,31 @@ default theme ships `copyright` and `thallo-version` (the running install's vers
 `site.version`, styled as a pill; recolour it from custom CSS through `--version-fg`,
 `--version-bg` and `--version-dot` on `.thallo-shortcode-version`).
 
+A shortcode block is two elements, and they are two style targets. `root` is the
+layout-neutral wrapper held to the page measure: spacing, visibility and the item settings
+land there. `content` is whatever the shortcode renders, and takes what gives it a look —
+background, text and border colour, border, radius and shadow. Only the shortcode's own
+template knows which element that is, so `blocks/shortcode.twig` calls the helper and hands
+the result down: the include receives `style.classes` beside `params` and `site`, and puts it
+**inside its element's class attribute**:
+
+```twig
+<span class="my-shortcode{{ style.classes|default('') }}">…</span>
+```
+
+Classes only: the author's anchor, classes and attributes belong to the root, and markup cannot
+be handed to an include without `raw`, which the template policy refuses. The target is
+optional — a shortcode that ignores `style.classes` renders as it always did and is simply not
+styleable. Give such an element its own defaults in the theme (`@layer theme`): the settings
+are in the layer above and win. A default `border: 0 solid var(--line)` lets a border *width*
+set in the Style tab show by itself.
+
+`thallo-version` draws its dot in the text's colour (`var(--version-dot, currentColor)`), so
+recolouring the text brings the dot along. Two `params` adjust it: `"dot": false` hides it, and
+`"dot_color"` takes one of the theme's colour names — `accent`, `text`, `muted`,
+`accent-contrast`, `background` — becoming `thallo-shortcode-version--dot-{name}`. `params` is
+free JSON, so any other value is ignored rather than written into the class attribute.
+
 Two blocks carry presentation choices an operator picks in the editor, each a closed
 enum that becomes a BEM modifier (unknown stored values degrade to the default):
 

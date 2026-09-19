@@ -3,6 +3,16 @@
    also block traversal for any legacy value written around the API. #}
 {% if name and '/' not in name and '.' not in name %}
 <div class="thallo-block thallo-block-shortcode{{ style_classes('root') }}"{{ style_attrs('root') }} data-shortcode="{{ name }}">
-  {%- include 'shortcodes/' ~ name ~ '.twig' ignore missing with {'params': data.params|default({}), 'site': site|default({})} only -%}
+  {#- The block's second style target, `content`, is the shortcode's OWN element — which only the
+      included template can name. So the helpers are called here, where the block's settings are in
+      scope, and handed down: a shortcode puts `style.classes` inside its element's class attribute.
+      One that does not renders as it always did. Classes only: the author's anchor, classes and
+      attributes belong to the root, and markup cannot be handed to an include without `raw`,
+      which the template policy refuses. -#}
+  {%- include 'shortcodes/' ~ name ~ '.twig' ignore missing with {
+    'params': data.params|default({}),
+    'site': site|default({}),
+    'style': {'classes': style_classes('content')},
+  } only -%}
 </div>
 {% endif %}

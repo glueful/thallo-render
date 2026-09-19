@@ -36,7 +36,7 @@
         "blocks/pricing_tier.twig": "d20f99f3e8d9cf542a901c1e97a38b1759eabaf989025c5065cf305e6a6e36a0",
         "blocks/rich_text.twig": "850282e71705a756ecaa189546832cc224703bb165e70bd54135dba8b41783fb",
         "blocks/separator.twig": "62cba446bc3913e4707c3702851e8be01d30faaba78fef3f29d375ed8553a1bf",
-        "blocks/shortcode.twig": "e7c48319692441b4393a4f4e6e0769d6adbc5817e4d1f0e6ab67315c076d3255",
+        "blocks/shortcode.twig": "949a9712759f9ead8761cfbec700f894170e030c1fca23cf795896c642255873",
         "blocks/social_link.twig": "647b2ddbb94e18f882c4a48d0833f2a8f34fcbd1cb6e65fcf6307846fa367ad7",
         "blocks/social_links.twig": "148965b13f47e897e5772c80a331f7c20834de5f322aa8dedd8668713b7b784a",
         "blocks/spacer.twig": "33ab9aca012f92b08857fb6ecdf12eea2f0ad877c474dd7ef5a27f55b7e40c3a",
