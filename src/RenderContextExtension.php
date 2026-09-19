@@ -726,15 +726,19 @@ final class RenderContextExtension extends AbstractExtension
      * bar, or `inner`, its content (RegionStyle) — with a leading space; '' for an unstyled region,
      * so an untouched header renders the classes it always had.
      *
+     * `$settings` overrides the stored ones: the admin's chrome preview renders settings that were
+     * POSTED, not saved, and hands them over.
+     *
+     * @param array<string,mixed>|null $settings
      * @throws RuntimeError for a target a region does not have
      */
-    public function regionStyleClasses(string $slug, string $target = 'root'): string
+    public function regionStyleClasses(string $slug, string $target = 'root', ?array $settings = null): string
     {
         $targets = RegionStyle::targets();
         if (!in_array($target, $targets->names(), true)) {
             throw new RuntimeError("region_style_classes(): a region has no \"{$target}\" target.");
         }
-        $style = $this->regionSettings($slug)['style'] ?? null;
+        $style = ($settings ?? $this->regionSettings($slug))['style'] ?? null;
         if (!is_array($style) || $style === []) {
             return '';
         }

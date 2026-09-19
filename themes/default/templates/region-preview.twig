@@ -23,16 +23,16 @@
 </head>
 <body>
   {% if header %}
-    <header class="site-header thallo-region thallo-region-header thallo-region-header--{{ header.settings.width|default('contained') }}{% if header.settings.sticky|default(false) %} thallo-region-header--sticky{% endif %}">
-      <div class="site-header__inner">{{ blocks(header.blocks) }}</div>
+    <header class="site-header thallo-region thallo-region-header thallo-region-header--{{ header.settings.width|default('contained') }}{% if header.settings.sticky|default(false) %} thallo-region-header--sticky{% endif %}{{ region_style_classes('header', 'root', header.settings) }}">
+      <div class="site-header__inner{{ region_style_classes('header', 'inner', header.settings) }}">{{ blocks(header.blocks) }}</div>
     </header>
   {% endif %}
   <main class="thallo-region-preview__main">
     <div class="thallo-region-preview__placeholder">Page content</div>
   </main>
   {% if footer %}
-    <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ footer.settings.width|default('contained') }}">
-      <div class="site-footer__inner">{{ blocks(footer.blocks) }}</div>
+    <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ footer.settings.width|default('contained') }}{{ region_style_classes('footer', 'root', footer.settings) }}">
+      <div class="site-footer__inner{{ region_style_classes('footer', 'inner', footer.settings) }}">{{ blocks(footer.blocks) }}</div>
     </footer>
   {% endif %}
 </body>
