@@ -14,11 +14,18 @@
 {% set reverse = data.reverse|default(false) %}
 {% set split = {equal: 'equal', copy: 'copy', media: 'media'}[data.split|default('equal')] ?? 'equal' %}
 {% set background = {gradient: 'gradient', none: 'none', muted: 'muted', inverted: 'inverted'}[data.background|default('gradient')] ?? 'gradient' %}
+{# The gradient's own colour and strength (Block tab). `accent` and `subtle` are the theme's own, so
+   they add no class; the families are the site accent's palette. Only the gradient reads them. #}
+{% set gradientFamilies = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'] %}
+{% set gradientColor = background == 'gradient' and data.gradient_color|default('') in gradientFamilies ? data.gradient_color : '' %}
+{% set gradientStrength = background == 'gradient' ? ({medium: 'medium', strong: 'strong'}[data.gradient_strength|default('')] ?? '') : '' %}
 {% set aside = data.aside|default([]) %}
 {% set rootClass = [
   'thallo-block thallo-block-hero',
   'thallo-block-hero--' ~ ({vertical: 'vertical', horizontal: 'horizontal'}[orientation] ?? 'vertical'),
   'thallo-block-hero--bg-' ~ background,
+  gradientColor ? 'thallo-block-hero--gradient-' ~ gradientColor : '',
+  gradientStrength ? 'thallo-block-hero--gradient-strength-' ~ gradientStrength : '',
   orientation == 'horizontal' and split != 'equal' ? 'thallo-block-hero--split-' ~ split : '',
   reverse ? 'thallo-block-hero--reverse' : '',
 ]|join(' ')|trim %}

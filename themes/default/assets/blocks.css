@@ -29,14 +29,54 @@
   padding-block: var(--space-7);
   border-bottom: 0;
 }
-/* background — schema enum: gradient (the original look) | none | muted | inverted */
+/* background — schema enum: gradient (the original look) | none | muted | inverted.
+   The gradient has a colour and a strength of its own (Block tab): two variables, each falling
+   back to what the hero always drew — the site accent, at a faint 9%. */
 .thallo-block-hero--bg-gradient {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--accent) 9%, var(--bg)),
+    color-mix(in srgb, var(--hero-gradient, var(--accent)) var(--hero-gradient-strength, 9%), var(--bg)),
     var(--bg)
   );
 }
+.thallo-block-hero--gradient-strength-medium { --hero-gradient-strength: 18%; }
+.thallo-block-hero--gradient-strength-strong { --hero-gradient-strength: 32%; }
+/* The families are the site accent's palette (ThemeColors), light and dark: a test holds these
+   rules to that table, so a hero's emerald is the emerald a site accent would be. */
+.thallo-block-hero--gradient-red { --hero-gradient: #dc2626; }
+.thallo-block-hero--gradient-orange { --hero-gradient: #c2410c; }
+.thallo-block-hero--gradient-amber { --hero-gradient: #b45309; }
+.thallo-block-hero--gradient-yellow { --hero-gradient: #a16207; }
+.thallo-block-hero--gradient-lime { --hero-gradient: #4d7c0f; }
+.thallo-block-hero--gradient-green { --hero-gradient: #15803d; }
+.thallo-block-hero--gradient-emerald { --hero-gradient: #047857; }
+.thallo-block-hero--gradient-teal { --hero-gradient: #0f766e; }
+.thallo-block-hero--gradient-cyan { --hero-gradient: #0e7490; }
+.thallo-block-hero--gradient-sky { --hero-gradient: #0369a1; }
+.thallo-block-hero--gradient-blue { --hero-gradient: #2563eb; }
+.thallo-block-hero--gradient-indigo { --hero-gradient: #4f46e5; }
+.thallo-block-hero--gradient-violet { --hero-gradient: #7c3aed; }
+.thallo-block-hero--gradient-purple { --hero-gradient: #9333ea; }
+.thallo-block-hero--gradient-fuchsia { --hero-gradient: #c026d3; }
+.thallo-block-hero--gradient-pink { --hero-gradient: #db2777; }
+.thallo-block-hero--gradient-rose { --hero-gradient: #e11d48; }
+html[data-theme="dark"] .thallo-block-hero--gradient-red { --hero-gradient: #ef4444; }
+html[data-theme="dark"] .thallo-block-hero--gradient-orange { --hero-gradient: #f97316; }
+html[data-theme="dark"] .thallo-block-hero--gradient-amber { --hero-gradient: #d97706; }
+html[data-theme="dark"] .thallo-block-hero--gradient-yellow { --hero-gradient: #ca8a04; }
+html[data-theme="dark"] .thallo-block-hero--gradient-lime { --hero-gradient: #65a30d; }
+html[data-theme="dark"] .thallo-block-hero--gradient-green { --hero-gradient: #22c55e; }
+html[data-theme="dark"] .thallo-block-hero--gradient-emerald { --hero-gradient: #10b981; }
+html[data-theme="dark"] .thallo-block-hero--gradient-teal { --hero-gradient: #14b8a6; }
+html[data-theme="dark"] .thallo-block-hero--gradient-cyan { --hero-gradient: #06b6d4; }
+html[data-theme="dark"] .thallo-block-hero--gradient-sky { --hero-gradient: #0ea5e9; }
+html[data-theme="dark"] .thallo-block-hero--gradient-blue { --hero-gradient: #3b82f6; }
+html[data-theme="dark"] .thallo-block-hero--gradient-indigo { --hero-gradient: #6366f1; }
+html[data-theme="dark"] .thallo-block-hero--gradient-violet { --hero-gradient: #8b5cf6; }
+html[data-theme="dark"] .thallo-block-hero--gradient-purple { --hero-gradient: #a855f7; }
+html[data-theme="dark"] .thallo-block-hero--gradient-fuchsia { --hero-gradient: #d946ef; }
+html[data-theme="dark"] .thallo-block-hero--gradient-pink { --hero-gradient: #ec4899; }
+html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f43f5e; }
 .thallo-block-hero--bg-none { background: transparent; }
 .thallo-block-hero--bg-muted { background: var(--surface-2); }
 .thallo-block-hero--bg-inverted { background: var(--ink); color: var(--accent-ink); }

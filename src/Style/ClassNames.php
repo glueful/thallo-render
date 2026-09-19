@@ -58,6 +58,7 @@ final class ClassNames
         'border.sides' => 'bsides',
         'colors.surface_opacity' => 'bgo',
         'backdrop.blur' => 'blur',
+        'typography.line_height' => 'leading',
     ];
 
     /**

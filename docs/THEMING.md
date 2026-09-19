@@ -741,6 +741,13 @@ so do the header and footer regions. The opacity mixes the colour chosen in the 
 one the theme names in `--t-surface-default` on that element (see Regions, above); a blur shows
 only through a background that is not opaque.
 
+The hero's gradient reads two variables, each with the theme's own value as its fallback:
+`--hero-gradient` (else `--accent`) and `--hero-gradient-strength` (else `9%`). The hero's
+*Gradient color* and *Gradient strength* fields set them through classes
+(`thallo-block-hero--gradient-{family}`, `…--gradient-strength-{medium|strong}`); the families are
+the site accent's palette, light and dark. A theme with its own hero styles reads the same two
+variables to honour the fields, or ignores them and keeps its own gradient.
+
 A block's **default** corners read the same scale the Style tab's tokens name: `--radius-sm`
 (6px), `--radius-md` (`var(--radius)`), `--radius-lg`. A theme defines all of them. `var(--x)`
 with no fallback, where `--x` is never defined, makes the whole declaration invalid and the

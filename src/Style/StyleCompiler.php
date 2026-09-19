@@ -20,7 +20,8 @@ final class StyleCompiler
     // 2: colors.surface compiles to the background shorthand (a theme gradient yields to it).
     // 4: layout.display compiles flex and grid only (container-layout spec §11.1).
     // 7: a background utility names its colour (--t-surface) for the opacity utility to mix.
-    public const VERSION = 7;
+    // 8: typography.line_height.
+    public const VERSION = 8;
 
     /** `backdrop.blur` radii. */
     private const BLUR = ['none' => 'none', 'sm' => 'blur(4px)', 'md' => 'blur(12px)', 'lg' => 'blur(24px)'];
@@ -51,6 +52,10 @@ final class StyleCompiler
             'font-weight' => ['regular' => '400', 'medium' => '500', 'semibold' => '600', 'bold' => '700'],
         ],
         'visibility' => ['display' => ['visible' => 'revert-layer', 'hidden' => 'none']],
+        // Unitless: a line's height follows its text's size — the Size setting beside it.
+        'typography.line_height' => ['line-height' => [
+            'tight' => '1.1', 'snug' => '1.25', 'normal' => '1.5', 'relaxed' => '1.65', 'loose' => '1.9',
+        ]],
         'border.width' => ['border-width' => ['none' => '0', 'thin' => '1px', 'thick' => '2px']],
         'border.style' => ['border-style' => ['solid' => 'solid', 'dashed' => 'dashed']],
         // Layout (container-layout spec §3.2). `layout.columns`, `layout.min_height`,
