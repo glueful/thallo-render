@@ -698,6 +698,20 @@ or a `<style>` element — the lint refuses both at save and before render; the 
 inline style emitters are `theme_colors_style()`, `theme_style_scope()` and
 `font_faces_style()` (variables and `@font-face`, no selectors).
 
+The feature block has a third target, `marker`: its icon chip or number badge. `marker.radius`
+and `marker.shadow` (Style tab → Marker) land there, while the block's `radius` and `shadow`
+stay the card's, on the root — two elements, two slots. A theme that overrides `feature.twig`
+adds `{{ style_classes('marker') }}` inside the marker's class attribute and
+`{{ style_attrs('marker') }}` on its tag; the target is optional, since a feature with no marker
+renders no element.
+
+A block's **default** corners read the same scale the Style tab's tokens name: `--radius-sm`
+(6px), `--radius-md` (`var(--radius)`), `--radius-lg`. A theme defines all of them. `var(--x)`
+with no fallback, where `--x` is never defined, makes the whole declaration invalid and the
+property silently takes its initial value — which is how a badge ships square while its
+stylesheet says rounded. A test holds the default theme to it: every custom property it reads
+without a fallback is one it defines.
+
 ### 12.3a The container's layout (what a theme must keep)
 
 A container is two elements: `root`, the band, and `__inner`, the content area. Its

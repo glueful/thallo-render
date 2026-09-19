@@ -25,7 +25,9 @@
   'thallo-block-feature--' ~ orientation,
 ]|join(' ') %}
 <div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  {% if marker == 'number' and data.number|default('') %}<span class="{{ markerClass }}">{{ data.number }}</span>{% elseif marker == 'icon' and data.icon %}<span class="{{ markerClass }} thallo-block-feature__icon" aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
+  {#- The marker is its own style target: its corners and shadow (Style tab → Marker) land here,
+      while the block's radius and shadow stay the card's, on the root. -#}
+  {% if marker == 'number' and data.number|default('') %}<span class="{{ markerClass }}{{ style_classes('marker') }}"{{ style_attrs('marker') }}>{{ data.number }}</span>{% elseif marker == 'icon' and data.icon %}<span class="{{ markerClass }} thallo-block-feature__icon{{ style_classes('marker') }}"{{ style_attrs('marker') }} aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
   <div class="thallo-block-feature__body">
     {% if data.title %}<h3 class="thallo-block-feature__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>{% endif %}
     {% if data.description %}<p class="thallo-block-feature__description">{{ data.description|editable_text('description') }}</p>{% endif %}

@@ -51,6 +51,8 @@ final class ClassNames
         'layout.grow' => 'grow',
         'layout.shrink' => 'shrink',
         'layout.align_self' => 'aself',
+        'marker.radius' => 'mradius',
+        'marker.shadow' => 'mshadow',
     ];
 
     /**
