@@ -53,6 +53,8 @@ final class ClassNames
         'layout.align_self' => 'aself',
         'marker.radius' => 'mradius',
         'marker.shadow' => 'mshadow',
+        'tabs.bar_radius' => 'barradius',
+        'tabs.tab_radius' => 'tabradius',
     ];
 
     /**

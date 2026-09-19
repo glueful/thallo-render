@@ -705,6 +705,14 @@ adds `{{ style_classes('marker') }}` inside the marker's class attribute and
 `{{ style_attrs('marker') }}` on its tag; the target is optional, since a feature with no marker
 renders no element.
 
+The tabs block has two targets for its strip, beside `panels`: `bar`, the list, takes
+`tabs.bar_radius`; `tab`, the label, takes `tabs.tab_radius` (Style tab → Tabs). The block's own
+`radius` stays the panels area's. A theme that overrides `tabs.twig` styles `bar` on the list and
+`tab` on **every** label: which tab is active is decided in CSS, by the checked radio, so the pill
+an author rounds is whichever label is showing it. `tab` is optional — a tabs block with no tabs
+has no label. Being settings, both outrank a variant's own corners: an author who rounds the bar
+of the `underline` or `boxed` variant gets a rounded bar.
+
 A block's **default** corners read the same scale the Style tab's tokens name: `--radius-sm`
 (6px), `--radius-md` (`var(--radius)`), `--radius-lg`. A theme defines all of them. `var(--x)`
 with no fallback, where `--x` is never defined, makes the whole declaration invalid and the

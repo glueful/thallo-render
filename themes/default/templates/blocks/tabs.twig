@@ -13,8 +13,9 @@
      variant (pill|underline|boxed), align (start|center|end|stretch),
      list_background / tab_color / active_background / active_color (theme colour tokens;
      unset keeps the variant's own), panel_padding (none|sm|md|lg).
-   Style targets: root (spacing, visibility) and `panels` — the one content area, whichever
-   tab is shown — for colours, radius, border and shadow. #}
+   Style targets: root (spacing, visibility); `panels` — the one content area, whichever tab is
+   shown — for colours, radius, border and shadow; and the strip's own corners (Style tab → Tabs):
+   `bar` on the list, `tab` on every label, since the active one is whichever radio is checked. #}
 {% set variant = {pill: 'pill', underline: 'underline', boxed: 'boxed'}[data.variant|default('')] ?? 'pill' %}
 {% set align = {start: 'start', center: 'center', end: 'end', stretch: 'stretch'}[data.align|default('')] ?? 'start' %}
 {% set panelPad = {none: 'none', sm: 'sm', md: 'md', lg: 'lg'}[data.panel_padding|default('')] ?? 'none' %}
@@ -38,9 +39,9 @@
   {% for item in data.items|default([]) %}
   <input class="thallo-block-tabs__radio" type="radio" name="tabs-{{ block.id }}" id="tabs-{{ block.id }}-{{ loop.index }}"{% if loop.first %} checked{% endif %}>
   {% endfor %}
-  <div class="thallo-block-tabs__list">
+  <div class="thallo-block-tabs__list{{ style_classes('bar') }}"{{ style_attrs('bar') }}>
     {% for item in data.items|default([]) %}
-    <label class="thallo-block-tabs__label" for="tabs-{{ block.id }}-{{ loop.index }}">{{ item.data.label|default('') }}</label>
+    <label class="thallo-block-tabs__label{{ style_classes('tab') }}"{{ style_attrs('tab') }} for="tabs-{{ block.id }}-{{ loop.index }}">{{ item.data.label|default('') }}</label>
     {% endfor %}
   </div>
   <div class="thallo-block-tabs__panels{{ style_classes('panels') }}"{{ style_attrs('panels') }}>
