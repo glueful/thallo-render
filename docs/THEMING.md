@@ -93,6 +93,26 @@ Regions are **global chrome** rendered around every page. There are two:
 - `region_blocks('header')` → HTML for the saved region (its blocks), or `null`
   when nothing is bound. Fall back to hardcoded chrome on `null`.
 - `region_settings('header')` → the region's settings (e.g. `width`, `sticky`).
+- `region_style_classes('header')` → the utility classes for the region's own style (the Regions
+  page's Style tab), with a leading space; `''` when the region is unstyled. The second argument
+  names the target: `'root'` (the default — the bar: margins, colours, background opacity,
+  backdrop blur, border, corners, shadow) or `'inner'` (padding, because that is where a theme
+  pads). Put each on its element:
+
+  ```twig
+  <header class="site-header …{{ region_style_classes('header') }}">
+    <div class="site-header__inner{{ region_style_classes('header', 'inner') }}">{{ headerHtml }}</div>
+  </header>
+  ```
+
+  A theme whose layout omits them still works; its header and footer just ignore the Style tab.
+- Name the colour each bar is painted with: `--t-surface-default` on the element, beside its
+  `background`. **Background opacity** with no colour chosen mixes that colour; without the
+  variable it has nothing to mix and paints the bar transparent.
+
+  ```css
+  .site-header { --t-surface-default: var(--bg); background: var(--bg); }
+  ```
 - A page can hide a region: `presentation.header == 'hidden'`.
 
 Pattern from `layout.twig`:
@@ -712,6 +732,14 @@ The tabs block has two targets for its strip, beside `panels`: `bar`, the list, 
 an author rounds is whichever label is showing it. `tab` is optional — a tabs block with no tabs
 has no label. Being settings, both outrank a variant's own corners: an author who rounds the bar
 of the `underline` or `boxed` variant gets a rounded bar.
+
+Three properties modify what others declare. **Border sides** (`border.sides`) keeps one side of
+the border the width and style settings draw; it is in the `border` group, so any block that
+declares a border has it. **Background opacity** (`colors.surface_opacity`) and **Backdrop blur**
+(`backdrop.blur`) are the `backdrop` group, which a block type opts into — the container does, and
+so do the header and footer regions. The opacity mixes the colour chosen in the Style tab, or the
+one the theme names in `--t-surface-default` on that element (see Regions, above); a blur shows
+only through a background that is not opaque.
 
 A block's **default** corners read the same scale the Style tab's tokens name: `--radius-sm`
 (6px), `--radius-md` (`var(--radius)`), `--radius-lg`. A theme defines all of them. `var(--x)`
