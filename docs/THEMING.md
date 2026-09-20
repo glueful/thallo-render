@@ -30,7 +30,7 @@ themes/<name>/
 - **A site's own theme** (app-level): `<app-root>/themes/<name>/`
 
 **Activation** — one of:
-- Admin → **General settings → Theme**, or
+- Admin → **Site › Appearance → Theme**, or
 - `.env` → `RENDER_THEME=<name>`
 
 **Per-template fallback:** if the active theme is missing a specific template,
@@ -501,7 +501,7 @@ drift from it, so this value stays correct. Glueful ships no CSP by default
 ## 9. Theme colors (accent + neutral)
 
 An operator can re-skin the theme by choosing a brand **accent** and a
-**neutral** tone from **Settings → General → Theme colors**. It re-maps the
+**neutral** tone from **Site › Appearance → Theme colors**. It re-maps the
 design **tokens only** — it never swaps a template — and applies in both light
 and dark mode.
 
@@ -547,7 +547,7 @@ logs) rather than emitting broken CSS.
 
 ### 9.6 Design settings (radius, typefaces, page ground)
 
-Next to the colours, **Settings → General → Design** carries three more closed enums,
+Next to the colours, **Site › Appearance → Design** carries three more closed enums,
 stored as `theme_radius`, `theme_font`, `theme_background` and emitted by the same
 `theme_colors_style()` block (`Thallo\Render\Theme\ThemeDesign`), after the colours:
 
