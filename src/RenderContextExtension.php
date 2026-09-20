@@ -108,6 +108,8 @@ final class RenderContextExtension extends AbstractExtension
     private ?ThemeLocator $boundTheme = null;
 
     private ?string $appearanceAccentOverride = null;
+    /** @var array<string,string> previewed design settings, by name; junk falls through to the saved one */
+    private array $appearanceDesignOverride = [];
     private ?string $appearanceNeutralOverride = null;
 
     /**
@@ -611,11 +613,18 @@ final class RenderContextExtension extends AbstractExtension
         return new \Twig\Markup($html, 'UTF-8');
     }
 
-    /** Preview-only appearance override (reset before every render by the controller). */
-    public function setThemeAppearanceOverride(?string $accent, ?string $neutral): void
+    /**
+     * Preview-only appearance override (reset before every render by the controller): the
+     * colours, and any subset of the design settings (radius, font, background). Every caller
+     * that resets the colours resets the design with them — it defaults to none.
+     *
+     * @param array<string,string>|null $design
+     */
+    public function setThemeAppearanceOverride(?string $accent, ?string $neutral, ?array $design = null): void
     {
         $this->appearanceAccentOverride = $accent;
         $this->appearanceNeutralOverride = $neutral;
+        $this->appearanceDesignOverride = $design ?? [];
     }
 
     /**
@@ -638,10 +647,15 @@ final class RenderContextExtension extends AbstractExtension
         $neutral = ThemeColors::normalizeNeutral($neutral) ?? ThemeColors::DEFAULT_NEUTRAL;
 
         // Design tokens (website plan phase 1b) ride in the same block, after the colours.
+        // A previewed value wins when it is one of the enum's; junk falls through to the saved one.
+        $design = $this->appearanceDesignOverride;
         $css = ThemeColors::css($accent, $neutral) . ThemeDesign::css(
-            $this->appearance?->radius() ?? ThemeDesign::DEFAULT_RADIUS,
-            $this->appearance?->font() ?? ThemeDesign::DEFAULT_FONT,
-            $this->appearance?->background() ?? ThemeDesign::DEFAULT_BACKGROUND,
+            ThemeDesign::normalizeRadius($design['radius'] ?? '')
+                ?? $this->appearance?->radius() ?? ThemeDesign::DEFAULT_RADIUS,
+            ThemeDesign::normalizeFont($design['font'] ?? '')
+                ?? $this->appearance?->font() ?? ThemeDesign::DEFAULT_FONT,
+            ThemeDesign::normalizeBackground($design['background'] ?? '')
+                ?? $this->appearance?->background() ?? ThemeDesign::DEFAULT_BACKGROUND,
             $neutral,
         );
         return new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8');

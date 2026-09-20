@@ -936,6 +936,7 @@ final class RenderController
         $this->extension->setThemeAppearanceOverride(
             $this->appearanceSession?->accent,
             $this->appearanceSession?->neutral,
+            $this->appearanceSession?->design,
         );
         // Controller-scoped intent, applied per render: every entry point ASSIGNS
         // $annotateBlocks (true only for preview renders), so the shared singleton
