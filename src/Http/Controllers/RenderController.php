@@ -54,6 +54,14 @@ final class RenderController
      * the site root, where a static-file rule (*.css/*.js from disk) answers 404.
      */
     public const PREVIEW_CSS_PATH = '/_thallo/preview.css';
+    /**
+     * A THEMED preview session's assets — the previewed theme's stylesheets, compiled artifacts
+     * and fonts, scoped to the session's token — under the same proxied prefix, for the same
+     * reason. They were at the root (`/_preview-assets/…`): `.css` and `.woff2` URLs outside the
+     * prefixes docs/production.md has a host hand to PHP, so its static-file rule answered them
+     * 404 and a themed preview loaded unstyled.
+     */
+    public const PREVIEW_ASSETS_PREFIX = '/_thallo/preview-assets';
     public const PREVIEW_BRIDGE_PATH = '/_thallo/preview-bridge.js';
 
     private ?Environment $twig = null;
@@ -308,7 +316,7 @@ final class RenderController
             );
             return [
                 $factory->environment(),
-                '/_preview-assets/' . $session->token,
+                self::PREVIEW_ASSETS_PREFIX . '/' . $session->token,
                 $locator->activePaths()['assets'],
                 $locator,
             ];
@@ -862,7 +870,7 @@ final class RenderController
      * @param array<string,mixed> $extra additional template context (listing/archive pages)
      * @param Environment|null $twig request-local themed environment (preview sessions);
      *                               null = the memoized boot-theme environment
-     * @param string|null $assetBase per-render asset() base (/_preview-assets/{token});
+     * @param string|null $assetBase per-render asset() base (/_thallo/preview-assets/{token});
      *                               null = /theme-assets
      * @param string|null $assetsDir the themed session's activePaths()['assets'] dir
      *                               (font spec §3); null = the boot theme's own dir

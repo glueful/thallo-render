@@ -272,7 +272,7 @@ the entry is the configured homepage, and every other page shows published
 content. `GET /_preview/exit` ends the session.
 Minting accepts an optional `theme` (validated against installed themes, signed into
 the token): the whole session renders through that theme, with assets served from the
-token-scoped `/_preview-assets/{token}/…` route. Sessions work with the page cache
+token-scoped `/_thallo/preview-assets/{token}/…` route. Sessions work with the page cache
 disabled; junk cookies never bypass the cache.
 
 ## DB-edited templates

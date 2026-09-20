@@ -35,8 +35,10 @@ $router->get('/_preview/{token}', [RenderController::class, 'preview'])
 
 // Token-scoped preview theme assets (preview-sessions spec §5): only the token's
 // SIGNED theme is served; junk tokens and theme-less tokens 404. No page cache —
-// preview assets are no-store like every other preview surface.
-$router->get('/_preview-assets/{token}/{path}', [RenderController::class, 'previewAsset'])
+// preview assets are no-store like every other preview surface. Under /_thallo/ with every
+// other PHP-served asset: these are `.css` and `.woff2` URLs, which a host's static-file rule
+// answers 404 unless their prefix is one docs/production.md has it hand to PHP.
+$router->get(RenderController::PREVIEW_ASSETS_PREFIX . '/{token}/{path}', [RenderController::class, 'previewAsset'])
     ->middleware(['tenant_profile:public', 'tenant_bootstrap'])
     ->where('path', '.+');
 
