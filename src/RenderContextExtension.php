@@ -346,7 +346,7 @@ final class RenderContextExtension extends AbstractExtension
     /**
      * The fingerprinted storefront stylesheet URL, or null when commerce is inactive/unbound.
      * The theme links this from `<head>`: block templates emit the uncacheable
-     * `/_shop/assets/shop.css` ALIAS (which 302s) inside the body, so without this the
+     * `/_thallo/shop/shop.css` ALIAS (which 302s) inside the body, so without this the
      * storefront's own header chrome paints unstyled and restyles on EVERY navigation.
      */
     /** Bind the theme whose artifact theme_stylesheet_url() names (TwigFactory and the render). */
