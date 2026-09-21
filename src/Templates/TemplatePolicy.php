@@ -72,7 +72,9 @@ final class TemplatePolicy
     // bumped: slot_attrs + is_canvas joined the function allowlist (visual builder spec §5.4)
     // bumped: markdown, markdown_toc and entry_tree joined the function allowlist (website plan,
     //         phase 2c — a docs page renders its Markdown body, contents and section sidebar).
-    public const CACHE_VERSION = 25;
+    // bumped: search_enabled joined the function allowlist (a theme offers a search box only
+    //         where the search capability is on).
+    public const CACHE_VERSION = 26;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -91,7 +93,8 @@ final class TemplatePolicy
         'shop_wishlist_scope', 'shop_wishlist_url', 'layers_stylesheet_url', 'theme_stylesheet_url',
         'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script',
-        'entries', 'entry_tree', 'markdown', 'markdown_toc', 'is_preview', 'media_image', 'claim_priority_image',
+        'entries', 'entry_tree', 'markdown', 'markdown_toc', 'search_enabled',
+        'is_preview', 'media_image', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'plan_checkout_url',
     ];

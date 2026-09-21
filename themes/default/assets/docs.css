@@ -242,3 +242,68 @@
 .prose .heading-anchor:focus-visible { opacity: 1; }
 /* A code listing fills the prose column rather than centring in a column of its own. */
 .prose .thallo-block-code { max-width: none; margin-block: 0 var(--space-3); padding-inline: 0; }
+
+/* ── Search (block-docs-search.js shows the form; without the script there is none) ───── */
+.docs-search { position: relative; margin-bottom: var(--space-4); }
+.docs-index .docs-search { max-width: 32rem; }
+.docs-search__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.docs-search__input {
+  width: 100%;
+  padding: 0.55rem 2.2rem 0.55rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+}
+.docs-search__input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.docs-search__key {
+  position: absolute;
+  inset-inline-end: 0.6rem;
+  top: 0.55rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+.docs-search__input:focus ~ .docs-search__key { display: none; }
+.docs-search__results,
+.docs-search__status {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  top: calc(100% + 0.35rem);
+  margin: 0;
+  padding: 0.35rem;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: var(--shadow-lg);
+}
+.docs-search__results { min-width: min(24rem, 90vw); max-height: 24rem; overflow-y: auto; }
+.docs-search__status { padding: 0.7rem 0.85rem; font-size: 0.9rem; color: var(--muted); }
+.docs-search__hit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: calc(var(--radius) - 4px);
+  text-decoration: none;
+  color: var(--ink);
+}
+.docs-search__results [aria-selected="true"] .docs-search__hit,
+.docs-search__hit:hover { background: var(--surface); }
+.docs-search__title { font-weight: 600; font-size: 0.95rem; }
+.docs-search__snippet { font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.docs-search__snippet mark { background: color-mix(in srgb, var(--accent) 22%, transparent); color: inherit; border-radius: 3px; }

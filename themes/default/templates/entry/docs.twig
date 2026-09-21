@@ -60,6 +60,7 @@
     </article>
 
     <aside class="docs__sidebar" id="docs-nav">
+      {% include '_docs_search.twig' %}
       <nav class="docs__nav" aria-label="Documentation">
         {% for group in tree.groups %}
           <section class="docs__group">

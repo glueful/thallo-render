@@ -1,0 +1,17 @@
+{# _docs_search.twig — a documentation section's search box (entry/docs.twig, listing/docs.twig).
+   Context: `type` (the docs content type), `site`. Rendered only where search_enabled() — the
+   site's search capability is on — and shipped `hidden`: block-docs-search.js shows it, so a
+   visitor without the script gets no search box rather than one that does nothing. A combobox
+   over GET /v1/search, scoped to this type and locale. #}
+{% if search_enabled() %}
+  <form class="docs-search" role="search" data-docs-search data-type="{{ type }}" data-locale="{{ site.locale }}" hidden>
+    <label class="docs-search__label" for="docs-search-input-{{ type }}">Search the documentation</label>
+    <input class="docs-search__input" id="docs-search-input-{{ type }}" type="search" name="q"
+           placeholder="Search…" autocomplete="off" spellcheck="false"
+           role="combobox" aria-expanded="false" aria-autocomplete="list" aria-haspopup="listbox">
+    <kbd class="docs-search__key" aria-hidden="true">/</kbd>
+    <ul class="docs-search__results" role="listbox" aria-label="Search results" hidden></ul>
+    <p class="docs-search__status" role="status" data-docs-search-status hidden></p>
+  </form>
+  {{ block_script('docs-search') }}
+{% endif %}

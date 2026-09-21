@@ -17,6 +17,7 @@ use Thallo\Contracts\Content\FormSealer;
 use Thallo\Contracts\Content\RegionReader;
 use Thallo\Contracts\Content\RichHtmlSanitizer;
 use Thallo\Contracts\Delivery\EntryTargetResolver;
+use Thallo\Contracts\Capability\CapabilityRegistry;
 use Thallo\Contracts\Delivery\EntryListReader;
 use Thallo\Contracts\Delivery\EntryTreeReader;
 use Thallo\Contracts\Delivery\FacetCountsReader;
@@ -86,7 +87,7 @@ final class RenderContextExtension extends AbstractExtension
 
     /** Closed block-asset catalog (modern-blocks spec §1) — block_script() is
      *  DB-template vocabulary; only these names ever resolve to a script tag. */
-    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'code', 'gallery', 'motion'];
+    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'code', 'docs-search', 'gallery', 'motion'];
 
     /** @var array<string,bool> per-render emitted set (bandwidth dedupe only —
      *  the asset's own exactly-once IIFE guard is the correctness authority). */
@@ -228,6 +229,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?StyleClassProvider $styleClasses = null,
         /** Soft-bound (website plan, phase 2c): null → entry_tree() is an empty tree. */
         private readonly ?EntryTreeReader $entryTree = null,
+        /** Soft-bound: null → search_enabled() is false, and a theme offers no search box. */
+        private readonly ?CapabilityRegistry $capabilities = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -267,6 +270,7 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('facets', $this->facets(...)),
             new TwigFunction('entries', $this->entries(...)),
             new TwigFunction('entry_tree', $this->entryTreeOf(...)),
+            new TwigFunction('search_enabled', $this->searchEnabled(...)),
             new TwigFunction('markdown', $this->markdown(...), [
                 'needs_environment' => true,
                 'is_safe' => ['html'],
@@ -1437,6 +1441,15 @@ final class RenderContextExtension extends AbstractExtension
         $result = $this->entryReader->list($type, $opts, $this->locale);
         $this->collectTags($result['cache_tags']);
         return $result['items'];
+    }
+
+    /**
+     * Whether the site's search is on (the `thallo.search` capability): a theme offers a search
+     * box only where `GET /v1/search` will answer.
+     */
+    public function searchEnabled(): bool
+    {
+        return $this->capabilities?->isEnabled('thallo.search') ?? false;
     }
 
     /**

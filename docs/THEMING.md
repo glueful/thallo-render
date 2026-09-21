@@ -214,6 +214,8 @@ Functions:
   pages flat in reading order, which is what previous and next walk. An item is `uuid`, `slug`,
   `href`, `title`, `summary`, `group` — never the entry's body. Up to 500. A docs sidebar
   (`entry/docs.twig`).
+- `search_enabled()` — whether the site's search is on. Offer a search box only inside it
+  (`_docs_search.twig`), so it is never one that cannot answer.
 - `markdown(text)` — render Markdown kept in a plain text field. GitHub-flavoured; every
   heading gets a stable id and a `.heading-anchor` link; raw HTML is stripped and unsafe link
   schemes refused, so the output is safe to emit as it is. A code fence is rendered by your

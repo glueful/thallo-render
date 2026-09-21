@@ -685,6 +685,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             entryReader: $container->has(EntryListReader::class)
                 ? $container->get(EntryListReader::class)
                 : null,
+            // search_enabled(): soft-bound; null = a theme offers no search box.
+            capabilities: $container->has(\Thallo\Contracts\Capability\CapabilityRegistry::class)
+                ? $container->get(\Thallo\Contracts\Capability\CapabilityRegistry::class)
+                : null,
             // entry_tree() (website plan, phase 2c): soft-bound; null = an empty tree.
             entryTree: $container->has(\Thallo\Contracts\Delivery\EntryTreeReader::class)
                 ? $container->get(\Thallo\Contracts\Delivery\EntryTreeReader::class)
