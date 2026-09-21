@@ -755,6 +755,33 @@ property silently takes its initial value — which is how a badge ships square 
 stylesheet says rounded. A test holds the default theme to it: every custom property it reads
 without a fallback is one it defines.
 
+#### A block type made in the admin
+
+A block type created under **Settings › Block types** gets style settings too, without code. Its
+editor has a **Style settings** card: tick the setting groups the block should offer in the
+designer — spacing, width, placement, typography, colours, backdrop, corners, border, shadow,
+visibility, minimum height, overflow, and sizing in a parent layout. Such a block has **one** style
+target, `root`, a box: its outermost element. Every chosen group lands there, and so do the
+Advanced tab's anchor, CSS classes and attributes. The template emits them:
+
+```twig
+{# blocks/promo_banner.twig #}
+<div class="promo-banner{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  <h2>{{ data.title }}</h2>
+</div>
+```
+
+The order matters once: choosing groups for a block whose template does **not** emit them is
+refused, with the line to add, because that template would fail the lint below and stop
+rendering. Add the two helpers first, then tick the groups. For a new block type there is no
+template yet, so tick the groups first; the Theme editor then refuses a template that leaves the
+helpers out.
+
+Not offered to a block made in the admin: text alignment (it needs a `text` target) and the
+parent-layout groups (a `stack`: what arranges a container's children). A block that needs
+several targets, or those kinds, is declared in code. The style settings of a block type Thallo or
+a pack declares are shown read-only: they are set in code and re-synced on every upgrade.
+
 ### 12.3a The container's layout (what a theme must keep)
 
 A container is two elements: `root`, the band, and `__inner`, the content area. Its

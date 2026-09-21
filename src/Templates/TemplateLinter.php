@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Thallo\Render\Templates;
 
 use Thallo\Contracts\Style\BlockStyleRegistry;
+use Thallo\Contracts\Style\StyleTargets;
 use Thallo\Render\RenderContextExtension;
 use Twig\Environment;
 use Twig\Error\SyntaxError;
@@ -38,6 +39,25 @@ final class TemplateLinter
         /** Block style declarations (spec §2.5): null = the target rules never apply. */
         private readonly ?BlockStyleRegistry $styleRegistry = null,
     ) {
+    }
+
+    /**
+     * The style-target rules ALONE, against targets the block type does not have yet: what a
+     * block's template would violate if its type were given `$targets` (a syntax error is a
+     * violation too). The full policy is {@see lint()}, which reads the type's stored declaration.
+     *
+     * @return list<array{line:int,message:string}> empty = the template honours them
+     */
+    public function lintTargets(string $source, string $name, StyleTargets $targets): array
+    {
+        $env = new Environment(new ArrayLoader([]), ['autoescape' => 'html']);
+        $env->addExtension($this->extension);
+        try {
+            $module = $env->parse($env->tokenize(new Source($source, $name)));
+        } catch (SyntaxError $e) {
+            return [['line' => max(1, $e->getTemplateLine()), 'message' => $e->getRawMessage()]];
+        }
+        return TargetLint::lint($module, $targets);
     }
 
     /** @return list<array{line:int,message:string}> empty = clean */

@@ -15,6 +15,7 @@ use Thallo\Render\Templates\DatabaseTemplateLoader;
 use Thallo\Render\Templates\IconSet;
 use Thallo\Render\Templates\IconInventory;
 use Thallo\Render\Templates\RuntimeAssetMap;
+use Thallo\Render\Templates\BlockTemplateTargetChecker;
 use Thallo\Render\Templates\TemplateLinter;
 use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Contracts\Capability\Capability;
@@ -65,6 +66,7 @@ use Thallo\Contracts\Delivery\RenderedPageCachePurge;
 use Thallo\Contracts\Preview\PreviewFragmentRenderer;
 use Thallo\Render\Http\Middleware\RenderCachePurge;
 use Thallo\Contracts\Style\BlockStyleRegistry;
+use Thallo\Contracts\Style\BlockTemplateTargetCheck;
 use Thallo\Contracts\Style\StyleArtifactCompiler;
 use Thallo\Render\Fragments\FragmentRenderer;
 use Thallo\Render\Fragments\FragmentVerification;
@@ -162,6 +164,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             CompiledStyleArtifacts::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeCompiledStyleArtifacts'],
+            ],
+            // Asked by whoever saves a block type's style declaration: does its template honour it?
+            BlockTemplateTargetCheck::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeBlockTemplateTargetCheck'],
             ],
             // The compile seam provision and a theme switch go through (spec §2.4).
             StyleArtifactCompiler::class => [
@@ -525,6 +532,15 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     {
         $context = $container->get(ApplicationContext::class);
         return new CompiledStyleArtifacts($context->getBasePath() . '/storage/cache/style');
+    }
+
+    public static function makeBlockTemplateTargetCheck(ContainerInterface $container): BlockTemplateTargetCheck
+    {
+        return new BlockTemplateTargetChecker(
+            $container->get(TemplateLinter::class),
+            $container->get(ThemeLocator::class),
+            $container->has(TemplateRepository::class) ? $container->get(TemplateRepository::class) : null,
+        );
     }
 
     public static function makeStyleArtifactCompiler(ContainerInterface $container): StyleArtifactCompiler
