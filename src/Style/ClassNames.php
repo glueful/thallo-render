@@ -59,6 +59,12 @@ final class ClassNames
         'colors.surface_opacity' => 'bgo',
         'backdrop.blur' => 'blur',
         'typography.line_height' => 'leading',
+        'motion.entrance' => 'enter',
+        'motion.duration' => 'enterdur',
+        'motion.delay' => 'enterdelay',
+        'motion.repeat' => 'enterrepeat',
+        'motion.stagger' => 'stagger',
+        'motion.ken_burns' => 'kenburns',
     ];
 
     /**

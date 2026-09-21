@@ -969,7 +969,7 @@ final class RenderController
         $context['presentation'] ??= $this->presentationContext(null, null);
 
         try {
-            $html = $env->render($template, $context);
+            $html = $this->extension->finish($env->render($template, $context));
         } catch (\Throwable $e) {
             $this->logger->error('thallo-render: template render failed', [
                 'template' => $template,

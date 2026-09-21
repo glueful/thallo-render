@@ -21,7 +21,33 @@ final class StyleCompiler
     // 4: layout.display compiles flex and grid only (container-layout spec §11.1).
     // 7: a background utility names its colour (--t-surface) for the opacity utility to mix.
     // 8: typography.line_height.
-    public const VERSION = 8;
+    // 9: motion — entrances, and the one shared rule that animates them.
+    public const VERSION = 9;
+
+    /** Where an entrance STARTS from; `none` starts nowhere. */
+    private const ENTRANCES = [
+        'fade' => 'none',
+        'fade-up' => 'translateY(1.5rem)',
+        'fade-down' => 'translateY(-1.5rem)',
+        'slide-left' => 'translateX(2rem)',
+        'slide-right' => 'translateX(-2rem)',
+        'zoom-in' => 'scale(0.92)',
+    ];
+    private const MOTION_TIMES = [
+        'motion.duration' => ['--t-enter-duration', ['fast' => 300, 'normal' => 600, 'slow' => 1000]],
+        'motion.delay' => ['--t-enter-delay', ['none' => 0, 'short' => 150, 'medium' => 300, 'long' => 600]],
+    ];
+    /** The step between one child's entrance and the next, in ms. */
+    private const STAGGER_STEPS = ['short' => 80, 'medium' => 150, 'long' => 250];
+    /** Ken Burns: where the picture's drift starts and ends. */
+    private const KEN_BURNS = [
+        'zoom-in' => ['scale(1)', 'scale(1.15)'],
+        'zoom-out' => ['scale(1.15)', 'scale(1)'],
+        'pan-left' => ['scale(1.12) translateX(3%)', 'scale(1.12) translateX(-3%)'],
+        'pan-right' => ['scale(1.12) translateX(-3%)', 'scale(1.12) translateX(3%)'],
+    ];
+    /** Past this child the stagger stops growing: a long list must not wait for seconds. */
+    private const STAGGER_CAP = 12;
 
     /** `backdrop.blur` radii. */
     private const BLUR = ['none' => 'none', 'sm' => 'blur(4px)', 'md' => 'blur(12px)', 'lg' => 'blur(24px)'];
@@ -34,6 +60,13 @@ final class StyleCompiler
      * class the emitter can write has a rule, so the empty ones are written.
      */
     private const MODIFIERS = ['border.sides', 'colors.surface_opacity'];
+
+    /**
+     * Properties whose utilities carry NO declaration for some or all values, and whose reset is
+     * likewise empty: an entrance of `none`, the repeat (read by the page's script, not by CSS),
+     * and the stagger (written on the CHILDREN by motionRules(), not on the element itself).
+     */
+    private const EMPTY_RESET = ['motion.entrance', 'motion.repeat', 'motion.stagger'];
 
     private const MEDIA = ['md' => 768, 'lg' => 1024];
 
@@ -168,9 +201,11 @@ final class StyleCompiler
             }
             foreach (self::valuesFor($path, $def->tokenDomain, $def->choices) as $value) {
                 $declarations = self::declarations($path, $value);
-                $out .= ClassNames::selector(ClassNames::for($path, $value, $bp)) . ' { ' . $declarations . " }\n";
+                $out .= ClassNames::selector(ClassNames::for($path, $value, $bp))
+                    . ($declarations === '' ? " { }\n" : ' { ' . $declarations . " }\n");
             }
-            if ($def->accepts(ValueKind::Reset) && in_array($path, self::MODIFIERS, true)) {
+            $emptyReset = in_array($path, self::MODIFIERS, true) || in_array($path, self::EMPTY_RESET, true);
+            if ($def->accepts(ValueKind::Reset) && $emptyReset) {
                 $out .= ClassNames::selector(ClassNames::reset($path, $bp)) . " { }\n";
             } elseif ($def->accepts(ValueKind::Reset)) {
                 $reset = implode(' ', array_map(
@@ -180,7 +215,7 @@ final class StyleCompiler
                 $out .= ClassNames::selector(ClassNames::reset($path, $bp)) . ' { ' . $reset . " }\n";
             }
         }
-        return $out . self::spanRules($bp);
+        return $out . self::spanRules($bp) . ($bp === 'base' ? self::motionRules() : '');
     }
 
     /**
@@ -215,6 +250,59 @@ final class StyleCompiler
             }
         }
         return $out;
+    }
+
+    /**
+     * What makes the entrance utilities DO something (they only name a starting state): the
+     * stagger of a container's children, and ONE rule that hides and animates every entrance.
+     * It applies only where three things hold: the visitor has not asked for reduced motion; the
+     * page's script has said it is running (`html[data-thallo-motion]`, which it sets only once
+     * its observer exists — so without JavaScript, or if it fails, nothing is ever hidden); and
+     * the block has not entered yet.
+     */
+    private static function motionRules(): string
+    {
+        $out = "@property --t-enter-stagger { syntax: '<time>'; inherits: false; initial-value: 0ms; }\n";
+        foreach (self::STAGGER_STEPS as $name => $step) {
+            $parent = ClassNames::selector(ClassNames::for('motion.stagger', $name));
+            for ($k = 2; $k <= self::STAGGER_CAP; $k++) {
+                // A <script> among the children is not a child that enters: it is not counted.
+                $nth = $k === self::STAGGER_CAP ? "n+{$k}" : (string) $k;
+                // The stage wraps every block root in a display:contents annotation element, which
+                // takes the child's place: the delay reaches through it, as a span does.
+                $place = ":nth-child({$nth} of :not(script))";
+                $out .= "{$parent} > {$place},\n{$parent} > .thallo-preview-block{$place} > *"
+                    . ' { --t-enter-stagger: ' . (($k - 1) * $step) . "ms; }\n";
+            }
+        }
+        $entrances = ':is(' . implode(', ', array_map(
+            static fn (string $name): string => ClassNames::selector(ClassNames::for('motion.entrance', $name)),
+            array_keys(self::ENTRANCES),
+        )) . ')';
+        // Ken Burns: the picture that is the frame's DIRECT child drifts — never one deeper inside
+        // (a container's content is not its background). Where a drift starts and ends is only a
+        // pair of values, so it stands outside the reduced-motion query: the editor's Play
+        // replays a drift by hand and reads them.
+        $picture = ' > :is(img, picture, video)';
+        foreach (self::KEN_BURNS as $name => [$from, $to]) {
+            $out .= ClassNames::selector(ClassNames::for('motion.ken_burns', $name))
+                . "{$picture} { --t-kb-from: {$from}; --t-kb-to: {$to}; }\n";
+        }
+        $out .= "@media (prefers-reduced-motion: no-preference) {\n";
+        $out .= "html[data-thallo-motion] {$entrances}:not([data-thallo-entered]) { opacity: 0; "
+            . "transform: var(--t-enter-transform, none); }\n";
+        $out .= "html[data-thallo-motion] {$entrances} { transition: opacity var(--t-enter-duration, 600ms) "
+            . 'ease-out, transform var(--t-enter-duration, 600ms) cubic-bezier(0.2, 0.7, 0.2, 1); '
+            . "transition-delay: calc(var(--t-enter-delay, 0ms) + var(--t-enter-stagger, 0ms)); }\n";
+        $frames = ':is(' . implode(', ', array_map(
+            static fn (string $name): string => ClassNames::selector(ClassNames::for('motion.ken_burns', $name)),
+            array_keys(self::KEN_BURNS),
+        )) . ')';
+        $out .= "{$frames}{$picture} { animation: t-kenburns 20s ease-in-out infinite alternate; "
+            . "transform-origin: center; }\n";
+        $out .= "@keyframes t-kenburns { from { transform: var(--t-kb-from); } "
+            . "to { transform: var(--t-kb-to); } }\n";
+        return $out . "}\n";
     }
 
     /** @return list<string> */
@@ -273,6 +361,20 @@ final class StyleCompiler
             $layout = $value === 'auto' ? 'block' : 'flex';
             return "min-height: {$height}; --thallo-root-layout: {$layout};";
         }
+        if ($path === 'motion.entrance') {
+            return isset(self::ENTRANCES[$value]) ? '--t-enter-transform: ' . self::ENTRANCES[$value] . ';' : '';
+        }
+        if (isset(self::MOTION_TIMES[$path])) {
+            [$variable, $times] = self::MOTION_TIMES[$path];
+            return "{$variable}: {$times[$value]}ms;";
+        }
+        if ($path === 'motion.repeat' || $path === 'motion.stagger') {
+            return '';
+        }
+        // The class lands on the FRAME, which clips; motionRules() moves the picture inside it.
+        if ($path === 'motion.ken_burns') {
+            return isset(self::KEN_BURNS[$value]) ? 'overflow: clip;' : '';
+        }
         if ($path === 'border.sides' && $value === 'all') {
             return ''; // what the width utility declares already
         }
@@ -325,6 +427,12 @@ final class StyleCompiler
         }
         if ($path === 'backdrop.blur') {
             return ['backdrop-filter', '-webkit-backdrop-filter'];
+        }
+        if (isset(self::MOTION_TIMES[$path])) {
+            return [self::MOTION_TIMES[$path][0]];
+        }
+        if ($path === 'motion.ken_burns') {
+            return ['overflow'];
         }
         if (isset(self::TOKEN_PROPERTY[$path])) {
             return [self::TOKEN_PROPERTY[$path]];

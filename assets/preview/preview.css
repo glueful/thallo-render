@@ -365,3 +365,33 @@
   font: 500 0.85rem/1 system-ui, sans-serif;
   color: rgba(100, 116, 139, 0.9);
 }
+
+/* Motion in the canvas. Entrances never run here on their own (the page's motion flag is not
+   emitted into a canvas), and a Ken Burns picture is held still: a block that hides until it is
+   scrolled to cannot be edited, and a drifting picture is a moving target. The Style tab's Play
+   replays one block through the bridge, which sets data-thallo-motion-play to "from" (the
+   starting state, painted without a transition) and then to "to" (released). Play is asked for
+   by hand, so it runs under a reduced-motion preference too. Scoped to the canvas's block
+   wrappers: this sheet also loads on the review surface, where motion runs as it does live. */
+.thallo-preview-block [class*="t-kenburns-"] > :is(img, picture, video) {
+  animation: none;
+}
+.thallo-preview-block [data-thallo-motion-play="from"][class*="t-enter-"] {
+  opacity: 0;
+  transform: var(--t-enter-transform, none);
+  transition: none;
+}
+.thallo-preview-block [data-thallo-motion-play="to"][class*="t-enter-"] {
+  transition:
+    opacity var(--t-enter-duration, 600ms) ease-out,
+    transform var(--t-enter-duration, 600ms) cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: calc(var(--t-enter-delay, 0ms) + var(--t-enter-stagger, 0ms));
+}
+.thallo-preview-block [data-thallo-motion-play="to"][class*="t-kenburns-"] > :is(img, picture, video) {
+  animation: thallo-canvas-kenburns 8s ease-in-out both;
+  transform-origin: center;
+}
+@keyframes thallo-canvas-kenburns {
+  from { transform: var(--t-kb-from, none); }
+  to { transform: var(--t-kb-to, none); }
+}

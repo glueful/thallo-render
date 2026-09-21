@@ -85,11 +85,14 @@ final class RenderContextExtension extends AbstractExtension
 
     /** Closed block-asset catalog (modern-blocks spec §1) — block_script() is
      *  DB-template vocabulary; only these names ever resolve to a script tag. */
-    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'code', 'gallery'];
+    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'code', 'gallery', 'motion'];
 
     /** @var array<string,bool> per-render emitted set (bandwidth dedupe only —
      *  the asset's own exactly-once IIFE guard is the correctness authority). */
     private array $emittedBlockScripts = [];
+
+    /** A block of this render ENTERS: the finished page gets the motion flag ({@see finish()}). */
+    private bool $motionNeeded = false;
 
     /**
      * Preview-only block annotation (visual-canvas spec §2): when on, blocks()
@@ -415,6 +418,65 @@ final class RenderContextExtension extends AbstractExtension
             $this->classRefsFor($frame['settings']['classes'] ?? null),
         );
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
+    }
+
+    /**
+     * Notes that `$type` with `$settings` ENTERS — by its own setting or a style class's — so the
+     * finished page gets the motion flag ({@see finish()}). Never in the canvas: nothing is
+     * hidden while editing.
+     *
+     * @param array<string,mixed> $settings
+     */
+    private function noteMotion(string $type, array $settings): void
+    {
+        if ($this->motionNeeded || $this->annotateBlocks || $this->styleRegistry === null) {
+            return;
+        }
+        $targets = $this->styleRegistry->targetsFor($type);
+        $target = $targets?->targetFor('motion.entrance');
+        if ($targets === null || $target === null) {
+            return;
+        }
+        $classes = $this->styleEmitter->classesFor(
+            $settings,
+            $targets,
+            $target,
+            $this->classRefsFor($settings['classes'] ?? null),
+        );
+        foreach ($classes as $class) {
+            if (str_starts_with($class, 't-enter-') && $class !== 't-enter-none' && $class !== 't-enter-reset') {
+                $this->motionNeeded = true;
+                return;
+            }
+        }
+    }
+
+    /**
+     * The last step of a page's render, for whoever turned a template into a page: what the body
+     * turned out to need goes into the head. Today that is the motion flag ({@see Motion}) — it
+     * must be in force before the first entering block is parsed, and the head is written before
+     * the blocks are known. It goes in the head and never beside the block it protects: a script
+     * among blocks is a sibling, and a theme's `:first-child` or `+` rule would see it. A page a
+     * host does not finish has no flag, and its blocks are simply shown.
+     */
+    public function finish(string $html): string
+    {
+        if (!$this->motionNeeded) {
+            return $html;
+        }
+        $this->motionNeeded = false;
+        $tags = Motion::tags();
+        foreach (['~</head\s*>~i', '~<body[\s>]~i'] as $before) {
+            if (preg_match($before, $html, $m, PREG_OFFSET_CAPTURE) === 1) {
+                return substr($html, 0, $m[0][1]) . $tags . substr($html, $m[0][1]);
+            }
+        }
+        // A theme that leaves its head and body implied: straight after the doctype — never
+        // ahead of it, which would put the page in quirks mode.
+        if (preg_match('~\A\s*<!doctype[^>]*>~i', $html, $m) === 1) {
+            return $m[0] . $tags . substr($html, strlen($m[0]));
+        }
+        return $tags . $html;
     }
 
     /** `data-thallo-slot="<field>"` in canvas mode, nothing otherwise (spec §5.4); leading space. */
@@ -1199,6 +1261,7 @@ final class RenderContextExtension extends AbstractExtension
                 // Settings (visual builder spec §1.2): every stored block carries them; the frame
                 // and the block context expose them to the style helpers and templates.
                 $settings = is_array($item['settings'] ?? null) ? $item['settings'] : [];
+                $this->noteMotion($type, $settings);
                 $this->blockFrames[] = [
                     'id' => $item['id'] ?? null,
                     'type' => $type,
@@ -1290,6 +1353,7 @@ final class RenderContextExtension extends AbstractExtension
         $this->resetBlockFrames();
         $this->resetPriorityImageClaim();
         $this->emittedBlockScripts = [];
+        $this->motionNeeded = false;
         $this->setAssetContext(null, null);
         // Defaults-off here (not assignment-per-path like annotation) so render
         // paths unaware of the surface split — e.g. pack fragment renderers —

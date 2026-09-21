@@ -87,6 +87,47 @@
     return document.querySelector('[data-thallo-block="' + cssEscape(id) + '"]')
   }
 
+  // ── Motion replay (the Style tab's Play) ────────────────────────────────────
+  // The canvas never runs entrances or Ken Burns on its own: a block that hid until scrolled to
+  // could not be edited, and a picture that drifts is a moving target. Play shows one block's
+  // motion once, on request. Everything that enters inside the block replays with it, so a
+  // staggered container plays as the visitor sees it.
+  var ENTRANCE_PLAY_MS = 5000 // the longest entrance: slow + long delay + the last stagger step
+  var KEN_BURNS_PLAY_MS = 8000
+  var motionTimers = []
+
+  function playMotion(id) {
+    var w = findBlock(id)
+    if (!w) return
+    function play(el, ms) {
+      // A second Play while the first still runs starts over; another block's replay is left be.
+      motionTimers = motionTimers.filter(function (t) {
+        if (t.el === el) clearTimeout(t.timer)
+        return t.el !== el
+      })
+      el.setAttribute('data-thallo-motion-play', 'from')
+      // The starting state has to be painted before it is released, or nothing transitions.
+      void el.offsetWidth
+      el.setAttribute('data-thallo-motion-play', 'to')
+      motionTimers.push({
+        el: el,
+        timer: setTimeout(function () {
+          el.removeAttribute('data-thallo-motion-play')
+          motionTimers = motionTimers.filter(function (t) { return t.el !== el })
+        }, ms),
+      })
+    }
+    Array.prototype.forEach.call(w.querySelectorAll('[class*="t-enter-"]'), function (el) {
+      var names = el.className.split(/\s+/).filter(function (c) {
+        return c.indexOf('t-enter-') === 0 && c !== 't-enter-none' && c !== 't-enter-reset'
+      })
+      if (names.length) play(el, ENTRANCE_PLAY_MS)
+    })
+    Array.prototype.forEach.call(w.querySelectorAll('[class*="t-kenburns-"]'), function (el) {
+      if (/(^|\s)t-kenburns-(?!none|reset)/.test(el.className)) play(el, KEN_BURNS_PLAY_MS)
+    })
+  }
+
   // ── Toolbar (stage-toolbar spec §3) ─────────────────────────────────────────
   var ACTIONS = [
     { action: 'drag', label: 'Drag to reorder', path: 'M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01' },
@@ -1932,6 +1973,7 @@
     if (data.type === 'thallo:structure-offer') onStructureOffer(data)
     if (data.type === 'thallo:grid-fill-state') onGridFillState(data)
     if (data.type === 'thallo:fragments') onFragments(data)
+    if (data.type === 'thallo:motion-play' && typeof data.id === 'string') playMotion(data.id)
     if (data.type === 'thallo:mirror-move') mirrorMove(data.id, data.beforeId, data.afterId)
     if (data.type === 'thallo:mirror-remove') mirrorRemove(data.id)
     if (data.type === 'thallo:mirror-duplicate') mirrorDuplicate(data.sourceId, data.idMap)
