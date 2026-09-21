@@ -86,6 +86,32 @@ final class ThemeColors
         return in_array($v, self::ACCENTS, true) ? $v : null;
     }
 
+    /**
+     * The SITE's accent: one of the families, or the site's own brand colour as a hex (`#rgb` is
+     * written out). Only the site-wide accent may be a hex — a scoped skin's class is built from
+     * the accent's name ({@see skinClass()}), so {@see normalizeAccent()} stays families only.
+     * The shape is held exactly, because the value is written into a stylesheet.
+     */
+    public static function normalizeSiteAccent(string $v): ?string
+    {
+        if (in_array($v, self::ACCENTS, true)) {
+            return $v;
+        }
+        if (preg_match('/\A#([0-9a-f]{3}|[0-9a-f]{6})\z/i', $v, $m) !== 1) {
+            return null;
+        }
+        $hex = strtolower($m[1]);
+        return '#' . (strlen($hex) === 3 ? $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2] : $hex);
+    }
+
+    /** The WCAG contrast ratio of two `#rrggbb` colours, 1 to 21. */
+    public static function contrast(string $a, string $b): float
+    {
+        $la = self::luminance($a);
+        $lb = self::luminance($b);
+        return (max($la, $lb) + 0.05) / (min($la, $lb) + 0.05);
+    }
+
     public static function normalizeNeutral(string $v): ?string
     {
         return in_array($v, self::NEUTRALS, true) ? $v : null;
@@ -98,7 +124,7 @@ final class ThemeColors
      */
     public static function tokens(string $accent, string $neutral, string $mode): array
     {
-        return self::neutralVars($neutral, $mode) + self::accentVars($accent, $mode);
+        return self::neutralVars($neutral, $mode) + self::accentVars($accent, $mode, $neutral);
     }
 
     /** Override CSS for a validated pair, or '' when it is the default. */
@@ -150,10 +176,48 @@ final class ThemeColors
      *
      * @return array<string,string>
      */
-    private static function accentVars(string $accent, string $mode): array
+    private static function accentVars(string $accent, string $mode, string $neutral = self::DEFAULT_NEUTRAL): array
     {
-        [$light, $dark] = self::ACCENT[$accent];
-        return ['--accent' => $mode === 'dark' ? $dark : $light, '--accent-ink' => '#ffffff'];
+        if (isset(self::ACCENT[$accent])) {
+            [$light, $dark] = self::ACCENT[$accent];
+            return ['--accent' => $mode === 'dark' ? $dark : $light, '--accent-ink' => '#ffffff'];
+        }
+        // A brand colour. On a light ground it is used exactly as given — the brand is the brand.
+        // On the dark ground it is lifted toward white until it can be seen there (the families
+        // do the same with a lighter stop), keeping its hue. Either way the ink on it is whichever
+        // of white and black is readable: between them, one always clears AA.
+        $fill = $accent;
+        if ($mode === 'dark') {
+            $ground = self::neutralVars($neutral, 'dark')['--bg'];
+            for ($step = 1; $step <= 20 && self::contrast($fill, $ground) < 4.5; $step++) {
+                $fill = self::mix($accent, '#ffffff', $step * 0.05);
+            }
+        }
+        $ink = self::contrast($fill, '#ffffff') >= self::contrast($fill, '#000000') ? '#ffffff' : '#000000';
+        return ['--accent' => $fill, '--accent-ink' => $ink];
+    }
+
+    /** Relative luminance of a `#rrggbb` colour (WCAG 2). */
+    private static function luminance(string $hex): float
+    {
+        $channel = static function (int $value): float {
+            $c = $value / 255;
+            return $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+        };
+        [$r, $g, $b] = sscanf($hex, '#%02x%02x%02x');
+        return 0.2126 * $channel((int) $r) + 0.7152 * $channel((int) $g) + 0.0722 * $channel((int) $b);
+    }
+
+    /** `$from` moved `$amount` (0..1) of the way to `$to`, per channel. */
+    private static function mix(string $from, string $to, float $amount): string
+    {
+        $a = sscanf($from, '#%02x%02x%02x');
+        $b = sscanf($to, '#%02x%02x%02x');
+        $out = '#';
+        foreach ([0, 1, 2] as $i) {
+            $out .= sprintf('%02x', (int) round((int) $a[$i] + ((int) $b[$i] - (int) $a[$i]) * $amount));
+        }
+        return $out;
     }
 
     /**

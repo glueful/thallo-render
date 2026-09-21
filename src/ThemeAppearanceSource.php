@@ -42,7 +42,7 @@ final class ThemeAppearanceSource
             return $this->accentMemo;
         }
         $raw = $this->settings?->accent() ?? ThemeColors::DEFAULT_ACCENT;
-        $ok = ThemeColors::normalizeAccent($raw);
+        $ok = ThemeColors::normalizeSiteAccent($raw);
         if ($ok === null) {
             $this->logger?->warning("[Thallo] Invalid theme accent '{$raw}'; falling back to 'blue'.");
             $ok = ThemeColors::DEFAULT_ACCENT;
@@ -84,6 +84,23 @@ final class ThemeAppearanceSource
         );
     }
 
+    /**
+     * The site's own faces as media library uuids; a value that is not one is not a face.
+     *
+     * @return array{body?: string, display?: string}
+     */
+    public function fontFaces(): array
+    {
+        $faces = [];
+        foreach (['body', 'display'] as $role) {
+            $uuid = ($this->settings?->fontFaces() ?? [])[$role] ?? null;
+            if (is_string($uuid) && ThemeDesign::normalizeFace($uuid) !== null) {
+                $faces[$role] = $uuid;
+            }
+        }
+        return $faces;
+    }
+
     public function background(): string
     {
         return $this->backgroundMemo ??= $this->design(
@@ -101,6 +118,10 @@ final class ThemeAppearanceSource
     public function fingerprint(): string
     {
         $segments = [$this->accent(), $this->neutral(), $this->radius(), $this->font(), $this->background()];
+        // The site's own faces re-key every cached page; with none, the fingerprint it always had.
+        if ($this->fontFaces() !== []) {
+            $segments[] = 'f' . implode('.', $this->fontFaces());
+        }
         if ($this->themeArtifactHash !== null) {
             $segments[] = 't' . substr((string) ($this->themeArtifactHash)(), 0, 8);
         }

@@ -718,7 +718,7 @@ final class RenderContextExtension extends AbstractExtension
             ?? ThemeColors::DEFAULT_NEUTRAL;
 
         // Normalize (a preview override could be junk) — invalid → default.
-        $accent = ThemeColors::normalizeAccent($accent) ?? ThemeColors::DEFAULT_ACCENT;
+        $accent = ThemeColors::normalizeSiteAccent($accent) ?? ThemeColors::DEFAULT_ACCENT;
         $neutral = ThemeColors::normalizeNeutral($neutral) ?? ThemeColors::DEFAULT_NEUTRAL;
 
         // Design tokens (website plan phase 1b) ride in the same block, after the colours.
@@ -727,13 +727,49 @@ final class RenderContextExtension extends AbstractExtension
         $css = ThemeColors::css($accent, $neutral) . ThemeDesign::css(
             ThemeDesign::normalizeRadius($design['radius'] ?? '')
                 ?? $this->appearance?->radius() ?? ThemeDesign::DEFAULT_RADIUS,
-            ThemeDesign::normalizeFont($design['font'] ?? '')
-                ?? $this->appearance?->font() ?? ThemeDesign::DEFAULT_FONT,
+            $this->effectiveFont(),
             ThemeDesign::normalizeBackground($design['background'] ?? '')
                 ?? $this->appearance?->background() ?? ThemeDesign::DEFAULT_BACKGROUND,
             $neutral,
+            $this->effectiveFontFaces(),
         );
         return new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8');
+    }
+
+    /** The typeface pairing this render uses: a preview's when it names one, else the saved one. */
+    private function effectiveFont(): string
+    {
+        return ThemeDesign::normalizeFont($this->appearanceDesignOverride['font'] ?? '')
+            ?? $this->appearance?->font() ?? ThemeDesign::DEFAULT_FONT;
+    }
+
+    /**
+     * The site's own faces as the URLs the media library serves them at — a preview's uuids when
+     * it names any, else the saved ones. A face the library no longer has is simply not used; a
+     * setting never reaches the stylesheet as anything but a looked-up URL.
+     *
+     * @return array{body?: string, display?: string}
+     */
+    private function effectiveFontFaces(): array
+    {
+        $uuids = $this->appearance?->fontFaces() ?? [];
+        foreach (['body' => 'font_body', 'display' => 'font_display'] as $role => $key) {
+            $previewed = $this->appearanceDesignOverride[$key] ?? null;
+            if (is_string($previewed)) {
+                unset($uuids[$role]);
+                if (ThemeDesign::normalizeFace($previewed) !== null) {
+                    $uuids[$role] = $previewed;
+                }
+            }
+        }
+        $faces = [];
+        foreach ($uuids as $role => $uuid) {
+            $url = $this->mediaUrls?->url($uuid);
+            if (is_string($url) && $url !== '') {
+                $faces[$role] = $url;
+            }
+        }
+        return $faces;
     }
 
     /**
@@ -1645,6 +1681,10 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function fontFacesStyle(string $family, string $romanRel, ?string $italicRel = null): Markup
     {
+        // A site whose text is set in another face entirely would download this one for nothing.
+        if (!ThemeDesign::usesThemeFace($this->effectiveFont(), $this->effectiveFontFaces())) {
+            return new Markup('', 'UTF-8');
+        }
         $romanUrl = $this->assetUrlIfExists($romanRel);
         if ($romanUrl === null) {
             return new Markup('', 'UTF-8');

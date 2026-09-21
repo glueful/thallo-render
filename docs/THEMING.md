@@ -558,12 +558,30 @@ and dark mode.
 
 - **Accent** — one Tailwind hue family: `red, orange, amber, yellow, lime,
   green, emerald, teal, cyan, sky, blue, indigo, violet, purple, fuchsia, pink,
-  rose`.
-- **Neutral** — one Tailwind neutral family: `slate, gray, zinc, neutral, stone`.
+  rose` — **or the site's own brand colour, as a hex** (`#0a7c66`; `#abc` is written out).
+- **Neutral** — one Tailwind neutral family: `slate, gray, zinc, neutral, stone`. Always a
+  family: a whole grey scale cannot be derived from one colour.
 - **Defaults `blue` / `slate`** reproduce the shipped look exactly.
 
-Both are closed enums; a save `422`s on anything else. Stored in `GeneralSettings`
-as `theme_accent` / `theme_neutral`.
+A save `422`s on anything else. Stored in `GeneralSettings` as `theme_accent` /
+`theme_neutral`.
+
+**A brand colour is used exactly as given on a light page** — the brand is the brand — and
+Thallo derives what the owner cannot be asked to work out:
+
+- `--accent-ink`, the label on the accent, is whichever of white and black reads on it. Between
+  the two, one always clears WCAG AA, so a button's label is always readable. **Read
+  `--accent-ink` for anything you put on `--accent`**; never assume white. And use it ONLY
+  there: text on an ink fill reads `--bg` (the pair that inverts in both colour modes), and
+  text over pictures and dark scrims reads `--on-media`, which no setting changes. The default
+  theme is held to this by a test.
+- On the dark ground the colour is lifted toward white until it can be seen there (the
+  families do the same with a lighter stop), keeping its hue.
+
+The Appearance page says how the colour will read before it is saved, including the one thing
+Thallo does not change: a light brand colour is hard to read as link text on a white page.
+Only the site-wide accent may be a hex; the scoped Style block (§10) stays families, because
+its class is built from the family's name.
 
 ### 9.2 How it re-skins (tokens only)
 
@@ -597,15 +615,26 @@ logs) rather than emitting broken CSS.
 ### 9.6 Design settings (radius, typefaces, page ground)
 
 Next to the colours, **Site › Appearance → Design** carries three more closed enums,
-stored as `theme_radius`, `theme_font`, `theme_background` and emitted by the same
+stored as `theme_radius`, `theme_font`, `theme_background` (and, for the site's own fonts,
+`theme_font_body` / `theme_font_display`) and emitted by the same
 `theme_colors_style()` block (`Thallo\Render\Theme\ThemeDesign`), after the colours:
 
 - **Corners** — `round` (default: `--radius: 12px`, pill buttons), `soft`
   (`--radius: 12px`, `--radius-btn: 8px`), `sharp` (`--radius: 4px`, `--radius-lg: 8px`,
   `--radius-btn: 4px`). Buttons read `--radius-btn` unless a radius setting is set.
 - **Typefaces** — `sans` (default: Figtree throughout), `editorial` (a system serif
-  stack for `--font-display`, so headings), `serif` (both `--font-display` and
-  `--font-body`). System stacks only: the site's CSP is `'self'`, so nothing is fetched.
+  stack for `--font-display`, so headings), `serif`, `humanist`, `geometric`, `mono` and
+  `system` (both `--font-display` and `--font-body`), and `slab` (headings only). All system
+  stacks: they cost a visitor nothing and the site's CSP stays `'self'`.
+  **`custom` is the site's own fonts**: a `.woff2` for the text, one for the headings, or
+  both, uploaded on the Appearance page into the media library. Each is declared with
+  `@font-face` from the URL the library serves it at (`font-weight: 100 900`, so a variable
+  font covers every weight from one file) and put first in `--font-body` / `--font-display`
+  with a system stack behind it. With only a text font, headings follow it. A font the library
+  no longer has is simply not used.
+- **Your theme's own font is not downloaded when nothing is set in it.** `font_faces_style()`
+  emits its preload and `@font-face` only while the site's text is still the theme's face —
+  not for `serif`, `humanist`, `geometric`, `mono`, `system`, or `custom` with a text font.
 - **Page ground** — `plain` (default: white page, tinted panels) or `tinted`, which
   swaps the neutral family's `--bg` and `--surface` in light mode (a tinted page with
   white panels); dark mode is unchanged.
