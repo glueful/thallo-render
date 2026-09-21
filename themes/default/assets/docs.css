@@ -1,0 +1,244 @@
+/* docs.css — a documentation section (entry/docs.twig, listing/docs.twig).
+
+   One column on a narrow screen: the page, then the sidebar, with a link at the top that jumps
+   to it. From 64rem the sidebar stands beside the page; from 80rem "On this page" joins them.
+   Both side columns stick under the site header and scroll on their own, so a long sidebar
+   never makes a short page long. No script anywhere.
+
+   .prose is the rendered Markdown. It styles ELEMENTS, because that is all generated Markdown
+   is — and nothing here targets a block, so none of it meets the managed settings. */
+
+.docs {
+  --docs-top: 5rem; /* clear of the sticky site header */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.docs__jump {
+  justify-self: start;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.docs__jump::after { content: " ↓"; }
+.docs__page { min-width: 0; }
+
+@media (min-width: 64rem) {
+  .docs {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    grid-template-areas: "nav page";
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .docs__jump { display: none; }
+  .docs__sidebar { grid-area: nav; }
+  .docs__page { grid-area: page; max-width: var(--content); }
+  .docs__sidebar,
+  .docs__toc {
+    position: sticky;
+    top: var(--docs-top);
+    max-height: calc(100vh - var(--docs-top) - var(--space-4));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+.docs__toc { display: none; }
+@media (min-width: 80rem) {
+  .docs--with-toc {
+    grid-template-columns: 16rem minmax(0, 1fr) 14rem;
+    grid-template-areas: "nav page toc";
+  }
+  .docs--with-toc .docs__toc { display: block; grid-area: toc; }
+}
+
+/* ── The page ─────────────────────────────────────────────────────────────── */
+.docs__header { margin-bottom: var(--space-5); }
+.docs__eyebrow {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.docs__title { margin: 0; font-size: clamp(2rem, 1.6rem + 1.6vw, 2.75rem); }
+.docs__summary { margin: var(--space-3) 0 0; font-size: 1.15rem; color: var(--muted); }
+
+.docs__footer {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+.docs__edit { font-size: 0.9rem; color: var(--muted); }
+.docs__edit:hover { color: var(--accent); }
+.docs__pager {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.docs__pager-link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s ease;
+}
+.docs__pager-link:hover { border-color: var(--accent); }
+.docs__pager-link--next { grid-column: 2; text-align: end; }
+.docs__pager-label { font-size: 0.8rem; color: var(--muted); }
+.docs__pager-title { font-weight: 600; }
+
+/* ── The sidebar ──────────────────────────────────────────────────────────── */
+.docs__sidebar { scroll-margin-top: var(--docs-top); }
+.docs__group + .docs__group { margin-top: var(--space-4); }
+.docs__group-title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.docs__list,
+.docs__toc-list { list-style: none; margin: 0; padding: 0; }
+.docs__list { border-inline-start: 1px solid var(--line); }
+.docs__link {
+  display: block;
+  margin-inline-start: -1px;
+  padding: 0.3rem var(--space-3);
+  border-inline-start: 1px solid transparent;
+  font-size: 0.95rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+.docs__link:hover { color: var(--ink); border-inline-start-color: var(--muted); }
+.docs__link[aria-current="page"] {
+  color: var(--accent);
+  font-weight: 600;
+  border-inline-start-color: var(--accent);
+}
+
+/* ── On this page ─────────────────────────────────────────────────────────── */
+.docs__toc-title {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.docs__toc-item a {
+  display: block;
+  padding-block: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+.docs__toc-item a:hover { color: var(--accent); }
+.docs__toc-item--3 a { padding-inline-start: var(--space-3); }
+
+/* ── The index ────────────────────────────────────────────────────────────── */
+.docs-index {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.docs-index__title { margin: 0 0 var(--space-5); }
+.docs-index__group + .docs-index__group { margin-top: var(--space-5); }
+.docs-index__group-title { margin: 0 0 var(--space-3); font-size: 1.35rem; }
+.docs-index__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: var(--space-3);
+}
+.docs-index__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  height: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s ease;
+}
+.docs-index__link:hover { border-color: var(--accent); }
+.docs-index__item-title { font-weight: 600; }
+.docs-index__summary { font-size: 0.9rem; color: var(--muted); }
+.docs-index__empty { color: var(--muted); }
+
+/* ── Rendered Markdown ────────────────────────────────────────────────────── */
+.prose { line-height: 1.7; overflow-wrap: break-word; }
+.prose > :first-child { margin-top: 0; }
+.prose > :last-child { margin-bottom: 0; }
+.prose :is(h2, h3, h4) { position: relative; scroll-margin-top: var(--docs-top, 5rem); }
+.prose h2 { margin: var(--space-5) 0 var(--space-3); font-size: 1.6rem; }
+.prose h3 { margin: var(--space-4) 0 var(--space-2); font-size: 1.25rem; }
+.prose h4 { margin: var(--space-4) 0 var(--space-2); font-size: 1.05rem; }
+.prose :is(p, ul, ol, blockquote, table, hr) { margin-block: 0 var(--space-3); }
+.prose :is(ul, ol) { padding-inline-start: 1.4rem; }
+.prose li + li { margin-top: 0.3rem; }
+.prose li > :is(ul, ol) { margin-block: 0.3rem 0; }
+.prose a:not(.heading-anchor) { color: var(--accent); text-underline-offset: 0.18em; }
+.prose strong { font-weight: 650; }
+.prose hr { border: 0; border-top: 1px solid var(--line); margin-block: var(--space-5); }
+.prose img { max-width: 100%; height: auto; border-radius: var(--radius); }
+.prose blockquote {
+  margin-inline: 0;
+  padding: var(--space-2) var(--space-4);
+  border-inline-start: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--ink);
+}
+.prose blockquote > :last-child { margin-bottom: 0; }
+/* Inline code only: a listing is the theme's code block, which styles itself. */
+.prose :not(pre) > code {
+  padding: 0.12em 0.4em;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.875em;
+}
+/* A wide table scrolls inside itself; the page never scrolls sideways. */
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.prose :is(th, td) {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid var(--line);
+  text-align: start;
+  vertical-align: top;
+}
+.prose th { background: var(--surface); font-weight: 650; white-space: nowrap; }
+.prose li:has(> input[type="checkbox"]) { list-style: none; margin-inline-start: -1.4rem; }
+.prose input[type="checkbox"] { margin-inline-end: 0.4rem; accent-color: var(--accent); }
+/* The heading's own link: there for a reader who hovers or tabs to it, out of the way otherwise. */
+.prose .heading-anchor {
+  margin-inline-start: 0.4rem;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.prose :is(h2, h3, h4):hover .heading-anchor,
+.prose .heading-anchor:focus-visible { opacity: 1; }
+/* A code listing fills the prose column rather than centring in a column of its own. */
+.prose .thallo-block-code { max-width: none; margin-block: 0 var(--space-3); padding-inline: 0; }

@@ -1,0 +1,90 @@
+{# entry/docs.twig — a documentation page (website plan, phase 2c).
+
+   For a content type made by `thallo:docs:setup`: a Markdown `body` kept as plain text, a
+   `section` and an `order` for the sidebar, a `summary`, and an `edit_url`. Three columns on a
+   wide screen — the section sidebar, the page, "On this page" — and one on a narrow one, where
+   the sidebar follows the page and a link at the top jumps to it. No script: the sidebar is a
+   list, the contents are links, the code blocks bring their own copy button.
+
+   Nothing here names the type: `type` is this entry's, so a site whose docs type is `handbook`
+   copies this file to entry/handbook.twig and it works as it stands.
+
+   markdown() renders the body (GitHub-flavoured, raw HTML stripped, fenced code through the
+   theme's code block); markdown_toc() is the same render's h2/h3 outline; entry_tree() is every
+   published page of the type in its sections, and `items` the same pages in reading order. #}
+{% extends 'layout.twig' %}
+{% block title %}{{ seo.title|default(entry.fields.title ~ ' — ' ~ site.name) }}{% endblock %}
+{% block content %}
+  {% set tree = entry_tree(type) %}
+  {% set toc = markdown_toc(entry.fields.body|default('')) %}
+  {% set here = null %}
+  {% for item in tree.items %}{% if item.uuid == entry.uuid %}{% set here = loop.index0 %}{% endif %}{% endfor %}
+  {% set previous = here is not null and here > 0 ? tree.items[here - 1] : null %}
+  {% set following = here is not null and here + 1 < tree.items|length ? tree.items[here + 1] : null %}
+  {% set section = null %}
+  {% for group in tree.groups %}{% for item in group.items %}{% if item.uuid == entry.uuid and group.label %}{% set section = group.label %}{% endif %}{% endfor %}{% endfor %}
+
+  <div class="docs{{ toc|length > 1 ? ' docs--with-toc' }}">
+    <a class="docs__jump" href="#docs-nav">Browse the documentation</a>
+
+    <article class="docs__page">
+      <header class="docs__header">
+        {% if section %}<p class="docs__eyebrow">{{ section }}</p>{% endif %}
+        <h1 class="docs__title">{{ entry.fields.title }}</h1>
+        {% if entry.fields.summary|default('') %}<p class="docs__summary">{{ entry.fields.summary }}</p>{% endif %}
+      </header>
+
+      <div class="docs__body prose">{{ markdown(entry.fields.body|default('')) }}</div>
+
+      <footer class="docs__footer">
+        {% if entry.fields.edit_url|default('')|safe_url %}
+          <a class="docs__edit" href="{{ entry.fields.edit_url|safe_url }}" rel="noopener">Edit this page</a>
+        {% endif %}
+        {% if previous or following %}
+          <nav class="docs__pager" aria-label="Previous and next page">
+            {% if previous %}
+              <a class="docs__pager-link docs__pager-link--prev" rel="prev" href="{{ previous.href }}">
+                <span class="docs__pager-label">Previous</span>
+                <span class="docs__pager-title">{{ previous.title }}</span>
+              </a>
+            {% endif %}
+            {% if following %}
+              <a class="docs__pager-link docs__pager-link--next" rel="next" href="{{ following.href }}">
+                <span class="docs__pager-label">Next</span>
+                <span class="docs__pager-title">{{ following.title }}</span>
+              </a>
+            {% endif %}
+          </nav>
+        {% endif %}
+      </footer>
+    </article>
+
+    <aside class="docs__sidebar" id="docs-nav">
+      <nav class="docs__nav" aria-label="Documentation">
+        {% for group in tree.groups %}
+          <section class="docs__group">
+            {% if group.label %}<h2 class="docs__group-title">{{ group.label }}</h2>{% endif %}
+            <ul class="docs__list">
+              {% for item in group.items %}
+                <li><a class="docs__link" href="{{ item.href }}"{% if item.uuid == entry.uuid %} aria-current="page"{% endif %}>{{ item.title }}</a></li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% endfor %}
+      </nav>
+    </aside>
+
+    {% if toc|length > 1 %}
+      <aside class="docs__toc">
+        <nav class="docs__toc-nav" aria-label="On this page">
+          <h2 class="docs__toc-title">On this page</h2>
+          <ul class="docs__toc-list">
+            {% for heading in toc %}
+              <li class="docs__toc-item docs__toc-item--{{ heading.level }}"><a href="#{{ heading.id }}">{{ heading.text }}</a></li>
+            {% endfor %}
+          </ul>
+        </nav>
+      </aside>
+    {% endif %}
+  </div>
+{% endblock %}

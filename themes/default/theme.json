@@ -55,6 +55,7 @@
     "assets/site.css",
     "assets/blocks.css",
     "assets/navigation.css",
-    "assets/stepper.css"
+    "assets/stepper.css",
+    "assets/docs.css"
   ]
 }

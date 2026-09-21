@@ -30,6 +30,10 @@ themes/<name>/
   `packages/thallo-render/themes/default/`
 - **A site's own theme** (app-level): `<app-root>/themes/<name>/`
 
+**Every entry template gets its `type`.** `entry.twig`, `entry/{type}.twig`, `listing.twig` and
+`listing/{type}.twig` all receive the content type's slug as `type`, so a template that
+navigates its type — `entry_tree(type)` — need not be named after one.
+
 **Activation** — one of:
 - Admin → **Site › Appearance → Theme**, or
 - `.env` → `RENDER_THEME=<name>`
@@ -202,6 +206,19 @@ Functions:
 - `region_blocks(name)` / `region_settings(name)` — region HTML / settings.
 - `site_logo(variant?)`, `site_favicon()`, `custom_css()` — site identity.
 - `path(...)`, `facets(...)`, `video_embed(...)`.
+- `entries(type, {limit, order, category})` — the newest few published entries of a type (at
+  most twelve): what a blog block lists.
+- `entry_tree(type, {group: 'section', order: 'order'})` — **every** published entry of a type
+  as navigation: `groups` (each `key`, `label`, `items`) in the order of the group field's enum
+  options, sorted inside a group by the order field and then by title; and `items`, the same
+  pages flat in reading order, which is what previous and next walk. An item is `uuid`, `slug`,
+  `href`, `title`, `summary`, `group` — never the entry's body. Up to 500. A docs sidebar
+  (`entry/docs.twig`).
+- `markdown(text)` — render Markdown kept in a plain text field. GitHub-flavoured; every
+  heading gets a stable id and a `.heading-anchor` link; raw HTML is stripped and unsafe link
+  schemes refused, so the output is safe to emit as it is. A code fence is rendered by your
+  theme's own `blocks/code.twig`. `markdown_toc(text)` is the same render's `h2`/`h3` outline,
+  a list of `id`, `text`, `level`.
 - `layers_stylesheet_url()`, `theme_stylesheet_url()`, `settings_stylesheet_url()` —
   the three stylesheets a layout links (§2, §12).
 - `style_classes(target)`, `style_attrs(target)`, `token_class(property, value)` —

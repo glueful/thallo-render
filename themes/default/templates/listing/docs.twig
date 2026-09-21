@@ -1,0 +1,31 @@
+{# listing/docs.twig — the index of a documentation section (`/docs`): every section with its
+   pages and their summaries, from entry_tree(). A docs index is a table of contents, not a
+   paginated feed, so `items` (the listing's page of newest entries) is not used. As with
+   entry/docs.twig, nothing names the type: copy it to listing/{your-type}.twig. #}
+{% extends 'layout.twig' %}
+{% block title %}Documentation — {{ site.name }}{% endblock %}
+{% block content %}
+  {% set tree = entry_tree(type) %}
+  <div class="docs-index">
+    <header class="docs-index__header">
+      <h1 class="docs-index__title">Documentation</h1>
+    </header>
+    {% for group in tree.groups %}
+      <section class="docs-index__group">
+        {% if group.label %}<h2 class="docs-index__group-title">{{ group.label }}</h2>{% endif %}
+        <ul class="docs-index__list">
+          {% for item in group.items %}
+            <li class="docs-index__item">
+              <a class="docs-index__link" href="{{ item.href }}">
+                <span class="docs-index__item-title">{{ item.title }}</span>
+                {% if item.summary %}<span class="docs-index__summary">{{ item.summary }}</span>{% endif %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% else %}
+      <p class="docs-index__empty">Nothing is published here yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

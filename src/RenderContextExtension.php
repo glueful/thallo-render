@@ -18,6 +18,7 @@ use Thallo\Contracts\Content\RegionReader;
 use Thallo\Contracts\Content\RichHtmlSanitizer;
 use Thallo\Contracts\Delivery\EntryTargetResolver;
 use Thallo\Contracts\Delivery\EntryListReader;
+use Thallo\Contracts\Delivery\EntryTreeReader;
 use Thallo\Contracts\Delivery\FacetCountsReader;
 use Thallo\Contracts\Delivery\MediaUrlResolver;
 use Thallo\Contracts\Delivery\MediaVariantUrlResolver;
@@ -225,6 +226,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly BlockStyleEmitter $styleEmitter = new BlockStyleEmitter(),
         /** The site's style classes (visual builder spec §4.3): soft-bound; null = no class layer. */
         private readonly ?StyleClassProvider $styleClasses = null,
+        /** Soft-bound (website plan, phase 2c): null → entry_tree() is an empty tree. */
+        private readonly ?EntryTreeReader $entryTree = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -263,6 +266,12 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('asset', $this->asset(...)),
             new TwigFunction('facets', $this->facets(...)),
             new TwigFunction('entries', $this->entries(...)),
+            new TwigFunction('entry_tree', $this->entryTreeOf(...)),
+            new TwigFunction('markdown', $this->markdown(...), [
+                'needs_environment' => true,
+                'is_safe' => ['html'],
+            ]),
+            new TwigFunction('markdown_toc', $this->markdownToc(...), ['needs_environment' => true]),
             new TwigFunction('is_preview', $this->isPreview(...)),
             new TwigFunction('blocks', $this->blocks(...), [
                 'needs_environment' => true,
@@ -1354,6 +1363,7 @@ final class RenderContextExtension extends AbstractExtension
         $this->resetPriorityImageClaim();
         $this->emittedBlockScripts = [];
         $this->motionNeeded = false;
+        $this->markdownMemo = [];
         $this->setAssetContext(null, null);
         // Defaults-off here (not assignment-per-path like annotation) so render
         // paths unaware of the surface split — e.g. pack fragment renderers —
@@ -1427,6 +1437,75 @@ final class RenderContextExtension extends AbstractExtension
         $result = $this->entryReader->list($type, $opts, $this->locale);
         $this->collectTags($result['cache_tags']);
         return $result['items'];
+    }
+
+    /**
+     * Every published entry of a type as a navigation tree (a docs sidebar, previous and next):
+     * `groups` in the group field's enum order, `items` the same pages flat in reading order.
+     * `opts.group` and `opts.order` name the fields (default `section` and `order`). Carries its
+     * own cache tags like entries(); an unknown or undelivered type is an empty tree.
+     *
+     * @param array{group?: string, order?: string} $opts
+     * @return array{groups: list<array<string,mixed>>, items: list<array<string,mixed>>}
+     */
+    public function entryTreeOf(string $type, array $opts = []): array
+    {
+        if ($this->entryTree === null) {
+            return ['groups' => [], 'items' => []];
+        }
+        $group = is_string($opts['group'] ?? null) ? $opts['group'] : 'section';
+        $order = is_string($opts['order'] ?? null) ? $opts['order'] : 'order';
+        $tree = $this->entryTree->tree($type, $this->locale, $group, $order);
+        $this->collectTags($tree['cache_tags']);
+        return ['groups' => $tree['groups'], 'items' => $tree['items']];
+    }
+
+    /**
+     * A docs page's body: Markdown rendered by {@see Markdown\MarkdownRenderer} — generated HTML,
+     * raw HTML stripped, so it is safe to emit. A code fence is rendered by the theme's OWN
+     * `blocks/code.twig`, under a frame of its own so its style helpers answer for a code block
+     * whatever template called this. Anything that is not text renders nothing.
+     */
+    public function markdown(Environment $env, mixed $source): string
+    {
+        return $this->renderedMarkdown($env, $source)['html'];
+    }
+
+    /**
+     * The same render's h2/h3 outline, for an on-page table of contents.
+     *
+     * @return list<array{id:string,text:string,level:int}>
+     */
+    public function markdownToc(Environment $env, mixed $source): array
+    {
+        return $this->renderedMarkdown($env, $source)['toc'];
+    }
+
+    /** @var array<string,array{html:string,toc:list<array{id:string,text:string,level:int}>}> */
+    private array $markdownMemo = [];
+
+    /** @return array{html:string,toc:list<array{id:string,text:string,level:int}>} */
+    private function renderedMarkdown(Environment $env, mixed $source): array
+    {
+        if (!is_string($source)) {
+            return ['html' => '', 'toc' => []];
+        }
+        // The body and its contents are asked for separately: one render serves both.
+        $key = md5($source);
+        return $this->markdownMemo[$key] ??= (new Markdown\MarkdownRenderer())->render(
+            $source,
+            function (string $code, string $language) use ($env): string {
+                $this->blockFrames[] = ['id' => null, 'type' => 'code', 'settings' => [], 'editable_field' => null];
+                try {
+                    return $env->render('blocks/code.twig', [
+                        'data' => ['code' => $code, 'language' => $language, 'copy' => true],
+                        'block' => ['id' => null, 'type' => 'code', 'settings' => []],
+                    ]);
+                } finally {
+                    array_pop($this->blockFrames);
+                }
+            },
+        );
     }
 
     /**

@@ -685,6 +685,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             entryReader: $container->has(EntryListReader::class)
                 ? $container->get(EntryListReader::class)
                 : null,
+            // entry_tree() (website plan, phase 2c): soft-bound; null = an empty tree.
+            entryTree: $container->has(\Thallo\Contracts\Delivery\EntryTreeReader::class)
+                ? $container->get(\Thallo\Contracts\Delivery\EntryTreeReader::class)
+                : null,
             // form_render() (form-block spec §4): soft-bound; null = disabled notice.
             formSealer: $container->has(FormSealer::class)
                 ? $container->get(FormSealer::class)

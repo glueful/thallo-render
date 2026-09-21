@@ -14,6 +14,7 @@
     "glueful/thallo-contracts": "self.version",
     "glueful/thallo-tenancy": "self.version",
     "glueful/framework": "^1.65.2",
+    "league/commonmark": "^2.8",
     "twig/twig": "^3.0"
   },
   "autoload": {
