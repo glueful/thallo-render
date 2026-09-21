@@ -138,9 +138,13 @@ final class RenderController
     /** Normalized request path for the render context (nav-v2 spec §3). */
     private string $currentPath = '/';
 
+    /** The address this request came in on (`https://example.com`), for links back into the admin. */
+    private ?string $origin = null;
+
     public function home(Request $request): Response
     {
         $this->currentPath = RenderPageCache::normalizePath($request->getPathInfo());
+        $this->origin = $request->getSchemeAndHttpHost();
         $session = $this->session($request);
         // Surface split: in-session navigation annotates only inside the design
         // canvas (companion cookie set by preview()?canvas=1) — a review-session
@@ -196,6 +200,7 @@ final class RenderController
     public function page(Request $request, string $path): Response
     {
         $this->currentPath = RenderPageCache::normalizePath($request->getPathInfo());
+        $this->origin = $request->getSchemeAndHttpHost();
         if ($this->reserved->isReserved($path)) {
             // Byte-compatible with the router's own 404 (shape + content type); API
             // clients under /v1 etc. never receive themed HTML.
@@ -346,6 +351,7 @@ final class RenderController
     public function preview(Request $request, string $token): Response
     {
         $this->currentPath = RenderPageCache::normalizePath($request->getPathInfo());
+        $this->origin = $request->getSchemeAndHttpHost();
         // Preview-session render, entry point ONE (visual-canvas spec §2 P1): this
         // route does NOT pass PreviewSessionMiddleware — the canvas iframe's first
         // load lands here, so annotation keys off controller knowledge, not the
@@ -557,7 +563,7 @@ final class RenderController
      * The preview bar's context (admin-bar feature): REAL publish status via
      * EntryTargetResolver plus deep links back into the admin's editor and
      * design views. Everything degrades: no session -> null (plain banner);
-     * no admin_url config -> no edit links; no targets binding -> no status.
+     * no admin to link to -> no edit links; no targets binding -> no status.
      *
      * @return array{status: ?string, live_path: ?string, editor_url: ?string,
      *   design_url: ?string}|null
@@ -565,9 +571,12 @@ final class RenderController
     private function previewBar(string $entryUuid, string $typeSlug, string $locale): array
     {
         $target = $this->targets?->resolve($entryUuid, $locale);
+        // Core's provider knows the whole chain (the setting, the deploy's, the site's own
+        // admin); without core there is only the deploy's.
         $adminUrl = rtrim(
-            $this->adminUrlProvider?->adminUrl()
-                ?? (string) config($this->context, 'render.admin_url', ''),
+            $this->adminUrlProvider !== null
+                ? (string) $this->adminUrlProvider->adminUrl($this->origin)
+                : (string) config($this->context, 'render.admin_url', ''),
             '/',
         );
         $canLink = $adminUrl !== '' && $typeSlug !== '';
