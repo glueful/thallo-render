@@ -19,7 +19,8 @@ A theme is **just a folder** — no build step is required to *use* one.
 
 ```
 themes/<name>/
-  theme.json          # manifest: name, version, menus
+  theme.json          # manifest: name, version, menus, its gallery card
+  screenshot.jpg      # optional: the theme's picture in the admin's gallery
   templates/          # Twig: page templates + blocks/
   assets/             # site.css, blocks.css, blocks.js (+ images, fonts…)
 ```
@@ -51,6 +52,34 @@ needs to ship the files it actually changes.
 `vocabulary` maps every name of the platform style vocabulary to a CSS value and
 `stylesheets` lists the theme's CSS in load order — both are required, and a theme
 missing either fails at load, on switch and in `thallo:doctor` (see §12).
+
+**The gallery card.** Site › Appearance shows every selectable theme as a card, and these
+optional `theme.json` keys are what the card says:
+
+```json
+{
+  "title": "Aurora",
+  "description": "A bright theme for studios and portfolios.",
+  "author": "Studio North",
+  "tags": ["portfolio", "light and dark"],
+  "screenshot": "screenshot.jpg",
+  "colors": { "background": "#0b1020", "text": "#ffffff", "accent": "#7c3aed" }
+}
+```
+
+| Key | What it is |
+|---|---|
+| `title` | The name shown on the card. Without it, the folder's name. |
+| `description` | Up to 300 characters. |
+| `author` | Who made it. |
+| `tags` | Up to six short words. |
+| `screenshot` | An image inside the theme's folder: `png`, `jpg` or `webp`, 2 MB at most. A `screenshot.jpg` (or `.png`, `.webp`) at the theme's root is found without being named. 4:3 is the card's shape; 1200×900 is what Thallo ships. |
+| `colors` | Hex colours for the thumbnail the admin **draws** when there is no screenshot, so a card is never blank. |
+
+None of it is required and none of it can break a theme: a wrong value is left off the card,
+never an error. Duplicating a theme resets its title, author and tags, says where it came
+from, and keeps the screenshot, which is true until you change the look. The site serves the
+screenshot at `/_thallo/theme-screenshot/<name>` — that one file and nothing else of a theme.
 
 ---
 

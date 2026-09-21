@@ -16,7 +16,7 @@ use Thallo\Contracts\Delivery\PreviewThemeValidator;
  *   - writability failures are LOUD RuntimeExceptions with the path in the
  *     message (read-only production containers surface a clear 4xx/CLI error,
  *     never a partial copy);
- *   - theme.json's "name" is rewritten to the new theme name.
+ *   - theme.json's "name" is rewritten to the new theme name, and its gallery card reset.
  *
  * Trust tier: templates.manage — the same operator surface as template
  * editing (the caller gates; this class only enforces the file rules).
@@ -56,7 +56,7 @@ final class ThemeCloner
         }
 
         $this->copyDir($source, $dest);
-        $this->rewriteThemeName($dest . '/theme.json', $newName);
+        $this->rewriteThemeName($dest . '/theme.json', $newName, $from);
 
         return ['name' => $newName, 'path' => $dest];
     }
@@ -94,13 +94,18 @@ final class ThemeCloner
         }
     }
 
-    private function rewriteThemeName(string $themeJsonPath, string $newName): void
+    private function rewriteThemeName(string $themeJsonPath, string $newName, string $from): void
     {
         $decoded = is_file($themeJsonPath)
             ? json_decode((string) file_get_contents($themeJsonPath), true)
             : null;
         $config = is_array($decoded) ? $decoded : [];
         $config['name'] = $newName;
+        // The gallery card (Themes\ThemeCard) is the new theme's to write: a copy is not its
+        // source's title, author or tags. It says where it came from, and keeps the screenshot —
+        // it does look the same until it is changed.
+        unset($config['title'], $config['author'], $config['tags']);
+        $config['description'] = "A copy of the {$from} theme.";
         file_put_contents(
             $themeJsonPath,
             json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",

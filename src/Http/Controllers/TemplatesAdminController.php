@@ -16,6 +16,8 @@ use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Render\Templates\TemplateUpdated;
 use Thallo\Render\Templates\ThemeCloner;
 use Thallo\Render\ThemeLocator;
+use Thallo\Render\Themes\ThemeCard;
+use Thallo\Render\Themes\ThemeGallery;
 use Glueful\Routing\Attributes\ApiOperation;
 use Glueful\Routing\Attributes\ApiResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,6 +42,7 @@ final class TemplatesAdminController
         private readonly ThemeLocator $activeTheme,
         private readonly EventService $events,
         private readonly ApplicationContext $context,
+        private readonly ThemeGallery $gallery,
         private readonly ?ThemeCloner $themeCloner = null,
     ) {
     }
@@ -54,6 +57,11 @@ final class TemplatesAdminController
         return Response::success([
             'themes' => $this->availableThemes(),
             'active' => $this->activeTheme->activePaths()['name'],
+            // What each theme says about itself, for the Appearance page's gallery.
+            'cards' => array_map(
+                static fn (ThemeCard $card): array => $card->toArray(),
+                $this->gallery->cards(),
+            ),
         ]);
     }
 
@@ -131,20 +139,17 @@ final class TemplatesAdminController
     }
 
     /**
-     * Selectable themes for the admin switcher: the pack 'default' plus every
-     * app theme directory the validator accepts (same ladder ThemeLocator uses).
+     * Selectable themes for the admin switcher: the pack 'default' plus every app theme
+     * directory the validator accepts — the gallery's set, by name.
      *
      * @return list<string>
      */
     private function availableThemes(): array
     {
-        $themes = ['default'];
-        foreach ($this->catalog->themeCandidates() as $name) {
-            if ($this->themeValidator->isValidTheme($name)) {
-                $themes[] = $name;
-            }
-        }
-        return $themes;
+        return array_map(
+            static fn (ThemeCard $card): string => $card->toArray()['name'],
+            $this->gallery->cards(),
+        );
     }
 
     /**

@@ -49,6 +49,8 @@ use Thallo\Contracts\Delivery\StorefrontWishlistResolver;
 use Thallo\Render\Http\Controllers\RenderController;
 use Thallo\Render\Http\Controllers\StyleSchemaController;
 use Thallo\Render\Http\Controllers\RuntimeAssetController;
+use Thallo\Render\Http\Controllers\ThemeScreenshotController;
+use Thallo\Render\Themes\ThemeGallery;
 use Thallo\Render\Http\Controllers\TemplatesAdminController;
 use Thallo\Render\Templates\TemplateCatalog;
 use Thallo\Render\Http\Middleware\PreviewSessionMiddleware;
@@ -200,6 +202,15 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 'shared' => true,
                 'autowire' => true,
             ],
+            ThemeGallery::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeThemeGallery'],
+            ],
+            ThemeScreenshotController::class => [
+                'class' => ThemeScreenshotController::class,
+                'shared' => true,
+                'autowire' => true,
+            ],
             RenderPageCache::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeRenderPageCache'],
@@ -307,6 +318,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->get(ThemeLocator::class),
             $container->get(EventService::class),
             $container->get(ApplicationContext::class),
+            $container->get(ThemeGallery::class),
             $container->get(ThemeCloner::class),
         );
     }
@@ -340,6 +352,15 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     {
         $context = $container->get(ApplicationContext::class);
         return new RenderThemeValidator($context->getBasePath() . '/themes');
+    }
+
+    public static function makeThemeGallery(ContainerInterface $container): ThemeGallery
+    {
+        return new ThemeGallery(
+            $container->get(ApplicationContext::class)->getBasePath() . '/themes',
+            dirname(__DIR__) . '/themes',
+            $container->get(PreviewThemeValidator::class),
+        );
     }
 
     public static function makeThemeCloner(ContainerInterface $container): ThemeCloner

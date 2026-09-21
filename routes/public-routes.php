@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Thallo\Render\Http\Controllers\RenderController;
 use Thallo\Render\Http\Controllers\RuntimeAssetController;
+use Thallo\Render\Http\Controllers\ThemeScreenshotController;
+use Thallo\Render\Themes\ThemeCard;
 use Thallo\Render\Http\Middleware\PreviewSessionMiddleware;
 use Thallo\Render\Http\Middleware\RenderPageCache;
 use Glueful\Routing\Router;
@@ -69,6 +71,12 @@ $router->get('/_thallo/custom.css', [RenderController::class, 'customCss'])
 // current fingerprint, never cached); only the exact current fingerprint serves bytes
 // (immutable). Static first segment wins over the '*' catch-all.
 $router->get('/_thallo/runtime/{file}', [RuntimeAssetController::class, 'serve'])
+    ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
+
+// A selectable theme's gallery screenshot, for the admin's theme cards: public because an <img>
+// carries no token, and one fixed file per theme (the request names no path). Under /_thallo/
+// like every PHP-served asset — a root-level *.jpg URL is a static-file rule's to 404.
+$router->get(ThemeCard::SCREENSHOT_ROUTE . '/{theme}', [ThemeScreenshotController::class, 'serve'])
     ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
 
 // Live theme assets (theme-setting spec §3): served from the ACTIVE theme per
