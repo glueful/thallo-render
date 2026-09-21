@@ -79,10 +79,13 @@ html[data-theme="dark"] .thallo-block-hero--gradient-pink { --hero-gradient: #ec
 html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f43f5e; }
 .thallo-block-hero--bg-none { background: transparent; }
 .thallo-block-hero--bg-muted { background: var(--surface-2); }
-.thallo-block-hero--bg-inverted { background: var(--ink); color: var(--accent-ink); }
-.thallo-block-hero--bg-inverted .thallo-block-hero__title { color: var(--accent-ink); }
+/* An ink fill takes the page ground as its text: the pair that inverts in BOTH colour modes.
+   Never --accent-ink here — that is the label on the accent, and on a light brand colour it is
+   black. */
+.thallo-block-hero--bg-inverted { background: var(--ink); color: var(--bg); }
+.thallo-block-hero--bg-inverted .thallo-block-hero__title { color: var(--bg); }
 .thallo-block-hero--bg-inverted .thallo-block-hero__description {
-  color: color-mix(in srgb, var(--accent-ink) 72%, transparent);
+  color: color-mix(in srgb, var(--bg) 72%, transparent);
 }
 .thallo-block-hero__inner {
   max-width: var(--container);
@@ -780,14 +783,14 @@ main > article > :where(.thallo-preview-block):first-child > .thallo-block-carou
 }
 .thallo-block-carousel--hero .thallo-block-hero__wrapper,
 .thallo-block-carousel--hero .thallo-block-hero__wrapper :is(h1, h2, h3, p) {
-  color: var(--accent-ink);                                                              /* 5: on-media token */
+  color: var(--on-media);                                                                /* 5: on-media token */
 }
 /* 6: no-image fallback — when media exists, the media + scrim (rule 4) fully cover
    this surface, so this background never shows through. A media-less slide has
    neither, so it falls straight to this dark base — which is exactly what makes
    the unconditional on-media ink (rule 5) readable instead of white-on-near-white.
    Uses the theme-invariant --hero-fallback-bg (NOT --ink, which flips light in dark
-   mode) because --accent-ink stays white in both modes. */
+   mode) because --on-media stays light in both modes and under every setting. */
 .thallo-block-carousel--hero .thallo-block-hero { background: var(--hero-fallback-bg); }
 
 .thallo-block-carousel__prev, .thallo-block-carousel__next {
@@ -1345,7 +1348,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 }
 .thallo-block-pricing_plan--variant-solid {
   background: var(--ink);
-  color: var(--accent-ink);
+  color: var(--bg);
   border-color: transparent;
 }
 .thallo-block-pricing_plan--variant-soft { background: var(--surface); border-color: transparent; }
@@ -1404,7 +1407,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .thallo-block-pricing_plan--variant-solid .thallo-block-pricing_plan__discount,
 .thallo-block-pricing_plan--variant-solid .thallo-block-pricing_plan__billing-period,
 .thallo-block-pricing_plan--variant-solid .thallo-block-pricing_plan__billing-cycle {
-  color: color-mix(in srgb, var(--accent-ink) 65%, transparent);
+  color: color-mix(in srgb, var(--bg) 65%, transparent);
 }
 /* horizontal card: body and footer side by side */
 @media (min-width: 64em) {
@@ -1686,7 +1689,7 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 .thallo-block-gallery--square .thallo-block-image figcaption,
 .thallo-block-gallery--landscape .thallo-block-image figcaption {
   position: absolute; inset: auto 0 0; margin: 0; padding: var(--space-2);
-  color: var(--accent-ink); background: rgb(0 0 0 / 0.62);
+  color: var(--on-media); background: rgb(0 0 0 / 0.62);
 }
 /* Lightbox (2026-08 modernization): the dialog IS the full-viewport stage —
    near-opaque blurred backdrop so the page never glares through, a contained

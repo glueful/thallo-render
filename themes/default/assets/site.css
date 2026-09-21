@@ -19,6 +19,9 @@
   --line: #e2e8f0;
   --accent: #2563eb;
   --accent-ink: #ffffff;
+  /* Text over pictures and dark scrims: light whatever the colour mode or the site's settings.
+     (--accent-ink is the label ON the accent, and is black on a light brand colour.) */
+  --on-media: #ffffff;
   /* media-less --hero slide base (modern-blocks): ALWAYS dark — the overlay
      ink is white in both modes; no dark-mode override on purpose. */
   --hero-fallback-bg: #0f172a;
