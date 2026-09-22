@@ -6,11 +6,12 @@ namespace Thallo\Render;
 
 use Glueful\Bootstrap\ApplicationContext;
 use Thallo\Contracts\Delivery\SiteVersionProvider;
+use Thallo\Contracts\Settings\SiteNameProvider;
 
 /**
- * The `site` template variable, built in one place for the page render and for fragment renders:
- * the site name, the locale, and the installed Thallo version (`site.version`, null in a
- * development checkout) from the SiteVersionProvider contract when the application binds one.
+ * The `site` template variable, built in one place for every page a theme renders — the site, the
+ * shop, the account pages, fragments: the site name (Settings › General, through SiteNameProvider),
+ * the locale, and the installed Thallo version (`site.version`, null in a development checkout).
  */
 final class SiteContext
 {
@@ -24,10 +25,19 @@ final class SiteContext
         }
 
         return [
-            'name' => (string) config($context, 'render.site_name', 'Thallo'),
+            'name' => self::name($context),
             'locale' => $locale,
             'locales' => [],
             'version' => $version,
         ];
+    }
+
+    /** The site's name as visitors see it. */
+    public static function name(ApplicationContext $context): string
+    {
+        $container = container($context);
+        return $container->has(SiteNameProvider::class)
+            ? $container->get(SiteNameProvider::class)->siteName()
+            : 'Thallo';
     }
 }

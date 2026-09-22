@@ -460,7 +460,6 @@ event-driven like everything else.
 |---|---|
 | `render.theme` (`RENDER_THEME`) | `default` |
 | `render.homepage_entry` (`RENDER_HOMEPAGE_ENTRY`) | `''` |
-| `render.site_name` (`RENDER_SITE_NAME`) | `Thallo` |
 | `render.reserved_prefixes` | `v1, admin, extensions, theme-assets` |
 | `render.reserved_exact` | `sitemap.xml, robots.txt` |
 | `render.cache_enabled` (`RENDER_CACHE_ENABLED`) | `true` |

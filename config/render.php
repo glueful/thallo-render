@@ -18,13 +18,10 @@ return [
     // config error (never a themed 404); a broken DB override logs + falls back.
     'homepage_entry' => env('RENDER_HOMEPAGE_ENTRY', ''),
 
-    // site.name in the template context.
-    'site_name' => env('RENDER_SITE_NAME', 'Thallo'),
-
     // First-PATH-SEGMENT prefixes the catch-all must never render ('v1' reserves /v1 and
     // /v1/... but NOT /v1abc). Reserved hits return the framework's standard JSON 404.
-    // Admin SPA base URL for the preview bar's "Edit"/"Design" links (e.g.
-    // https://admin.example.com). Empty = the links don't render.
+    // Where the admin is, for the preview bar's "Edit"/"Design" links, when it is hosted elsewhere
+    // (e.g. https://admin.example.com). Empty = this site's own admin, at BASE_URL/admin.
     'admin_url' => env('RENDER_ADMIN_URL', ''),
 
     // 'api-docs' is the framework's API reference (API_DOCS_PATH default); '/docs' is NOT
