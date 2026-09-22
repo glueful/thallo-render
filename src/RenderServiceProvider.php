@@ -259,6 +259,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 'shared' => true,
                 'factory' => [self::class, 'makeRenderThemeValidator'],
             ],
+            \Thallo\Render\Http\Middleware\SiteSecurityHeaders::class => [
+                'class' => \Thallo\Render\Http\Middleware\SiteSecurityHeaders::class,
+                'shared' => true,
+            ],
             PreviewSessionMiddleware::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makePreviewSessionMiddleware'],

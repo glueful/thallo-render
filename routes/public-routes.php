@@ -7,6 +7,7 @@ use Thallo\Render\Http\Controllers\RuntimeAssetController;
 use Thallo\Render\Http\Controllers\ThemeScreenshotController;
 use Thallo\Render\Themes\ThemeCard;
 use Thallo\Render\Http\Middleware\PreviewSessionMiddleware;
+use Thallo\Render\Http\Middleware\SiteSecurityHeaders;
 use Thallo\Render\Http\Middleware\RenderPageCache;
 use Glueful\Routing\Router;
 
@@ -33,7 +34,7 @@ $router->get('/_preview/exit', [RenderController::class, 'exit'])
 // preview response can never enter or read the shared page cache. The static first
 // segment wins over the '*'-bucket catch-all.
 $router->get('/_preview/{token}', [RenderController::class, 'preview'])
-    ->middleware(['tenant_profile:public', 'tenant_bootstrap']);
+    ->middleware(['tenant_profile:public', 'tenant_bootstrap', SiteSecurityHeaders::class]);
 
 // Token-scoped preview theme assets (preview-sessions spec §5): only the token's
 // SIGNED theme is served; junk tokens and theme-less tokens 404. No page cache —
@@ -89,7 +90,7 @@ $router->get('/theme-assets/{path}', [RenderController::class, 'themeAsset'])
 // Session detection runs BEFORE the page cache (preview-sessions spec §4): session
 // state is not cache state, and verified sessions bypass the cache wholesale.
 $router->get('/', [RenderController::class, 'home'])
-    ->middleware(['tenant_profile:public', 'tenant_bootstrap', PreviewSessionMiddleware::class, RenderPageCache::class]);
+    ->middleware(['tenant_profile:public', 'tenant_bootstrap', SiteSecurityHeaders::class, PreviewSessionMiddleware::class, RenderPageCache::class]);
 $router->get('/{path}', [RenderController::class, 'page'])
     ->where('path', '.+')
-    ->middleware(['tenant_profile:public', 'tenant_bootstrap', PreviewSessionMiddleware::class, RenderPageCache::class]);
+    ->middleware(['tenant_profile:public', 'tenant_bootstrap', SiteSecurityHeaders::class, PreviewSessionMiddleware::class, RenderPageCache::class]);
