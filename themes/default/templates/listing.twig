@@ -1,7 +1,7 @@
 {% extends 'layout.twig' %}
-{% block title %}{{ type }} — {{ site.name }}{% endblock %}
+{% block title %}{{ type_name|default(type) }} — {{ site.name }}{% endblock %}
 {% block content %}
-  <h1>{{ type }}</h1>
+  <h1>{{ type_name|default(type) }}</h1>
   {% include '_listing_rows.twig' %}
   {% include '_pagination.twig' %}
 {% endblock %}

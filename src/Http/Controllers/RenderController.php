@@ -820,6 +820,8 @@ final class RenderController
             'items' => $listing['items'],
             'pagination' => $pagination,
             'type' => $typeSlug,
+            // What a heading says: the type's name as the admin shows it, not its slug.
+            'type_name' => (string) ($listing['type_name'] ?? $typeSlug),
         ];
         if ($result['kind'] === 'archive') {
             $extra['term'] = $result['term'];
