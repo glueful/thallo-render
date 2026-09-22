@@ -8,11 +8,12 @@
       <div class="entry-content"><h1>{{ entry.fields.title }}</h1></div>
     {% endif %}
     {# A blocks-typed body renders through blocks() as DIRECT flow (spec P2 —
-       block roots own their width); a scalar body stays ESCAPED inside the
-       constrained .entry-content: the reference theme cannot know that a
-       field named "body" is sanitized rich text rather than arbitrary text. #}
+       block roots own their width). A scalar body sits in the constrained
+       .entry-content: as sanitised HTML when the schema says it is rich text
+       (rich_fields), escaped otherwise. The format decides, never the name. #}
     {% if entry.fields.body is defined %}
       {% if entry.fields.body is iterable %}<div class="entry-blocks"{{ slot_attrs('body') }}>{{ blocks(entry.fields.body) }}</div>
+      {% elseif 'body' in rich_fields|default([]) %}<div class="entry-content"><div class="body">{{ entry.fields.body|safe_html }}</div></div>
       {% else %}<div class="entry-content"><div class="body">{{ entry.fields.body }}</div></div>{% endif %}
     {% endif %}
   </article>

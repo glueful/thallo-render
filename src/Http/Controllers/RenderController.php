@@ -30,6 +30,7 @@ use Thallo\Render\SiteContext;
 use Thallo\Render\TwigFactory;
 use Thallo\Tenancy\Cache\TenantCacheSegment;
 use Psr\Log\LoggerInterface;
+use Thallo\Contracts\Schema\ContentTypeReader;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -101,7 +102,32 @@ final class RenderController
         private readonly ?ThemeStylesheetArtifacts $themeArtifacts = null,
         /** The compiled style artifact per theme (visual builder spec §2.4), served by hash. */
         private readonly ?CompiledStyleArtifacts $compiledArtifacts = null,
+        /** Soft-bound: without it no field is known to be rich text, so every one stays escaped. */
+        private readonly ?ContentTypeReader $contentTypes = null,
     ) {
+    }
+
+    /**
+     * The entry's rich-text fields (`text` with format `rich`), which a template may render
+     * through `safe_html`; every other text field is escaped.
+     *
+     * @return list<string>
+     */
+    private function richFields(string $typeSlug): array
+    {
+        $uuid = $typeSlug !== '' ? $this->contentTypes?->findUuidBySlug($typeSlug) : null;
+        $schema = $uuid !== null ? $this->contentTypes?->schemaFor($uuid) : null;
+        if ($schema === null) {
+            return [];
+        }
+        $names = [];
+        foreach ($schema->fields() as $field) {
+            if ($field->type() === 'text' && $field->format() === 'rich') {
+                $names[] = $field->name();
+            }
+        }
+
+        return $names;
     }
 
     /** @return array<string,mixed>|null */
@@ -758,6 +784,7 @@ final class RenderController
         // The entry's type, as listing and archive templates already get it: a template that
         // navigates its type (a docs sidebar, entry_tree(type)) need not be named after one.
         $extra['type'] = $typeSlug;
+        $extra['rich_fields'] = $this->richFields($typeSlug);
         // seo-head spec §3: composed head data for the SAME entry identity the
         // cache tags below carry (tagResponse's uuid derivation) — entry renders
         // are the ONLY context that gains the `seo` key.

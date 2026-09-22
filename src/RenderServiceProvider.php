@@ -483,6 +483,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 : null,
             $container->get(ThemeStylesheetArtifacts::class),
             $container->get(CompiledStyleArtifacts::class),
+            $container->has(\Thallo\Contracts\Schema\ContentTypeReader::class)
+                ? $container->get(\Thallo\Contracts\Schema\ContentTypeReader::class)
+                : null,
         );
     }
 
