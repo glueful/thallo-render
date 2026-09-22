@@ -2,17 +2,20 @@
    <img> is skipped when it nulls (private/unresolvable/non-image blob). Sizing is a
    `width` token and placement on the `root` target; corners and shadow on the
    optional `picture` target (visual builder spec §2.5) — nothing here is inline.
-   Fields: image, alt, caption.
+   Fields: image, alt, caption. A blank alt or caption falls back on the file's own, set in the
+   media library (media_text()).
    Image discipline (storefront-performance spec §4): resolve FIRST, claim the
    at-most-one priority slot only on a non-null resolve, attributes from the claim. #}
 {% set img = data.image ? media_image(data.image, [480, 768, 1024, 1536]) : null %}
+{% set words = data.image and (not data.alt or not data.caption) ? media_text(data.image) : {alt: '', caption: ''} %}
 <figure class="thallo-block thallo-block-image{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if img %}
     {% set priority = claim_priority_image() %}
     <img class="thallo-block-image__img{{ style_classes('picture') }}"{{ style_attrs('picture') }} src="{{ img.src }}"
          {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="(max-width: 64rem) 100vw, 60rem"{% endif %}
-         alt="{{ data.alt|default('') }}"
+         alt="{{ data.alt ?: words.alt }}"
          {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
   {% endif %}
-  {% if data.caption %}<figcaption>{{ data.caption|editable_text('caption') }}</figcaption>{% endif %}
+  {% if data.caption %}<figcaption>{{ data.caption|editable_text('caption') }}</figcaption>
+  {%- elseif words.caption %}<figcaption>{{ words.caption }}</figcaption>{% endif %}
 </figure>

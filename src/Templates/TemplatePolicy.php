@@ -74,7 +74,9 @@ final class TemplatePolicy
     //         phase 2c — a docs page renders its Markdown body, contents and section sidebar).
     // bumped: search_enabled joined the function allowlist (a theme offers a search box only
     //         where the search capability is on).
-    public const CACHE_VERSION = 26;
+    // bumped: media_text joined the function allowlist (an Image block falls back on the file's
+    //         alt text and caption from the media library).
+    public const CACHE_VERSION = 27;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -94,7 +96,7 @@ final class TemplatePolicy
         'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script',
         'entries', 'entry_tree', 'markdown', 'markdown_toc', 'search_enabled',
-        'is_preview', 'media_image', 'claim_priority_image',
+        'is_preview', 'media_image', 'media_text', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'plan_checkout_url',
     ];

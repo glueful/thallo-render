@@ -231,6 +231,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?EntryTreeReader $entryTree = null,
         /** Soft-bound: null → search_enabled() is false, and a theme offers no search box. */
         private readonly ?CapabilityRegistry $capabilities = null,
+        /** Soft-bound: null → media_text() answers empty strings. */
+        private readonly ?\Thallo\Contracts\Delivery\MediaTextResolver $mediaTexts = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -284,6 +286,7 @@ final class RenderContextExtension extends AbstractExtension
             ]),
             new TwigFunction('media', $this->media(...)),
             new TwigFunction('media_image', $this->mediaImage(...)),
+            new TwigFunction('media_text', $this->mediaText(...)),
             new TwigFunction('claim_priority_image', $this->claimPriorityImage(...), ['needs_context' => true]),
             new TwigFunction('site_logo', $this->siteLogo(...)),
             new TwigFunction('video_embed', $this->videoEmbed(...)),
@@ -1031,6 +1034,17 @@ final class RenderContextExtension extends AbstractExtension
             return $src === null ? null : ['src' => $src, 'srcset' => null];
         }
         return $this->mediaVariants->variants($uuid, $widths);
+    }
+
+    /**
+     * A file's alt text and caption from the media library, for a template to fall back on when
+     * the block leaves its own empty. Empty strings for a file the page may not show.
+     *
+     * @return array{alt: string, caption: string}
+     */
+    public function mediaText(string $uuid): array
+    {
+        return $this->mediaTexts?->texts($uuid) ?? ['alt' => '', 'caption' => ''];
     }
 
     /**
