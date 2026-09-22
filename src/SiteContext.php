@@ -11,7 +11,8 @@ use Thallo\Contracts\Settings\SiteNameProvider;
 /**
  * The `site` template variable, built in one place for every page a theme renders — the site, the
  * shop, the account pages, fragments: the site name (Settings › General, through SiteNameProvider),
- * the locale, and the installed Thallo version (`site.version`, null in a development checkout).
+ * the locale, the enabled languages' codes (`site.locales`, empty without the i18n extension), and
+ * the installed Thallo version (`site.version`, null in a development checkout).
  */
 final class SiteContext
 {
@@ -27,9 +28,29 @@ final class SiteContext
         return [
             'name' => self::name($context),
             'locale' => $locale,
-            'locales' => [],
+            'locales' => self::locales($context),
             'version' => $version,
         ];
+    }
+
+    /** @return list<string> the enabled languages' codes, in their Settings › Languages order */
+    private static function locales(ApplicationContext $context): array
+    {
+        $manager = 'Glueful\\Extensions\\I18n\\Contracts\\LocaleManagerInterface';
+        $container = container($context);
+        if (!$container->has($manager)) {
+            return [];
+        }
+        try {
+            $rows = $container->get($manager)->enabled();
+        } catch (\Throwable) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            static fn(mixed $row): string => is_array($row) ? (string) ($row['code'] ?? '') : '',
+            $rows,
+        )));
     }
 
     /** The site's name as visitors see it. */
