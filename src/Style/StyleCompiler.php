@@ -298,8 +298,12 @@ final class StyleCompiler
             static fn (string $name): string => ClassNames::selector(ClassNames::for('motion.ken_burns', $name)),
             array_keys(self::KEN_BURNS),
         )) . ')';
-        $out .= "{$frames}{$picture} { animation: t-kenburns 20s ease-in-out infinite alternate; "
+        // One drift there and back, then it rests; it holds still under the pointer or keyboard
+        // focus. Motion that runs on its own for longer than five seconds must be stoppable
+        // (WCAG 2.2.2), and a background that never settles is the one visitors cannot stop.
+        $out .= "{$frames}{$picture} { animation: t-kenburns 20s ease-in-out 2 alternate both; "
             . "transform-origin: center; }\n";
+        $out .= "{$frames}:is(:hover, :focus-within){$picture} { animation-play-state: paused; }\n";
         $out .= "@keyframes t-kenburns { from { transform: var(--t-kb-from); } "
             . "to { transform: var(--t-kb-to); } }\n";
         return $out . "}\n";
