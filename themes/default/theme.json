@@ -6,9 +6,6 @@
   "author": "Thallo",
   "tags": ["general", "light and dark", "all blocks"],
   "screenshot": "screenshot.jpg",
-  "menus": [
-    "main"
-  ],
   "vocabulary": {
     "spacing.none": "0",
     "spacing.xs": "var(--space-1)",

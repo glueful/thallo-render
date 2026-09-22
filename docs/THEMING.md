@@ -47,7 +47,6 @@ needs to ship the files it actually changes.
 {
   "name": "my-theme",
   "version": "1.0.0",
-  "menus": ["main"],
   "vocabulary": { "spacing.none": "0", "spacing.xs": "var(--space-1)", "…": "…" },
   "stylesheets": ["assets/site.css", "assets/blocks.css"]
 }
