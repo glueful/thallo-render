@@ -14,7 +14,10 @@ use Thallo\Render\Style\ThemeVocabulary;
  *   4. per-TEMPLATE fallback happens in the Twig loader: activePaths() returns the app
  *      theme first, then any contributed template dirs, then the pack default last, so a
  *      theme may omit any template and a contribution may omit any template.
- * Resolution happens at construction (boot) — v1 theme changes require a restart.
+ * Resolution happens at construction. The container builds one per request, naming the theme
+ * ActiveThemeSource resolves then (the Appearance page's choice, else RENDER_THEME, else
+ * `default`), so a theme chosen in the admin applies on the next request; only a change to
+ * RENDER_THEME itself waits for a restart, because it is read with the config at boot.
  *
  * Contributed template dirs (storefront-rendering spec §5.2) resolve BETWEEN the app theme
  * and the render default: the app theme overrides a contribution, and a contribution overrides

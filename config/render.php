@@ -7,8 +7,10 @@ return [
     // config/thallo.php ('capabilities' => ['thallo.render' => false]) is the only gate.
 
     // Active theme name: an app-level themes/{name}/ directory, falling back to the
-    // pack-embedded default theme. RESOLVED AT BOOT (v1): changing it requires an app
-    // restart / extension-cache rebuild.
+    // pack-embedded default theme. This env value is read at boot, so changing it requires an
+    // app restart / config-cache rebuild. It is the fallback: a theme chosen on the admin's
+    // Appearance page (Site › Appearance → Theme) overrides it and is read per request
+    // (ActiveThemeSource), so that choice needs no restart.
     'theme' => env('RENDER_THEME', 'default'),
 
     // Entry uuid rendered at `/` (through index.twig) — the DEPLOY DEFAULT: the

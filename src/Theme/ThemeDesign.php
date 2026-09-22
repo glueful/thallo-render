@@ -10,9 +10,11 @@ namespace Thallo\Render\Theme;
  * reproduce the shipped theme exactly and emit nothing, the same contract as
  * {@see ThemeColors::css()}.
  *
- * Every pairing but `custom` is a system stack — it costs a visitor nothing and the site's CSP
- * stays 'self'. `custom` is the site's OWN faces: a woff2 for the text, one for the headings, or
- * both, uploaded to the media library and served from the site.
+ * Every pairing but `custom` is a system stack — it downloads no font of its own and the site's
+ * CSP stays 'self'. `editorial` and `slab` set only the headings, so the text keeps the theme's
+ * face and the layout still downloads it (usesThemeFace()), as it does for the default `sans`.
+ * `custom` is the site's OWN faces: a woff2 for the text, one for the headings, or both,
+ * uploaded to the media library and served from the site.
  */
 final class ThemeDesign
 {

@@ -15,9 +15,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * `render:theme:clone <name> [--from=default]` — scaffold a new app theme by
  * copying an existing one into themes/{name}/. The CLI form works on every
- * deployment (the admin button needs a writable app dir); the copied theme
+ * deployment (the Theme editor's clone button needs a writable app dir); the copied theme
  * inherits nothing implicitly — it IS a full copy, editable in place or via
- * the admin's per-theme DB overrides.
+ * the Theme editor's per-theme DB overrides.
  */
 #[AsCommand(
     name: 'render:theme:clone',
@@ -49,7 +49,7 @@ final class ThemeCloneCommand extends BaseCommand
         }
 
         $this->success(sprintf("Theme '%s' created at %s.", $created['name'], $created['path']));
-        $this->line('Edit it on disk or through the admin templates page (per-theme overrides).');
+        $this->line('Edit it on disk or in the admin under Site › Theme editor (per-theme overrides).');
         return self::SUCCESS;
     }
 }

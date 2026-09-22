@@ -26,7 +26,8 @@ final class ThemeColors
     public const NEUTRALS = ['slate', 'gray', 'zinc', 'neutral', 'stone'];
 
     /**
-     * Accent fill per family: [light, dark]. accent-ink is white uniformly, so
+     * Accent fill per family: [light, dark]. A family's accent-ink is always white (a brand
+     * hex instead gets white or black, whichever reads; see accentVars()), so
      * light-hued families (amber/yellow/lime) use DARKER stops to keep white text
      * at AA — enforced by ThemeColorsTest::testWhiteAccentInkMeetsContrast...
      * @var array<string,array{0:string,1:string}>

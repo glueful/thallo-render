@@ -22,7 +22,7 @@ themes/<name>/
   theme.json          # manifest: name, version, menus, its gallery card
   screenshot.jpg      # optional: the theme's picture in the admin's gallery
   templates/          # Twig: page templates + blocks/
-  assets/             # site.css, blocks.css, blocks.js (+ images, fonts…)
+  assets/             # site.css, blocks.css (+ images, fonts…); behaviour is the package's
 ```
 
 **Where themes live**
@@ -105,16 +105,31 @@ and fills `{% block content %}`.
 | `_pagination.twig` | Shared pagination partial (path-based: `/blog/page/2`). |
 | `region-preview.twig` | Isolated render of a single region (used by the region editor). |
 
+`blog` in these paths stands for any content type you create; Thallo ships no `blog` type.
+
 `layout.twig` links exactly three stylesheets — the layer order sheet, the theme
 artifact (every manifest stylesheet plus every package-contributed sheet, inside
 `@layer theme`) and the compiled settings artifact (`@layer settings`) — never the
-theme's files one by one (see §12):
+theme's files one by one (see §12). The default layout's `<head>`, abbreviated:
 ```twig
+{{ color_mode_script() }}
+<title>{% block title %}{{ seo.title|default(site.name) }}{% endblock %}</title>
+{{ seo_head() }}
+{% set favicon = site_favicon() %}
+{% if favicon %}<link rel="icon" href="{{ favicon }}">{% endif %}
+{{ font_faces_style('Figtree', 'fonts/figtree-roman-latin.woff2', 'fonts/figtree-italic-latin.woff2') }}
 <link rel="stylesheet" href="{{ layers_stylesheet_url() }}">
 <link rel="stylesheet" href="{{ theme_stylesheet_url() }}">
 <link rel="stylesheet" href="{{ settings_stylesheet_url() }}">
-<script defer src="{{ asset('blocks.js') }}"></script>
+{{ theme_colors_style() }}
+{% set customCss = custom_css() %}
+{% if customCss %}<link rel="stylesheet" href="{{ customCss }}">{% endif %}
+<script defer src="{{ runtime_script() }}"></script>
 ```
+
+`color_mode_script()` comes before any CSS so `data-theme` is set before the first paint.
+`custom_css()` loads last so the site's own rules win. `runtime_script()` is the package's
+theme runtime (carousel, tabs, navigation, colour mode, forms); keep it in a copied layout.
 
 ---
 
@@ -125,7 +140,8 @@ Regions are **global chrome** rendered around every page. There are two:
 
 - `region_blocks('header')` → HTML for the saved region (its blocks), or `null`
   when nothing is bound. Fall back to hardcoded chrome on `null`.
-- `region_settings('header')` → the region's settings (e.g. `width`, `sticky`).
+- `region_settings('header')` → the region's settings: `width` (`contained` or `full`), `sticky` (header only)
+  and `style`, the Style tab's saved settings, which `region_style_classes()` reads for you.
 - `region_style_classes('header')` → the utility classes for the region's own style (the Regions
   page's Style tab), with a leading space; `''` when the region is unstyled. The second argument
   names the target: `'root'` (the default — the bar: margins, colours, background opacity,
@@ -154,7 +170,7 @@ Pattern from `layout.twig`:
 {% set headerHtml = headerHidden ? null : region_blocks('header') %}
 {% if headerHtml %}
   {% set hs = region_settings('header') %}
-  <header class="site-header … {{ hs.sticky|default(false) ? 'is-sticky' : '' }}">
+  <header class="site-header … {{ hs.sticky|default(false) ? 'thallo-region-header--sticky' : '' }}">
     <div class="site-header__inner">{{ headerHtml }}</div>
   </header>
 {% elseif not headerHidden %}
@@ -184,9 +200,17 @@ optional ones.
 
 ### 4.2 Helpers available in templates
 
+Every function and filter below is registered on every render; the ones that need a package
+or a setting return `null` or an empty list without it. [Template
+functions](../../../docs/reference/03-template-functions.md) has each one's return shape and an
+example.
+
 Functions:
 - `asset('blocks.css')` — URL to a theme asset.
-- `media(uuid, variant?)` — resolve an asset UUID to a servable URL (`null` if not servable).
+- `media(uuid)` — resolve an asset UUID to a public URL (`null` if not anonymously servable).
+- `media_image(uuid, widths)` — `src` and `srcset` for an image (`null` if it is not a servable
+  image); `claim_priority_image()` is `true` for the first image on the page that asks, and
+  always `false` inside a region.
 - `blocks(list)` — render a list of **child blocks** (nesting; e.g. hero links, carousel slides).
   Blocks nest up to five levels deep (container → container → card → container → heading); a
   deeper list renders nothing and the validator refuses it.
@@ -201,11 +225,15 @@ Functions:
   (also marked `data-thallo-slot-empty`); render the wrapper even when the list is empty — `is_canvas()` says whether you are on the
   canvas, so a wrapper the published page omits can still exist there.
 - `is_canvas()` — true while rendering for the editor's canvas.
+- `is_preview()` — the same flag under its older name.
 - `icon(name)` — render an icon.
 - `menu('main')` — items for a named menu.
-- `region_blocks(name)` / `region_settings(name)` — region HTML / settings.
+- `region_blocks(name)` / `region_settings(name)` / `region_style_classes(name, target?)` —
+  region HTML / settings / the region's Style tab classes (§3).
 - `site_logo(variant?)`, `site_favicon()`, `custom_css()` — site identity.
-- `path(...)`, `facets(...)`, `video_embed(...)`.
+- `path(uuid)` — an entry's public path; `facets(type, field, limit?)` — term counts for a
+  filterable reference field; `video_embed(url)` — `provider` and `id` for a YouTube or Vimeo URL.
+- `form_render(block)` — the render payload for a `form` block, or `null`.
 - `entries(type, {limit, order, category})` — the newest few published entries of a type (at
   most twelve): what a blog block lists.
 - `entry_tree(type, {group: 'section', order: 'order'})` — **every** published entry of a type
@@ -223,6 +251,19 @@ Functions:
   a list of `id`, `text`, `level`.
 - `layers_stylesheet_url()`, `theme_stylesheet_url()`, `settings_stylesheet_url()` —
   the three stylesheets a layout links (§2, §12).
+- `runtime_script()` — the package theme runtime's URL (§2). `block_script(name)` — a deferred
+  script tag for one block's asset, once per render: `animated-text`, `code`, `docs-search`,
+  `gallery` or `motion`.
+- `font_faces_style(family, roman, italic?)` — a preload link and `@font-face` rules for a
+  webfont in the theme's `assets/` (§9.6).
+- `color_mode_enabled()`, `color_mode_script()` — colour mode (§8).
+- `theme_colors_style()` — the site's accent, neutral and design-settings override (§9);
+  `theme_style_scope(accent, neutral)` — a `style` block's scoped re-skin (§10).
+- `seo_head()` — the page's SEO tags; `json_script(value)` — JSON that is safe inside a
+  `<script>` element.
+- `shop_product_url(slug)`, `shop_category_url(slug)`, `shop_index_url()`,
+  `shop_wishlist_scope()`, `shop_wishlist_url()`, `plan_checkout_url(key)` — commerce and
+  subscription links, `null` when those packages are absent.
 - `style_classes(target)`, `style_attrs(target)`, `token_class(property, value)` —
   a block template's style targets (§12.3). **Every block template emits the first
   two on each target its block type declares.**
@@ -233,6 +274,9 @@ Filters:
   the canvas. Plain `{{ data.title }}` renders but isn't editable.
 - `|safe_html` — sanitize + emit author-authored rich HTML (rich-text / `body`).
 - `|safe_url` — sanitize a URL attribute.
+- `|numeric_clamp(min, max)` — a number held between two bounds, `null` when not numeric.
+- `|br_tokens` — turn the literal tokens `<br>`, `<br/>` and `<br />` into line breaks; the
+  rest stays escaped.
 
 ### 4.3 Editing hooks (why you're free to restyle)
 
@@ -244,11 +288,11 @@ Filters:
 - Slots come from `slot_attrs('field')` on the element that holds `blocks()` — one per
   `blocks` field of the type. The **template lint** refuses a template whose type declares a
   `blocks` field it never names with `slot_attrs`, unless the type renders its children's data
-  inline (`renders_children_inline` in its flags, as the navigation and social links blocks do)
-  and so has no slot.
+  inline (`renders_children_inline` in its flags, as `accordion`, `stepper`, `tabs`, `carousel`,
+  `gallery` and `pricing_table` do) and so has no slot.
 
 **Consequence:** presentational classes are yours to change freely. The only
-classes/attributes you must keep stable are ones your **own `blocks.js`** selects
+classes/attributes you must keep stable are the ones the package runtime selects
 (see the carousel example).
 
 ### 4.4 The block set
@@ -429,10 +473,10 @@ Notes:
 
 ### 6.2 `carousel` — a JS-driven block (keep the hooks)
 
-The theme's `blocks.js` enhances carousels by selecting
+The package runtime (`runtime_script()`, §2) enhances carousels by selecting
 `.thallo-block-carousel`, `.thallo-block-carousel__viewport`, and
 `.thallo-block-carousel__track`, and reads `data-arrows` / `data-dots` /
-`data-autoplay`. **These are behavior hooks — keep them**; all looks come from the
+`data-autoplay` / `data-transition` / `data-speed`. **These are behavior hooks — keep them**; all looks come from the
 hand-authored `.thallo-block-carousel*` rules in `blocks.css`.
 
 ```twig
@@ -472,8 +516,9 @@ selectors, using the theme tokens.
 - **No `!important` on a managed property** (§12.1) in a rule that targets a
   `.thallo-block*` selector, and no `@import`: the artifact build refuses both.
 - **Interactive disclosure blocks** (`accordion`, `collapsible`) are native
-  `<details>` — CSS-only, no JS. Only reach for `blocks.js` when a block genuinely
-  needs scripting (e.g. `carousel`).
+  `<details>` — CSS-only, no JS. The default theme ships no script: behaviour is the
+  package's, in the runtime (`carousel`, `tabs`, `navigation`, `form`) and the per-block
+  assets `block_script()` loads.
 - Consumers get plain `.css` files — no build, no toolchain, nothing to run.
 
 ## 8. Color mode (light / dark / system)
@@ -514,20 +559,20 @@ would override an explicit light choice on an OS-dark machine.
 
 ### 8.3 The toggle block
 
-Drop the **Color mode** block (`color_mode`) into a region (it's in the header
-palette) to give visitors a light / system / dark switch. It renders a
+Drop the **Color mode** block (`color_mode`) into a region (it's in the Content
+category of the palette) to give visitors a light / system / dark switch. It renders a
 three-option segmented control; each option carries `data-color-mode-set`
-(`light` | `system` | `dark`). The runtime in `blocks.js` wires the clicks,
+(`light` | `system` | `dark`). The package runtime (`runtime_script()`, §2) wires the clicks,
 persists the choice, updates `data-theme`, reflects the active option
 (`aria-checked`), and dispatches a `thallo:color-mode-change` event on
-`<html>`. `window.thalloColorMode` (`get()` / `set()` / `resolved()`) is
+`<html>`. `window.thalloColorMode` (`get()` / `set()` / `resolved()` / `reflect()`) is
 available for custom controls.
 
 ### 8.4 Turning it off
 
 Set `THALLO_COLOR_MODE_ENABLED=false` (config `theme.color_mode.enabled`). With
 color mode **off**: no resolver script and no `data-color-mode-enabled` marker
-are emitted, the `blocks.js` runtime stays inert (even if `localStorage` still
+are emitted, the runtime's colour-mode code stays inert (even if `localStorage` still
 holds a stale `dark`), and the `color_mode` block renders nothing. The site
 falls back to the light tokens.
 
@@ -544,8 +589,10 @@ script-src 'sha256-LPPpGD9ammrw92nJUwoMRPu1xnHk26P8c3tFKYUe8OE='
 
 The digest is published as `Thallo\Render\ColorMode::RESOLVER_SHA256`
 (`base64(sha256(RESOLVER_JS))`); a test fails the build if the script bytes ever
-drift from it, so this value stays correct. Glueful ships no CSP by default
-(`CSP_HEADER` is unset) — this only matters if you opt into one.
+drift from it, so this value stays correct. The `.env.example` a new site starts from sets
+`CSP_HEADER` to a policy that allows `script-src 'self' 'unsafe-inline'` and sends it
+report-only (`CSP_REPORT_ONLY=true`), so the resolver runs under it. The hash matters once you
+drop `'unsafe-inline'` from `script-src`.
 
 ## 9. Theme colors (accent + neutral)
 
@@ -569,7 +616,8 @@ A save `422`s on anything else. Stored in `GeneralSettings` as `theme_accent` /
 **A brand colour is used exactly as given on a light page** — the brand is the brand — and
 Thallo derives what the owner cannot be asked to work out:
 
-- `--accent-ink`, the label on the accent, is whichever of white and black reads on it. Between
+- `--accent-ink`, the label on the accent, is whichever of white and black reads on it. (For a
+  family it is always white: each family's light stop is dark enough for white to clear AA.) Between
   the two, one always clears WCAG AA, so a button's label is always readable. **Read
   `--accent-ink` for anything you put on `--accent`**; never assume white. And use it ONLY
   there: text on an ink fill reads `--bg` (the pair that inverts in both colour modes), and
@@ -588,7 +636,7 @@ its class is built from the family's name.
 Each family maps to concrete token values (light + dark) via a curated table
 (`Thallo\Render\Theme\ThemeColors`). A `theme_colors_style()` function emits a
 `:root { … }` + `html[data-theme="dark"] { … }` override in `<head>`, **after
-`site.css`/`blocks.css` and before `custom.css`** so custom CSS stays the final
+the theme's stylesheets and before `custom.css`** so custom CSS stays the final
 escape hatch. Because every block paints from `var(--…)`, the whole theme flips
 with no per-block rules — and the dark accent now comes from the chosen family
 (replacing the old hard-coded blue).
@@ -598,11 +646,13 @@ a default site's HTML stays override-free; only a non-default pair emits a style
 
 ### 9.3 Preview before apply
 
-The card's **Preview on site** mints a preview session carrying the *pending*
-(unsaved) pair and opens the live-rendered site. The chosen colors are **signed
-into the preview token** and applied for that session only — they are never
-written to settings until you **Save**. Exiting/expiring the preview reverts to
-the saved pair with no residue.
+The Appearance page's **Preview** card frames the site's homepage wearing the *pending*
+(unsaved) look: theme, colours and design settings as they stand in the form. Each change
+mints a preview session and the frame loads it; **Open** shows the same session in a new tab.
+The choices are **signed into the preview token** and applied for that session only — they are
+never written to settings until you **Save**. Exiting/expiring the preview reverts to
+the saved look with no residue. The preview opens through the homepage entry, so a site with
+none set gets no preview. A new logo or site icon is not in the token and shows once saved.
 
 ### 9.4 Caching
 
@@ -611,39 +661,6 @@ choice — `render:{theme}:{accent}-{neutral}-{radius}-{font}-{background}:{path
 `ThemeAppearanceChanged`, which purges `thallo:render:page`. A color change is
 reflected immediately, and a bad stored value falls back to `blue`/`slate` (and
 logs) rather than emitting broken CSS.
-
-### 9.6 Design settings (radius, typefaces, page ground)
-
-Next to the colours, **Site › Appearance → Design** carries three more closed enums,
-stored as `theme_radius`, `theme_font`, `theme_background` (and, for the site's own fonts,
-`theme_font_body` / `theme_font_display`) and emitted by the same
-`theme_colors_style()` block (`Thallo\Render\Theme\ThemeDesign`), after the colours:
-
-- **Corners** — `round` (default: `--radius: 12px`, pill buttons), `soft`
-  (`--radius: 12px`, `--radius-btn: 8px`), `sharp` (`--radius: 4px`, `--radius-lg: 8px`,
-  `--radius-btn: 4px`). Buttons read `--radius-btn` unless a radius setting is set.
-- **Typefaces** — `sans` (default: Figtree throughout), `editorial` (a system serif
-  stack for `--font-display`, so headings), `serif`, `humanist`, `geometric`, `mono` and
-  `system` (both `--font-display` and `--font-body`), and `slab` (headings only). All system
-  stacks: they cost a visitor nothing and the site's CSP stays `'self'`.
-  **`custom` is the site's own fonts**: a `.woff2` for the text, one for the headings, or
-  both, uploaded on the Appearance page into the media library. Each is declared with
-  `@font-face` from the URL the library serves it at (`font-weight: 100 900`, so a variable
-  font covers every weight from one file) and put first in `--font-body` / `--font-display`
-  with a system stack behind it. With only a text font, headings follow it. A font the library
-  no longer has is simply not used.
-- **Your theme's own font is not downloaded when nothing is set in it.** `font_faces_style()`
-  emits its preload and `@font-face` only while the site's text is still the theme's face —
-  not for `serif`, `humanist`, `geometric`, `mono`, `system`, or `custom` with a text font.
-- **Page ground** — `plain` (default: white page, tinted panels) or `tinted`, which
-  swaps the neutral family's `--bg` and `--surface` in light mode (a tinted page with
-  white panels); dark mode is unchanged.
-
-`site.css` declares `--font-body` and `--font-display` (display follows body by default)
-and `body`/headings read them, so a theme inheriting the default layout gets the settings
-for free. Defaults emit nothing. Every choice is in the cache fingerprint (§9.4 —
-`render:{theme}:{accent}-{neutral}-{radius}-{font}-{background}:{path}`) and a change
-dispatches `ThemeAppearanceChanged`.
 
 ### 9.5 Content-Security-Policy
 
@@ -656,10 +673,46 @@ style-src 'unsafe-inline'
 ```
 
 This is acceptable because the style is generated from **closed enums**, not
-free CSS (a far narrower trust surface than `custom.css`), and Glueful ships no
-CSP by default. If strict-CSP perfection is later required, the same storage +
-token model can serve the CSS from a linked `/theme-colors.css` route instead —
+free CSS (a far narrower trust surface than `custom.css`). The policy in the shipped
+`.env.example` already allows `style-src 'self' 'unsafe-inline'`. If strict-CSP perfection is
+later required, the same storage + token model can serve the CSS from a linked `/theme-colors.css` route instead —
 a delivery-only change.
+
+### 9.6 Design settings (radius, typefaces, page ground)
+
+Next to the colours, **Site › Appearance → Design** carries three more closed enums,
+stored as `theme_radius`, `theme_font`, `theme_background` (and, for the site's own fonts,
+`theme_font_body` / `theme_font_display`) and emitted by the same
+`theme_colors_style()` block (`Thallo\Render\Theme\ThemeDesign`), after the colours:
+
+- **Corners** — `round` (default: `--radius: 12px`, pill buttons), `soft`
+  (`--radius: 12px`, `--radius-lg: 20px`, `--radius-btn: 8px`), `sharp` (`--radius: 4px`,
+  `--radius-lg: 8px`, `--radius-btn: 4px`). Buttons read `--radius-btn` unless a radius setting is set.
+- **Typefaces** — `sans` (default: Figtree throughout), `editorial` (a system serif
+  stack for `--font-display`, so headings), `serif`, `humanist`, `geometric`, `mono` and
+  `system` (both `--font-display` and `--font-body`), and `slab` (headings only). All system
+  stacks: none downloads a font of its own and the site's CSP stays `'self'`. `editorial` and
+  `slab` set only the headings, so the text stays in the theme's face and that face is still
+  downloaded (see below).
+  **`custom` is the site's own fonts**: a `.woff2` for the text, one for the headings, or
+  both, uploaded on the Appearance page into the media library. Each is declared with
+  `@font-face` from the URL the library serves it at (`font-weight: 100 900`, so a variable
+  font covers every weight from one file) and put first in `--font-body` / `--font-display`
+  with a system stack behind it. With only a text font, headings follow it. A font the library
+  no longer has is simply not used.
+- **Your theme's own font is not downloaded when nothing is set in it.** `font_faces_style()`
+  emits its preload and `@font-face` only while the site's text is still the theme's face —
+  for `sans`, `editorial`, `slab` and `custom` without a text font; not for `serif`,
+  `humanist`, `geometric`, `mono`, `system`, or `custom` with a text font.
+- **Page ground** — `plain` (default: white page, tinted panels) or `tinted`, which
+  swaps the neutral family's `--bg` and `--surface` in light mode (a tinted page with
+  white panels); dark mode is unchanged.
+
+`site.css` declares `--font-body` and `--font-display` (display follows body by default)
+and `body`/headings read them, so a theme inheriting the default layout gets the settings
+for free. Defaults emit nothing. Every choice is in the cache fingerprint (§9.4 —
+`render:{theme}:{accent}-{neutral}-{radius}-{font}-{background}:{path}`) and a change
+dispatches `ThemeAppearanceChanged`.
 
 ## 10. Style block (scoped accent/neutral)
 
@@ -838,7 +891,7 @@ without a fallback is one it defines.
 A block type created under **Settings › Block types** gets style settings too, without code. Its
 editor has a **Style settings** card: tick the setting groups the block should offer in the
 designer — spacing, width, placement, typography, colours, backdrop, corners, border, shadow,
-visibility, minimum height, overflow, and sizing in a parent layout. Such a block has **one** style
+visibility, minimum height, overflow, sizing in a parent layout, and motion. Such a block has **one** style
 target, `root`, a box: its outermost element. Every chosen group lands there, and so do the
 Advanced tab's anchor, CSS classes and attributes. The template emits them:
 
@@ -865,7 +918,10 @@ a pack declares are shown read-only: they are set in code and re-synced on every
 A container is two elements: `root`, the band, and `__inner`, the content area. Its
 layout is settings, not data — there are no `--layout-flex`, `--gap-*` or `--contained`
 modifier classes to style. It arranges its children in one of two modes, Flex or Grid;
-there is no block mode. These theme defaults carry the contract, and a theme that
+there is no block mode. A `block` value stored by an older version compiles to nothing, so
+the theme's flex column renders; the Layout tab shows it in place of the mode control, says
+where it is set (the block or a style class, and at which breakpoint), and refuses to save it
+until it is replaced with Flex or removed. These theme defaults carry the contract, and a theme that
 restyles the container keeps all of them:
 
 ```css
