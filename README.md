@@ -1,10 +1,10 @@
 # glueful/thallo-render
 
 **Rendered delivery** for [Thallo](https://thallo.dev) — the CMS serves real HTML pages
-from published content through filesystem **Twig themes** — packaged as a **removable
-capability pack** (V2 rendered-delivery sub-project 2; see `docs/internal/V2_DESIGN.md`). With the
-pack absent or `thallo.render` disabled, the install is exactly the headless product:
-unmatched public paths return the router's standard JSON 404.
+from published content through filesystem **Twig themes** — packaged as a **capability
+pack** (V2 rendered-delivery sub-project 2; see `docs/internal/V2_DESIGN.md`). With
+`thallo.render` disabled, the install is exactly the headless product: unmatched public paths
+return the router's standard JSON 404.
 
 ## How a page renders
 
@@ -31,8 +31,8 @@ themed HTML.
 ## Themes
 
 A theme is `themes/{name}/` with `theme.json`, `templates/`, `assets/`. The pack embeds
-the **default reference theme**; an app theme overrides it by name
-(`render.theme`, env `RENDER_THEME`) with **per-template fallback** — omit
+the **default reference theme**; an app theme overrides it by name with **per-template
+fallback** — omit
 `404.twig` and the default theme's serves. Ladder: missing app theme → default; present
 but invalid `theme.json` → loud 500; broken pack default → hard 500; template missing in
 both → `error.twig` → plain-text 500 (never a loop).
@@ -71,8 +71,9 @@ Hierarchy: `entry/{type-slug}.twig` → `entry.twig`; `index.twig` (homepage);
 their schema's rich-text fields.
 
 Twig compiles to `storage/cache/twig/{theme}` with `auto_reload` (recompiles on template
-change). **The active theme is resolved at boot (v1):** changing `render.theme`
-requires an app restart / extension-cache rebuild.
+change). **The active theme is resolved per request:** the theme chosen in the admin under
+**Appearance** (stored as a site setting) wins, then `render.theme` (env `RENDER_THEME`), then
+`default`. Switching needs no restart.
 
 ## Theme runtime
 
@@ -223,9 +224,10 @@ npx playwright install chromium && npm test`; see that package's README.md.
 
 ## Homepage
 
-`GET /` always renders `index.twig`. Set `render.homepage_entry` (env
-`RENDER_HOMEPAGE_ENTRY`) to put that entry in the context; unset renders the standalone
-welcome. A set-but-unresolvable value (missing/unpublished/routeless/deleted) is a
+`GET /` always renders `index.twig`. Choosing a homepage entry in the admin (Appearance, or
+the entry's Publish panel) puts that entry in the context; the stored setting wins while it
+resolves, with `render.homepage_entry` (env `RENDER_HOMEPAGE_ENTRY`) as the fallback. Unset
+renders the standalone welcome. A set-but-unresolvable value (missing/unpublished/routeless/deleted) is a
 **500 config error** — logged always, message in the body only under debug mode.
 
 ## Listing & archive pages
@@ -499,19 +501,21 @@ degrades to TTL-only freshness: entries still store and expire by
 escape hatch. A tag-capable driver (Redis) is recommended for production render
 caching.
 
-## Install / remove
+## Install / disable
 
-Bundled by default in the Thallo create-project template. Existing app:
-`composer require glueful/thallo-render`, `./thallo extensions:enable thallo-render`.
-Disable via the switchboard (`'capabilities' => ['thallo.render' => false]`) or remove —
-the headless product is untouched.
+The pack ships with Thallo: `glueful/thallo-core` requires it at the same version and the project's
+`config/serviceproviders.php` loads its provider, so there is nothing to install or enable per pack.
+An operator turns `thallo.render` off or on in the admin under **Extensions › Capabilities**
+(stored system-wide; it overrides the deploy-time `thallo.capabilities` config map). Off, the
+headless product is untouched.
 
-## Out of scope (v1 — see V2_DESIGN §6)
+## Out of scope (see V2_DESIGN §6)
 
-Taxonomy term INDEX pages (`/{type}/{field}` enumerating all terms), DB-edited
-templates, page/block builder, admin theme/homepage switching UI, full-site preview
-navigation (links on a preview page lead to published pages). Per-page TTL overrides
-and stale-while-revalidate are deferred with them (render caching spec §8).
+Taxonomy term INDEX pages (`/{type}/{field}` enumerating all terms), per-page TTL overrides and
+stale-while-revalidate (render caching spec §8). The other v1 exclusions have since shipped: the
+admin Templates screen (DB-edited templates, above), the page/block builder (the Design view),
+theme and homepage switching in the admin, and cookie-backed preview sessions that carry across
+pages.
 
 ## Contributing
 

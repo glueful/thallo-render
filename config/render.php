@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 return [
-    // NOTE: enable/disable is NOT configured here — the capability switchboard in the app's
-    // config/thallo.php ('capabilities' => ['thallo.render' => false]) is the only gate.
+    // NOTE: enable/disable is NOT configured here. The switch is Extensions › Capabilities in the
+    // admin; until it is flipped there, the app's optional config/thallo.php 'capabilities' map
+    // ('thallo.render' => false) sets the default.
 
     // Active theme name: an app-level themes/{name}/ directory, falling back to the
     // pack-embedded default theme. This env value is read at boot, so changing it requires an
