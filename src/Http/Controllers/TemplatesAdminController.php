@@ -218,7 +218,19 @@ final class TemplatesAdminController
         }
         $file = $this->catalog->readFile($theme, $path);
         if ($file === null) {
-            return Response::error('Not Found', 404);
+            // A block type with no template yet opens as a starter that already carries its style
+            // settings and slots; saving it creates the template.
+            $starter = $this->linter->starterFor($path);
+            if ($starter === null) {
+                return Response::error('Not Found', 404);
+            }
+            return Response::success([
+                'path' => $path,
+                'theme' => $theme,
+                'origin' => 'starter',
+                'source' => $starter,
+                'version_uuid' => null,
+            ]);
         }
         return Response::success([
             'path' => $path,

@@ -60,6 +60,42 @@ final class TemplateLinter
         return TargetLint::lint($module, $targets);
     }
 
+    /**
+     * A first template for a block type that has none, shaped to pass {@see lint()}: the type's
+     * layout-item target (or its first) on the outermost element, each other target inside it, and
+     * one element per slot rendering its children. Null for a path that is not a block template.
+     */
+    public function starterFor(string $path): ?string
+    {
+        if (preg_match('~\Ablocks/([a-z][a-z0-9_-]*)\.twig\z~', $path, $m) !== 1) {
+            return null;
+        }
+        $type = $m[1];
+        $targets = $this->styleRegistry?->targetsFor($type);
+        $names = $targets?->names() ?? [];
+        $outer = $targets?->targetFor('layout.span') ?? ($names[0] ?? null);
+        $inline = ($this->styleRegistry?->flagsFor($type)['renders_children_inline'] ?? false) === true;
+        $slots = $inline ? [] : ($this->styleRegistry?->regionsFor($type) ?? []);
+
+        $style = static fn (string $target): string
+            => "{{ style_classes('{$target}') }}\"{{ style_attrs('{$target}') }}";
+        $lines = ["{# {$type}: this block's fields are under data, for example {{ data.title }} #}"];
+        $lines[] = $outer === null
+            ? "<div class=\"thallo-block thallo-block-{$type}\">"
+            : "<div class=\"thallo-block thallo-block-{$type}" . $style($outer) . '>';
+        foreach ($names as $name) {
+            if ($name !== $outer) {
+                $lines[] = '  <div class="' . $style($name) . '></div>';
+            }
+        }
+        foreach ($slots as $slot) {
+            $lines[] = "  <div{{ slot_attrs('{$slot}') }}>{{ blocks(data.{$slot}) }}</div>";
+        }
+        $lines[] = '</div>';
+
+        return implode("\n", $lines) . "\n";
+    }
+
     /** @return list<array{line:int,message:string}> empty = clean */
     public function lint(string $source, string $name = 'template.twig'): array
     {
