@@ -41,10 +41,19 @@
   .docs__toc {
     position: sticky;
     top: var(--docs-top);
-    max-height: calc(100vh - var(--docs-top) - var(--space-4));
+    /* Sized from where the panel STARTS, not from where it will stick: main's top padding sits
+       above it until the page has scrolled past, and a box taller than the room left runs under
+       the fold — its last rows unreachable, so its own scrolling looks broken until the whole
+       page is scrolled to the bottom. */
+    max-height: calc(100vh - var(--docs-top) - var(--space-5) - var(--space-4));
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
+  }
+  /* A signed-in editor also gets the preview banner above the header, which pushes the panels
+     down again until it scrolls away. */
+  body:has(.preview-banner) :where(.docs__sidebar, .docs__toc) {
+    max-height: calc(100vh - var(--docs-top) - var(--space-6) - var(--space-5) - var(--space-4));
   }
 }
 .docs__toc { display: none; }
