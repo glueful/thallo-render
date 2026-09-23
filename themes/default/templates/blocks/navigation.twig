@@ -7,7 +7,7 @@
 {% macro sublink(node, current_path) %}
 {%- set p = '/' ~ (node.url|default('')|split('://')|last|split('/', 2)|last) -%}
 <li class="thallo-block-navigation__subitem{% if current_path is defined and p == current_path %} thallo-block-navigation__subitem--active{% endif %}">
-  <a class="thallo-block-navigation__sublink" href="{{ node.url }}"{% if current_path is defined and p == current_path %} aria-current="page"{% endif %}>{% if node.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(node.icon) }}</span>{% endif %}<span class="thallo-block-navigation__subtext"><span class="thallo-block-navigation__sublabel">{{ node.label }}</span>{% if node.description|default('') %}<span class="thallo-block-navigation__subdesc">{{ node.description }}</span>{% endif %}</span></a>
+  <a class="thallo-block-navigation__sublink" href="{{ node.url }}"{% if current_path is defined and p == current_path %} aria-current="page"{% endif %}{% if node.new_tab|default(false) %} target="_blank" rel="noopener noreferrer"{% endif %}>{% if node.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(node.icon) }}</span>{% endif %}<span class="thallo-block-navigation__subtext"><span class="thallo-block-navigation__sublabel">{{ node.label }}</span>{% if node.new_tab|default(false) %}<span class="visually-hidden"> (opens in a new tab)</span>{% endif %}{% if node.description|default('') %}<span class="thallo-block-navigation__subdesc">{{ node.description }}</span>{% endif %}</span></a>
 </li>
 {% endmacro %}
 {#
@@ -24,7 +24,7 @@
   {% for child in item.children|default([]) %}
     <div class="thallo-block-navigation__col">
       {% if child.url|default('') %}
-        <a class="thallo-block-navigation__col-title" href="{{ child.url }}">{{ child.label }}</a>
+        <a class="thallo-block-navigation__col-title" href="{{ child.url }}"{% if child.new_tab|default(false) %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ child.label }}{% if child.new_tab|default(false) %}<span class="visually-hidden"> (opens in a new tab)</span>{% endif %}</a>
       {% else %}
         <span class="thallo-block-navigation__col-title">{{ child.label }}</span>
       {% endif %}
@@ -81,7 +81,7 @@
             {% set active = current_path is defined and itemPath == current_path %}
             {% if not hasKids %}
               <li class="thallo-block-navigation__item{% if active %} thallo-block-navigation__item--active{% endif %}">
-                <a class="thallo-block-navigation__link" href="{{ item.url }}"{% if active %} aria-current="page"{% endif %}>{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span></a>
+                <a class="thallo-block-navigation__link" href="{{ item.url }}"{% if active %} aria-current="page"{% endif %}{% if item.new_tab|default(false) %} target="_blank" rel="noopener noreferrer"{% endif %}>{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if item.new_tab|default(false) %}<span class="visually-hidden"> (opens in a new tab)</span>{% endif %}</a>
               </li>
             {% else %}
               {# ONE parent form for BOTH reveal modes (unified tree): a summary

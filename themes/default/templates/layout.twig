@@ -136,7 +136,7 @@
           <ul class="site-nav__list">
             {% for item in menu('main') %}
               {% set p = '/' ~ (item.url|default('')|split('://')|last|split('/', 2)|last) %}
-              <li><a href="{{ item.url }}"{% if current_path is defined and p == current_path %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+              <li><a href="{{ item.url }}"{% if current_path is defined and p == current_path %} aria-current="page"{% endif %}{% if item.new_tab|default(false) %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ item.label }}{% if item.new_tab|default(false) %}<span class="visually-hidden"> (opens in a new tab)</span>{% endif %}</a></li>
             {% endfor %}
           </ul>
         </details>
