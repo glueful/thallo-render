@@ -1,6 +1,8 @@
 {# The running Thallo version, from the install itself (site.version): correct on every
    deploy by construction. params: prefix (optional text before the version, e.g.
-   "Developer Preview "). A development checkout has no version and says so. #}
+   "Developer Preview"). The space between them is this template's: the params editor trims
+   values, so a trailing space typed into the prefix never survives the save. A development
+   checkout has no version and says so. #}
 {# The look: `style.classes` is the block's `content` target (background, text and
    border colour, border, radius, shadow from the Style tab), handed down by blocks/shortcode.twig.
    The dot: params.dot = false hides it; params.dot_color names one of the theme's colours. Only
@@ -11,8 +13,9 @@
   ? ' thallo-shortcode-version--no-dot'
   : (params.dot_color|default('') in dot_colors ? ' thallo-shortcode-version--dot-' ~ params.dot_color : '') %}
 {% set look = style.classes|default('') %}
+{% set prefix = params.prefix|default('')|trim %}
 {% if version %}
-<span class="thallo-shortcode-version{{ dot }}{{ look }}">{{ params.prefix|default('') }}{{ version }}</span>
+<span class="thallo-shortcode-version{{ dot }}{{ look }}">{% if prefix %}{{ prefix }} {% endif %}{{ version }}</span>
 {% else %}
 <span class="thallo-shortcode-version thallo-shortcode-version--development{{ dot }}{{ look }}">development checkout</span>
 {% endif %}
