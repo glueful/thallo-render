@@ -863,6 +863,12 @@ an author rounds is whichever label is showing it. `tab` is optional — a tabs 
 has no label. Being settings, both outrank a variant's own corners: an author who rounds the bar
 of the `underline` or `boxed` variant gets a rounded bar.
 
+The hero's `media` target — its image, or the blocks in its aside — takes the block's `radius` and
+`shadow`, and `aside.padding` and `aside.surface` (Style tab → Aside) pad and fill it as a panel,
+while the block's own `spacing` and `colors.surface` stay the band's, on the root. A theme that
+overrides `hero.twig` keeps `{{ style_classes('media') }}` and `{{ style_attrs('media') }}` on the
+media element; the target is optional, since a hero with neither an image nor an aside renders none.
+
 Three properties modify what others declare. **Border sides** (`border.sides`) keeps one side of
 the border the width and style settings draw; it is in the `border` group, so any block that
 declares a border has it. **Background opacity** (`colors.surface_opacity`) and **Backdrop blur**

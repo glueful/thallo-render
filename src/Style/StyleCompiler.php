@@ -22,7 +22,8 @@ final class StyleCompiler
     // 7: a background utility names its colour (--t-surface) for the opacity utility to mix.
     // 8: typography.line_height.
     // 9: motion — entrances, and the one shared rule that animates them.
-    public const VERSION = 9;
+    // 10: a hero's aside — aside.padding and aside.surface.
+    public const VERSION = 10;
 
     /** Where an entrance STARTS from; `none` starts nowhere. */
     private const ENTRANCES = [
@@ -142,6 +143,9 @@ final class StyleCompiler
         // A tab strip's corners, likewise: the bar's and the tab's, beside the panels area's.
         'tabs.bar_radius' => 'border-radius',
         'tabs.tab_radius' => 'border-radius',
+        // A hero's aside: its padding and its fill, beside the band's own.
+        'aside.padding' => 'padding',
+        'aside.surface' => 'background',
         // The shorthand: the surface colour owns the whole background, so a theme's gradient
         // (a background-image) yields to a managed colour exactly like a flat theme fill does.
         'colors.surface' => 'background',
