@@ -2,17 +2,28 @@
    <img> is skipped when it nulls (private/unresolvable/non-image blob). Sizing is a
    `width` token and placement on the `root` target; corners and shadow on the
    optional `picture` target (visual builder spec §2.5) — nothing here is inline.
-   Fields: image, alt, caption. A blank alt or caption falls back on the file's own, set in the
+   Fields: image, alt, caption, width, height, fill. A blank alt or caption falls back on the file's own, set in the
    media library (media_text()).
    Image discipline (storefront-performance spec §4): resolve FIRST, claim the
    at-most-one priority slot only on a non-null resolve, attributes from the claim. #}
+{# Exact sizes, in pixels, are the <img>'s width and height ATTRIBUTES — never inline style. One
+   alone leaves the other to the picture's proportions; both make a box it fills (cropped by the
+   theme's object-fit, never stretched), and it is never wider than its column. `fill` takes the
+   column's width in place of a width in pixels. Anything that is not a positive number is unset. #}
+{% set width = (data.width ?? null)|numeric_clamp(0, 4000) %}
+{% set width = width ? width|round : 0 %}
+{% set height = (data.height ?? null)|numeric_clamp(0, 4000) %}
+{% set height = height ? height|round : 0 %}
+{% set fill = data.fill ?? false %}
+{% if fill %}{% set width = 0 %}{% endif %}
 {% set img = data.image ? media_image(data.image, [480, 768, 1024, 1536]) : null %}
 {% set words = data.image and (not data.alt or not data.caption) ? media_text(data.image) : {alt: '', caption: ''} %}
-<figure class="thallo-block thallo-block-image{{ style_classes('root') }}"{{ style_attrs('root') }}>
+<figure class="thallo-block thallo-block-image{{ fill ? ' thallo-block-image--fill' }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if img %}
     {% set priority = claim_priority_image() %}
     <img class="thallo-block-image__img{{ style_classes('picture') }}"{{ style_attrs('picture') }} src="{{ img.src }}"
-         {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="(max-width: 64rem) 100vw, 60rem"{% endif %}
+         {%- if img.srcset %} srcset="{{ img.srcset }}" sizes="{{ width > 0 ? '(max-width: ' ~ width ~ 'px) 100vw, ' ~ width ~ 'px' : '(max-width: 64rem) 100vw, 60rem' }}"{% endif %}
+         {%- if width > 0 %} width="{{ width }}"{% endif %}{% if height > 0 %} height="{{ height }}"{% endif %}
          alt="{{ data.alt ?: words.alt }}"
          {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
   {% endif %}

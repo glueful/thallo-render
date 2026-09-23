@@ -235,6 +235,11 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 /* Width is a settings token on the figure (t-w-*); a full-bleed figure loses its gutter. */
 .thallo-block-image.t-w-full { padding-inline: 0; }
 .thallo-block-image.t-w-full img { width: 100%; border-radius: 0; box-shadow: none; }
+/* Exact sizes are the img's width/height attributes (blocks/image.twig). A height makes a box the
+   picture fills — cropped, never stretched — which matters once max-width holds it inside a
+   narrower column. Fill is the column's width. */
+.thallo-block-image img[height] { object-fit: cover; }
+.thallo-block-image--fill img { width: 100%; }
 .thallo-block-image figcaption {
   color: var(--muted);
   font-size: 0.9rem;
