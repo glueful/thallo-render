@@ -1825,6 +1825,10 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 .thallo-block-code__line--prompt { padding-inline-start: 2ch; text-indent: -2ch; }
 .thallo-block-code__line--prompt::before { content: "$ "; color: var(--accent); }
 .thallo-block-code__line--comment { color: var(--muted); }
+/* The note sits on the caption's right, pushing the actions (Copy) after it. */
+.thallo-block-code__note { margin-inline-start: auto; font-family: var(--font-mono, ui-monospace, monospace); color: var(--muted); }
+/* size: compact — a dense snippet set smaller and closer. */
+.thallo-block-code--compact .thallo-block-code__pre { font-size: 0.8rem; line-height: 1.55; padding: 0.875rem 1.125rem; }
 .thallo-block-code__copy {
   font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line);
   border-radius: var(--radius-sm, 6px); padding: 0.125rem var(--space-2); cursor: pointer;

@@ -17,10 +17,15 @@
 {% set language = data.language|default('text') in languages ? data.language|default('text') : 'text' %}
 {% set copy = data.copy ?? true %}
 {% set label = data.label|default('') %}
-<div class="thallo-block thallo-block-code{{ style_classes('root') }}"{{ style_attrs('root') }} data-language="{{ language }}" data-copy="{{ copy ? '1' : '0' }}">
+{# size: compact sets a dense snippet smaller and closer; anything else is the default. note:
+   short text on the caption's right, before the actions the runtime fills with Copy. #}
+{% set size = data.size|default('default') == 'compact' ? ' thallo-block-code--compact' : '' %}
+{% set note = data.note|default('')|trim %}
+<div class="thallo-block thallo-block-code{{ size }}{{ style_classes('root') }}"{{ style_attrs('root') }} data-language="{{ language }}" data-copy="{{ copy ? '1' : '0' }}">
   <figure class="thallo-block-code__panel{{ style_classes('panel') }}"{{ style_attrs('panel') }}>
     <figcaption class="thallo-block-code__caption">
       <span class="thallo-block-code__label">{{ label ?: language }}</span>
+      {%- if note %}<span class="thallo-block-code__note">{{ note }}</span>{% endif %}
       <span class="thallo-block-code__actions"></span>
     </figcaption>
     {%- if language == 'bash' %}
