@@ -93,7 +93,8 @@ body {
    (e.g. inside an html block) on the theme face; every theme/shop control already opts
    in individually, so this is a guarantee, not a change. */
 button, input, select, textarea { font: inherit; }
-h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; letter-spacing: -0.02em; }
+/* A heading that wraps shares its words between its lines, instead of leaving one alone on the last. */
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.15; letter-spacing: -0.02em; text-wrap: balance; }
 h1 { font-size: clamp(1.9rem, 1.4rem + 2vw, 2.75rem); }
 h2 { font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2rem); }
 a { color: var(--accent); }
