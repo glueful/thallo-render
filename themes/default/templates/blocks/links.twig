@@ -4,10 +4,11 @@
    keyed off the __element classes, and the active/muted link recipe is lifted
    from navigationMenu (active → --accent, others muted → --ink on hover).
    Fields: title (optional, editable_text), items — a plain array (NOT child
-   blocks) of { label, url, icon (optional), active (optional bool) }. #}
+   blocks) of { label, url, icon (optional), active (optional bool) }. The title is the `title`
+   target: its size, weight, line height, colour and alignment are its own. #}
 <nav class="thallo-block thallo-block-links{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if data.title|default('') is not empty %}
-    <p class="thallo-block-links__title">{{ data.title|editable_text('title') }}</p>
+    <p class="thallo-block-links__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</p>
   {% endif %}
   <ul class="thallo-block-links__list">
     {% for item in data.items|default([]) %}
