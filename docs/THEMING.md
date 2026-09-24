@@ -864,7 +864,7 @@ has no label. Being settings, both outrank a variant's own corners: an author wh
 of the `underline` or `boxed` variant gets a rounded bar.
 
 The hero's `media` target — its image, or the blocks in its aside — takes the block's `radius` and
-`shadow`, and `aside.padding` and `aside.surface` (Style tab → Aside) pad and fill it as a panel,
+`shadow`, and `aside.padding.{top,right,bottom,left}` and `aside.surface` (Style tab → Aside) pad and fill it as a panel,
 while the block's own `spacing` and `colors.surface` stay the band's, on the root. A theme that
 overrides `hero.twig` keeps `{{ style_classes('media') }}` and `{{ style_attrs('media') }}` on the
 media element; the target is optional, since a hero with neither an image nor an aside renders none.

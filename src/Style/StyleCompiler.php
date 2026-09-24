@@ -23,7 +23,8 @@ final class StyleCompiler
     // 8: typography.line_height.
     // 9: motion — entrances, and the one shared rule that animates them.
     // 10: a hero's aside — aside.padding and aside.surface.
-    public const VERSION = 10;
+    // 11: the aside's padding is a side each.
+    public const VERSION = 11;
 
     /** Where an entrance STARTS from; `none` starts nowhere. */
     private const ENTRANCES = [
@@ -144,7 +145,10 @@ final class StyleCompiler
         'tabs.bar_radius' => 'border-radius',
         'tabs.tab_radius' => 'border-radius',
         // A hero's aside: its padding and its fill, beside the band's own.
-        'aside.padding' => 'padding',
+        'aside.padding.top' => 'padding-top',
+        'aside.padding.right' => 'padding-right',
+        'aside.padding.bottom' => 'padding-bottom',
+        'aside.padding.left' => 'padding-left',
         'aside.surface' => 'background',
         // The shorthand: the surface colour owns the whole background, so a theme's gradient
         // (a background-image) yields to a managed colour exactly like a flat theme fill does.
