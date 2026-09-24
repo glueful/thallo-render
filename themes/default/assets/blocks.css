@@ -386,6 +386,12 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-rich_text > .thallo-edit-region > :first-child { margin-top: 0; }
 .thallo-block-rich_text > :last-child,
 .thallo-block-rich_text > .thallo-edit-region > :last-child { margin-bottom: 0; }
+/* A list reads as a list. The admin's editor writes each item's text as a paragraph
+   (<li><p>…</p></li>), so the paragraph's margin would open a gap between items; the items sit a
+   short step apart instead, indented by a bullet's width rather than the browser's 40px. */
+.thallo-block-rich_text :is(ul, ol) { padding-inline-start: 1.25em; }
+.thallo-block-rich_text li > p { margin: 0; }
+.thallo-block-rich_text li + li { margin-top: 0.35em; }
 /* The container's width, height, alignment, flex mode and gap were modifier classes driven by
    data fields; they are layout SETTINGS now (container-layout spec §4), so the rules that served
    them are gone. What replaces them lives in the compiled settings layer, over the layout defaults
