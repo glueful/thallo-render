@@ -1266,6 +1266,9 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 /* footer — a <footer> bar (refs.md `footer`). Optional top band over a
    left/center/right row: stacked + centered on small screens, spread on wide.
    Tokens only; dark mode re-maps them. */
+/* A footer block is the whole footer: it spans its container, so placed in the footer region —
+   whose inner is a flex row — it is not shrunk to its content and pushed to one side. */
+.thallo-block-footer { flex: 1 1 100%; width: 100%; }
 .thallo-block-footer__top {
   padding-block: var(--space-6);
   border-bottom: 1px solid var(--line);
