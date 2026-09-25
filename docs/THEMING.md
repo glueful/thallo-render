@@ -102,7 +102,8 @@ and fills `{% block content %}`.
 | `404.twig` | Not-found page. |
 | `error.twig` | Generic error page. |
 | `_pagination.twig` | Shared pagination partial (path-based: `/blog/page/2`). |
-| `region-preview.twig` | Isolated render of a single region (used by the region editor). |
+| `region-stage.twig` | The Header & footer page's stage when no published page can be shown: the layout around a placeholder body. |
+| `region-session-expired.twig` | What that stage shows once its session has expired. |
 
 `blog` in these paths stands for any content type you create; Thallo ships no `blog` type.
 
@@ -165,12 +166,12 @@ Regions are **global chrome** rendered around every page. There are two:
 
 Pattern from `layout.twig`:
 ```twig
-{% set headerHidden = (presentation.header|default('default')) == 'hidden' %}
+{% set headerHidden = (presentation.header|default('default')) == 'hidden' and not region_stage() %}
 {% set headerHtml = headerHidden ? null : region_blocks('header') %}
-{% if headerHtml %}
+{% if headerHtml or region_stage() %}
   {% set hs = region_settings('header') %}
   <header class="site-header … {{ hs.sticky|default(false) ? 'thallo-region-header--sticky' : '' }}">
-    <div class="site-header__inner">{{ headerHtml }}</div>
+    <div class="site-header__inner"{{ region_slot_attrs('header') }}>{{ headerHtml }}</div>
   </header>
 {% elseif not headerHidden %}
   {# hardcoded fallback header: logo + menu('main') #}
@@ -180,6 +181,15 @@ Pattern from `layout.twig`:
 Never render an *empty* region — a `null` (unbound reader, absent row, or
 saved-empty list) must fall back to the built-in chrome. Hiding is a page
 `presentation` decision, not an empty region.
+
+**The Header & footer stage.** The admin edits the regions on a stage: the picked published page,
+rendered by your theme, with the header and footer from the editor's working copy. There
+`region_stage()` is true, `region_blocks()` annotates the region's blocks for editing and returns
+`''` rather than `null` for an empty region, and a page's own `presentation.header == 'hidden'`
+does not apply. Render both bars on the stage even when empty, and put `region_slot_attrs('header')`
+(or `'footer'`) on the element that wraps `region_blocks()`: it marks the slot blocks are dropped
+into, and renders nothing off the stage. The page body renders as published and is not annotated;
+the stage keeps it inert.
 
 ---
 
@@ -282,6 +292,13 @@ Filters:
 - The **render engine** wraps each block with `data-thallo-block` on the canvas —
   the theme does **not** add that. So the editor finds blocks by data-attribute,
   **not** by the `thallo-block-*` CSS classes.
+- The root element carries `data-thallo-canvas="{{ canvas_scope() }}"` on a stage — `entry` for
+  the Design view, `regions` for the Header & footer page — and nothing on the published site. The
+  stage scripts read it (the regions stage keeps the page body inert by it), so keep it on `<html>`
+  as the default layout does.
+- A pack that renders pages of its own through the render engine sets what is annotated with
+  `RenderContextExtension::setAnnotationScope('none' | 'entry' | 'regions')`: `entry` annotates
+  the page's blocks (the Design view), `regions` only the header and footer, `none` nothing.
 - In-place text editing comes from the `|editable_text('field')` filter, not from
   a class.
 - Slots come from `slot_attrs('field')` on the element that holds `blocks()` — one per

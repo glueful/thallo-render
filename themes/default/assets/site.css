@@ -139,7 +139,7 @@ html[data-theme="dark"] .site-name--has-dark .site-logo--dark { display: block; 
 .thallo-region-footer--full .site-footer__inner { max-width: none; }
 .thallo-region .site-header__inner,
 .thallo-region .site-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
-/* The admin's chrome preview (region-preview.twig): a placeholder body between the regions. */
+/* The header & footer stage with no page to show (partials/region-stage-placeholder.twig): a placeholder body between the regions. */
 .thallo-region-preview__main { max-width: 72rem; margin: 0 auto; padding: var(--space-6) var(--space-4); }
 .thallo-region-preview__placeholder {
   border: 2px dashed var(--line);
