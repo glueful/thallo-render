@@ -1,0 +1,5 @@
+{# The header & footer stage with no published page to show (regions-stage spec §4.4): the real
+   layout — the chrome from the session, annotated — around a placeholder body. #}
+{% extends 'layout.twig' %}
+{% block title %}{{ site.name }}{% endblock %}
+{% block content %}{% include 'partials/region-stage-placeholder.twig' %}{% endblock %}

@@ -105,6 +105,17 @@ final class RenderContextExtension extends AbstractExtension
     private bool $annotateBlocks = false;
 
     /**
+     * Which subtree the stage annotates (regions-stage spec §4.4): `entry` (the Design view — the
+     * entry's blocks; the chrome untagged), `regions` (the header & footer stage — the chrome's
+     * blocks; the page body untagged) or `none`. `$annotateBlocks` is the effective flag for the
+     * subtree being rendered now.
+     */
+    private string $annotationScope = 'none';
+
+    /** A regions-stage session's snapshot, served in place of the saved regions for one render. */
+    private ?RegionReader $regionOverride = null;
+
+    /**
      * Preview-only appearance override (theme-color-config spec §6): request-local,
      * reset before every render by the controller. Null = use the saved/default
      * source; a verified preview session's signed pair sets it for that render only.
@@ -299,6 +310,14 @@ final class RenderContextExtension extends AbstractExtension
                 'needs_context' => true,
             ]),
             new TwigFunction('region_settings', $this->regionSettings(...)),
+            // The header & footer stage (regions-stage spec §4.4): the region wrappers' drop slots,
+            // whether this render is that stage, and the <html> canvas marker's value.
+            new TwigFunction('region_slot_attrs', $this->regionSlotAttrs(...), ['is_safe' => ['html']]),
+            new TwigFunction('region_stage', fn (): bool => $this->annotationScope === 'regions'),
+            new TwigFunction(
+                'canvas_scope',
+                fn (): string => $this->annotationScope === 'none' ? '' : $this->annotationScope,
+            ),
             new TwigFunction('region_style_classes', $this->regionStyleClasses(...)),
             new TwigFunction('site_favicon', $this->siteFavicon(...)),
             new TwigFunction('custom_css', $this->customCss(...)),
@@ -445,7 +464,9 @@ final class RenderContextExtension extends AbstractExtension
      */
     private function noteMotion(string $type, array $settings): void
     {
-        if ($this->motionNeeded || $this->annotateBlocks || $this->styleRegistry === null) {
+        // Never on a stage, in any subtree: the theme runtime skips its modules there, so an entering
+        // block — even in the header & footer stage's untagged body — would stay hidden.
+        if ($this->motionNeeded || $this->annotationScope !== 'none' || $this->styleRegistry === null) {
             return;
         }
         $targets = $this->styleRegistry->targetsFor($type);
@@ -827,12 +848,16 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function regionBlocks(Environment $env, array $context, string $slug): ?\Twig\Markup
     {
-        $list = $this->regions?->blocks($slug);
+        $list = $this->regionReader()?->blocks($slug);
         if ($list === null || $list === []) {
-            return null;
+            // On the header & footer stage an empty region is an empty slot to drop into (the
+            // layout draws its wrapper); everywhere else it falls back to the built-in chrome.
+            return $this->annotationScope === 'regions' ? new \Twig\Markup('', 'UTF-8') : null;
         }
+        // Annotated only on the header & footer stage: chrome block ids are not an entry's, so on
+        // the Design view they would corrupt the stage's DOM↔id bridge.
         $saved = $this->annotateBlocks;
-        $this->annotateBlocks = false;
+        $this->annotateBlocks = $this->annotationScope === 'regions';
         try {
             // Thread the region slug so a form placed in a region gets a stable,
             // region-scoped source key (form-block spec §5).
@@ -846,7 +871,31 @@ final class RenderContextExtension extends AbstractExtension
     /** @return array<string,mixed> */
     public function regionSettings(string $slug): array
     {
-        return $this->regions?->settings($slug) ?? [];
+        return $this->regionReader()?->settings($slug) ?? [];
+    }
+
+    /** ` data-thallo-slot="<region>"` on the header & footer stage, nothing otherwise. */
+    public function regionSlotAttrs(string $slug): string
+    {
+        if ($this->annotationScope !== 'regions') {
+            return '';
+        }
+        return ' data-thallo-slot="' . htmlspecialchars($slug, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
+    }
+
+    /**
+     * Serve these regions instead of the saved ones for the current render (a regions-stage
+     * session's snapshot); null restores the saved regions. The controller sets and clears it
+     * around one render.
+     */
+    public function setRegionReaderOverride(?RegionReader $reader): void
+    {
+        $this->regionOverride = $reader;
+    }
+
+    private function regionReader(): ?RegionReader
+    {
+        return $this->regionOverride ?? $this->regions;
     }
 
     /**
@@ -1441,10 +1490,17 @@ final class RenderContextExtension extends AbstractExtension
         return true;
     }
 
-    /** Reset-family (see $annotateBlocks): the controller assigns per render. */
-    public function setBlockAnnotations(bool $on): void
+    /**
+     * Reset-family (see $annotationScope): the controller assigns per render — `none`, `entry` or
+     * `regions`. The entry body is annotated in `entry` scope only; the chrome in `regions` only.
+     */
+    public function setAnnotationScope(string $scope): void
     {
-        $this->annotateBlocks = $on;
+        if (!in_array($scope, ['none', 'entry', 'regions'], true)) {
+            throw new \InvalidArgumentException("unknown annotation scope '{$scope}'");
+        }
+        $this->annotationScope = $scope;
+        $this->annotateBlocks = $scope === 'entry';
     }
 
     private function logBlockMiss(string $type, string $reason): void

@@ -9,8 +9,8 @@
          would hide behavior forks).
        - selector: what the module enhances; enhance() receives each matching
          component root exactly once (data-thallo-enhanced marker, per module).
-       - canvas: 'skip' (default) — no-op when the canvas stage is present
-         (.thallo-preview-block; injected DOM would break the canvas patch gate);
+       - canvas: 'skip' (default) — no-op on a stage (<html data-thallo-canvas>; injected DOM
+         would break the canvas patch gate);
          'allow' — runs everywhere (color-mode only: it touches <html>, no block DOM).
      ThalloRuntime.enhance(root)
        - root is a SCAN BOUNDARY: the root itself (when it matches) plus matching
@@ -21,8 +21,12 @@
   var modules = Object.create(null);
   var order = [];
 
+  /* A stage render marks <html data-thallo-canvas="entry"|"regions"> (regions-stage spec §4.4):
+     the marker, not an annotated block, says "stage" — the header & footer stage with both regions
+     empty and its body untagged has no block wrapper at all. */
   function isCanvas() {
-    return !!document.querySelector('.thallo-preview-block');
+    var root = document.documentElement;
+    return !!root && root.getAttribute('data-thallo-canvas') !== null;
   }
 
   function markerHas(elm, name) {

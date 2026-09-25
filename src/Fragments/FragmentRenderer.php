@@ -51,7 +51,7 @@ final class FragmentRenderer
         $this->extension->setAssetContext(null, null);
         $this->extension->bindTheme($this->themes);
         $this->extension->setThemeAppearanceOverride($accent, $neutral);
-        $this->extension->setBlockAnnotations(true);
+        $this->extension->setAnnotationScope('entry');
         $this->extension->setPreviewContext(true);
         $this->extension->setLocale($locale);
         $blockContext = [
@@ -75,7 +75,7 @@ final class FragmentRenderer
             // Leave the shared extension as a controller would find it.
             $this->extension->drainTags();
             $this->extension->resetPerRenderState();
-            $this->extension->setBlockAnnotations(false);
+            $this->extension->setAnnotationScope('none');
             $this->extension->setThemeAppearanceOverride(null, null);
         }
         return $out;

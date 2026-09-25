@@ -1,0 +1,17 @@
+{# The header & footer stage after its editing session expired (regions-stage spec §4.2): no
+   region content at all — never the live rows. The admin renews the session and applies the
+   editor's document again. #}
+<!DOCTYPE html>
+<html lang="{{ site.locale|default('en') }}" data-thallo-canvas="regions" data-thallo-session-expired>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Editing session expired</title>
+</head>
+<body>
+  <main id="main">
+    <p>This editing session expired. It is being renewed.</p>
+  </main>
+</body>
+</html>

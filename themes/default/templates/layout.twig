@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ site.locale }}"{% if color_mode_enabled() %} data-color-mode-enabled="true"{% endif %}>
+<html lang="{{ site.locale }}"{% if color_mode_enabled() %} data-color-mode-enabled="true"{% endif %}{% if canvas_scope() %} data-thallo-canvas="{{ canvas_scope() }}"{% endif %}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -93,9 +93,11 @@
      region_blocks() (annotation-suppressed internally); EVERY null — unbound
      reader, absent row, saved-empty list — falls back to the hardcoded chrome
      below. Hiding is a page _presentation decision, never an empty region. #}
-  {% set headerHidden = (presentation.header|default('default')) == 'hidden' %}
+  {#- On the header & footer stage both regions always show — the page's hiding applies to the
+      live site — and an empty one is an empty slot to drop into (regions-stage spec §4.4). -#}
+  {% set headerHidden = (presentation.header|default('default')) == 'hidden' and not region_stage() %}
   {% set headerHtml = headerHidden ? null : region_blocks('header') %}
-  {% if headerHtml %}
+  {% if headerHtml or region_stage() %}
     {% set hs = region_settings('header') %}
     {# Presentation → classes, computed up top (logos.twig authoring shape) so the
        markup stays clean. Same class names the CSS + tests already expect — only
@@ -108,7 +110,7 @@
     {#- The region's own style (the Regions page's Style tab): the bar takes everything but the
         padding, which lands on the inner element — where the theme pads. Unstyled, both are ''. -#}
     <header class="{{ headerClass }}{{ region_style_classes('header') }}">
-      <div class="site-header__inner{{ region_style_classes('header', 'inner') }}">{{ headerHtml }}</div>
+      <div class="site-header__inner{{ region_style_classes('header', 'inner') }}"{{ region_slot_attrs('header') }}>{{ headerHtml }}</div>
     </header>
   {% elseif not headerHidden %}
   <header class="site-header">
@@ -154,12 +156,12 @@
   <main id="main" tabindex="-1" class="{{ layoutClass }}{% if presentation.style_classes|default('') %} {{ presentation.style_classes }}{% endif %}"{% if preview_revision is defined and preview_revision %} data-thallo-epoch="{{ preview_revision.epoch }}" data-thallo-revision="{{ preview_revision.revision }}"{% if preview_revision.style_generation is defined %} data-thallo-style-generation="{{ preview_revision.style_generation }}"{% endif %}{% endif %}>
     {% block content %}{% endblock %}
   </main>
-  {% set footerHidden = (presentation.footer|default('default')) == 'hidden' %}
+  {% set footerHidden = (presentation.footer|default('default')) == 'hidden' and not region_stage() %}
   {% set footerHtml = footerHidden ? null : region_blocks('footer') %}
-  {% if footerHtml %}
+  {% if footerHtml or region_stage() %}
     {% set fs = region_settings('footer') %}
     <footer class="site-footer thallo-region thallo-region-footer thallo-region-footer--{{ fs.width|default('contained') }}{{ region_style_classes('footer') }}">
-      <div class="site-footer__inner{{ region_style_classes('footer', 'inner') }}">{{ footerHtml }}</div>
+      <div class="site-footer__inner{{ region_style_classes('footer', 'inner') }}"{{ region_slot_attrs('footer') }}>{{ footerHtml }}</div>
     </footer>
   {% elseif not footerHidden %}
   <footer class="site-footer">

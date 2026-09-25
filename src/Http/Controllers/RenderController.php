@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Http\Controllers;
 
+use Thallo\Render\Regions\RegionSessionReader;
 use Glueful\Bootstrap\ApplicationContext;
 use Glueful\Http\Response as ApiResponse;
 use Thallo\Contracts\Delivery\EntryTargetResolver;
@@ -104,6 +105,8 @@ final class RenderController
         private readonly ?CompiledStyleArtifacts $compiledArtifacts = null,
         /** Soft-bound: without it no field is known to be rich text, so every one stays escaped. */
         private readonly ?ContentTypeReader $contentTypes = null,
+        /** The header & footer stage's session snapshots (regions-stage spec §4.4); null = no stage. */
+        private ?\Thallo\Contracts\Delivery\RegionStageSnapshots $regionStage = null,
     ) {
     }
 
@@ -144,7 +147,8 @@ final class RenderController
      * block — assignment-not-set means the shared singleton never leaks
      * annotation across requests.
      */
-    private bool $annotateBlocks = false;
+    /** Which subtree this render annotates for a stage: `none`, `entry` or `regions` (regions-stage §4.4). */
+    private string $annotationScope = 'none';
 
     /**
      * Preview-context intent (surface split): TRUE for ANY preview render —
@@ -175,8 +179,8 @@ final class RenderController
         // Surface split: in-session navigation annotates only inside the design
         // canvas (companion cookie set by preview()?canvas=1) — a review-session
         // walk through the site renders clean, with live-page behaviors running.
-        $this->annotateBlocks = $session !== null
-            && $request->cookies->get('thallo_preview_canvas') === '1';
+        $this->annotationScope = $session !== null
+            && $request->cookies->get('thallo_preview_canvas') === '1' ? 'entry' : 'none';
         $this->previewContext = $session !== null;
         $this->appearanceSession = $session;
         // Source-aware provider (homepage-setting spec §0): the DB site setting
@@ -237,8 +241,8 @@ final class RenderController
         // Surface split: in-session navigation annotates only inside the design
         // canvas (companion cookie set by preview()?canvas=1) — a review-session
         // walk through the site renders clean, with live-page behaviors running.
-        $this->annotateBlocks = $session !== null
-            && $request->cookies->get('thallo_preview_canvas') === '1';
+        $this->annotationScope = $session !== null
+            && $request->cookies->get('thallo_preview_canvas') === '1' ? 'entry' : 'none';
         $this->previewContext = $session !== null;
         $this->appearanceSession = $session;
         $extra = $this->sessionExtra($session);
@@ -391,11 +395,16 @@ final class RenderController
         // the plain token URL is the REVIEW surface, rendered clean so the theme
         // runtime behaves exactly as live (autoplay, arrows, lightboxes run).
         $canvas = $request->query->getBoolean('canvas');
-        $this->annotateBlocks = $canvas;
+        $this->annotationScope = $canvas ? 'entry' : 'none';
         $this->previewContext = true;
         // Verified up front: the session drives BOTH the cookie and the per-preview
         // theme (spec §5) — a themed token renders through a request-local environment.
         $session = $this->sessionVerifier?->verify($token);
+        // The header & footer stage (regions-stage spec §4.4): a session of the other kind renders
+        // a published page with the chrome from its snapshot — never the entry path below.
+        if ($session !== null && !$session->isEntry()) {
+            return $this->regionsStage($session, $canvas);
+        }
         $this->appearanceSession = $session;
         [$env, $assetBase, $assetsDir, $previewTheme] = $this->themedEnv($session);
         $result = $this->resolver->resolvePreview($token);
@@ -475,6 +484,59 @@ final class RenderController
                 $response->headers->clearCookie('thallo_preview_canvas', '/');
             }
         }
+        return $this->withPreviewBridge($response);
+    }
+
+    /**
+     * The header & footer stage (regions-stage spec §4.4): the session's snapshot read ONCE — its
+     * working copy, else its baseline — served as the regions for this render and annotated; the
+     * picked page's PUBLISHED version as the body, untagged; the placeholder body when there is no
+     * page; the expired page when the session's records are gone. Never the live rows.
+     */
+    private function regionsStage(PreviewSession $session, bool $canvas): Response
+    {
+        $this->annotationScope = $canvas ? 'regions' : 'none';
+        $this->appearanceSession = null;
+        $snapshot = $session->session !== null ? $this->regionStage?->snapshot($session->session) : null;
+        if ($snapshot === null) {
+            $response = $this->render('region-session-expired.twig', $this->defaultLocale(), null, 200);
+        } else {
+            $this->extension->setRegionReaderOverride(new RegionSessionReader($snapshot['regions']));
+            try {
+                $revision = $snapshot['epoch'] === null ? null : [
+                    'epoch' => $snapshot['epoch'],
+                    'revision' => $snapshot['revision'],
+                    'style_generation' => $this->extension->styleSnapshotGeneration(),
+                ];
+                $result = $session->page !== null
+                    ? $this->resolver->resolveEntry($session->page)
+                    : ['kind' => 'not_found'];
+                if (($result['kind'] ?? null) === 'content') {
+                    $typeSlug = (string) ($result['type'] ?? '');
+                    $candidate = $typeSlug !== '' ? "entry/{$typeSlug}.twig" : '';
+                    $template = $candidate !== '' && $this->twig()->getLoader()->exists($candidate)
+                        ? $candidate
+                        : 'entry.twig';
+                    $response = $this->render($template, (string) $result['locale'], $result['content'], 200, [
+                        'presentation' => $this->presentationContext(
+                            $typeSlug !== '' ? $typeSlug : null,
+                            $result['presentation'] ?? null,
+                        ),
+                        'preview_revision' => $revision,
+                    ]);
+                } else {
+                    $response = $this->render('region-stage.twig', $this->defaultLocale(), null, 200, [
+                        'presentation' => $this->presentationContext(null, null),
+                        'preview_revision' => $revision,
+                    ]);
+                }
+            } finally {
+                $this->extension->setRegionReaderOverride(null);
+            }
+        }
+        $response->headers->remove('Cache-Tag');
+        $response->headers->set('Cache-Control', 'no-store');
+        $response->headers->set('X-Robots-Tag', 'noindex');
         return $this->withPreviewBridge($response);
     }
 
@@ -993,9 +1055,9 @@ final class RenderController
             $this->appearanceSession?->design,
         );
         // Controller-scoped intent, applied per render: every entry point ASSIGNS
-        // $annotateBlocks (true only for preview renders), so the shared singleton
+        // $annotationScope (non-`none` only for stage renders), so the shared singleton
         // can never leak annotation into a live response.
-        $this->extension->setBlockAnnotations($this->annotateBlocks);
+        $this->extension->setAnnotationScope($this->annotationScope);
         // After resetPerRenderState (which defaults it off): any-preview flag for
         // the SEO discipline — true for BOTH canvas and review surfaces.
         $this->extension->setPreviewContext($this->previewContext);

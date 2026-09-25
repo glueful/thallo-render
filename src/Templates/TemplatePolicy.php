@@ -94,6 +94,7 @@ final class TemplatePolicy
         'runtime_script', 'seo_head', 'font_faces_style',
         'shop_wishlist_scope', 'shop_wishlist_url', 'layers_stylesheet_url', 'theme_stylesheet_url',
         'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
+        'canvas_scope', 'region_stage', 'region_slot_attrs',
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script',
         'entries', 'entry_tree', 'markdown', 'markdown_toc', 'search_enabled',
         'is_preview', 'media_image', 'media_text', 'claim_priority_image',

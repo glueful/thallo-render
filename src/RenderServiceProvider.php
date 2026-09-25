@@ -486,6 +486,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->has(\Thallo\Contracts\Schema\ContentTypeReader::class)
                 ? $container->get(\Thallo\Contracts\Schema\ContentTypeReader::class)
                 : null,
+            $container->has(\Thallo\Contracts\Delivery\RegionStageSnapshots::class)
+                ? $container->get(\Thallo\Contracts\Delivery\RegionStageSnapshots::class)
+                : null,
         );
     }
 
