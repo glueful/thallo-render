@@ -1746,7 +1746,15 @@
     src.parentNode.insertBefore(clone, src.nextSibling)
   }
 
+  /**
+   * The regions stage's expired page (regions-stage spec §6.5) tells the parent, which runs the
+   * restore sequence; said on activation and again on every hello, so a reload is heard too.
+   */
+  function announceExpired() {
+    if (document.documentElement.hasAttribute('data-thallo-session-expired')) post('session-expired', {})
+  }
   function activate() {
+    announceExpired()
     // Region-only mode (regions stage spec §5.4): on the regions stage the page body is published
     // context — only the header and footer are edited. Outside them nothing navigates, submits or
     // activates, and nothing is selected; these capture listeners run before every other one, so
@@ -1980,6 +1988,7 @@
       return
     }
     if (event.origin !== session.origin || data.nonce !== session.nonce) return
+    if (data.type === 'thallo:canvas-hello') announceExpired()
     if (data.type === 'thallo:highlight') {
       // Outline-driven selection behaves like a stage click: ring + toolbar.
       var el = findBlock(data.id)

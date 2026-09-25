@@ -511,6 +511,19 @@ final class RenderController
                 $result = $session->page !== null
                     ? $this->resolver->resolveEntry($session->page)
                     : ['kind' => 'not_found'];
+                // A page unpublished since the session began: the homepage, as a new session
+                // would pick (regions-stage spec §6.3); then the placeholder.
+                $home = $this->homepage?->homepageEntry() ?? '';
+                if (($result['kind'] ?? null) !== 'content' && $home !== '' && $home !== $session->page) {
+                    $result = $this->resolver->resolveEntry($home);
+                }
+                $placeholder = fn (): Response => $this->render(
+                    'region-stage.twig',
+                    $this->defaultLocale(),
+                    null,
+                    200,
+                    ['presentation' => $this->presentationContext(null, null), 'preview_revision' => $revision],
+                );
                 if (($result['kind'] ?? null) === 'content') {
                     $typeSlug = (string) ($result['type'] ?? '');
                     $candidate = $typeSlug !== '' ? "entry/{$typeSlug}.twig" : '';
@@ -524,11 +537,13 @@ final class RenderController
                         ),
                         'preview_revision' => $revision,
                     ]);
+                    // A page that fails to render still leaves the chrome editable: the placeholder
+                    // body, with the revision the stage patches against.
+                    if ($response->getStatusCode() >= 500) {
+                        $response = $placeholder();
+                    }
                 } else {
-                    $response = $this->render('region-stage.twig', $this->defaultLocale(), null, 200, [
-                        'presentation' => $this->presentationContext(null, null),
-                        'preview_revision' => $revision,
-                    ]);
+                    $response = $placeholder();
                 }
             } finally {
                 $this->extension->setRegionReaderOverride(null);
