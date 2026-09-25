@@ -719,6 +719,19 @@
   function newSession() {
     return 'd' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36)
   }
+  /** Whether every block in a slot sits on the first block's line. */
+  function onOneLine(slotEl) {
+    var kids = childWrappersOf(slotEl, [])
+    var first = null
+    for (var i = 0; i < kids.length; i++) {
+      var host = firstVisualChild(kids[i])
+      if (!host) continue
+      var r = host.getBoundingClientRect()
+      if (first === null) { first = r; continue }
+      if (r.top >= first.bottom || r.bottom <= first.top) return false
+    }
+    return true
+  }
   function layoutOf(el) {
     var cs = window.getComputedStyle ? window.getComputedStyle(el) : null
     if (!cs) return 'linear-vertical'
@@ -727,7 +740,10 @@
     if (display.indexOf('flex') !== -1) {
       var dir = cs.flexDirection || 'row'
       var wrap = cs.flexWrap || 'nowrap'
-      if (dir.indexOf('reverse') !== -1 || wrap !== 'nowrap') return 'other'
+      if (dir.indexOf('reverse') !== -1 || wrap === 'wrap-reverse') return 'other'
+      // A wrapping row splits on x while its blocks still share one line (a header bar); once one
+      // has wrapped onto another line, a point no longer names one position.
+      if (wrap !== 'nowrap' && (dir !== 'row' || !onOneLine(el))) return 'other'
       if (dir === 'row') return (cs.direction || 'ltr') === 'rtl' ? 'other' : 'linear-horizontal'
       return 'linear-vertical'
     }
@@ -1734,20 +1750,33 @@
     // Region-only mode (regions stage spec §5.4): on the regions stage the page body is published
     // context — only the header and footer are edited. Outside them nothing navigates, submits or
     // activates, and nothing is selected; these capture listeners run before every other one, so
-    // the bridge never hears a gesture there. Scrolling and wheel are untouched. The mode is read
-    // from the document's canvas marker as each event arrives.
-    var inertOutsideRegions = function (e) {
-      if (document.documentElement.getAttribute('data-thallo-canvas') !== 'regions') return
-      var t = e.target
-      if (t && t.closest && t.closest('[data-thallo-slot="header"],[data-thallo-slot="footer"]')) return
+    // the bridge never hears a gesture there. Scrolling and wheel are untouched. The stage's own
+    // controls (the block toolbar, the format bar and its link panel) are mounted on the body and
+    // stay live. The mode is read from the document's canvas marker as each event arrives.
+    var STAGE_UI = '.thallo-canvas-toolbar, .thallo-canvas-format-bar, .thallo-canvas-link-panel'
+    var REGIONS = '[data-thallo-slot="header"],[data-thallo-slot="footer"]'
+    var inBody = function (t) {
+      if (document.documentElement.getAttribute('data-thallo-canvas') !== 'regions') return false
+      if (!t || !t.closest) return false
+      return !t.closest(REGIONS) && !t.closest(STAGE_UI)
+    }
+    var inert = function (e) {
+      if (!inBody(e.target)) return
       e.preventDefault()
       e.stopImmediatePropagation()
     }
-    document.addEventListener('click', inertOutsideRegions, true)
-    document.addEventListener('auxclick', inertOutsideRegions, true)
-    document.addEventListener('submit', inertOutsideRegions, true)
+    document.addEventListener('click', inert, true)
+    document.addEventListener('auxclick', inert, true)
+    document.addEventListener('submit', inert, true)
+    // Keyboard activation is cancelled on the body's own focusable elements only: a key that
+    // arrives on <body> — nothing focused, or a block selected — is the canvas's to handle (Enter
+    // edits the selected block, Space scrolls).
+    var ACTIVATES = 'a[href], button, input, select, textarea, summary, [tabindex], [contenteditable="true"]'
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') inertOutsideRegions(e)
+      if (e.key !== 'Enter' && e.key !== ' ') return
+      var t = e.target
+      if (!t || t === document.body || t === document.documentElement || !t.matches || !t.matches(ACTIVATES)) return
+      inert(e)
     }, true)
     document.addEventListener('mouseover', function (e) {
       if (drag) return
