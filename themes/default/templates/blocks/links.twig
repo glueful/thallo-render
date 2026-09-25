@@ -5,7 +5,8 @@
    from navigationMenu (active → --accent, others muted → --ink on hover).
    Fields: title (optional, editable_text), items — a plain array (NOT child
    blocks) of { label, url, icon (optional), active (optional bool) }. The title is the `title`
-   target: its size, weight, line height, colour and alignment are its own. #}
+   target: its size, weight, line height, colour and alignment are its own. Each link carries the
+   block's `link` part: its text style, colour and padding. #}
 <nav class="thallo-block thallo-block-links{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {% if data.title|default('') is not empty %}
     <p class="thallo-block-links__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{{ data.title|editable_text('title') }}</p>
@@ -13,7 +14,7 @@
   <ul class="thallo-block-links__list">
     {% for item in data.items|default([]) %}
       <li class="thallo-block-links__item">
-        <a class="thallo-block-links__link{% if item.active|default(false) %} thallo-block-links__link--active{% endif %}" href="{{ item.url|default('')|safe_url }}">
+        <a class="thallo-block-links__link{% if item.active|default(false) %} thallo-block-links__link--active{% endif %}{{ style_classes('link') }}" href="{{ item.url|default('')|safe_url }}">
           {% if item.icon|default('') is not empty %}<span class="thallo-block-links__icon" aria-hidden="true">{{ icon(item.icon) ?? item.icon }}</span>{% endif %}
           <span class="thallo-block-links__label">{{ item.label }}</span>
         </a>

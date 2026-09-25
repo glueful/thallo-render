@@ -33,8 +33,21 @@ final class BlockStyleEmitter
         array $classDefinitions = [],
     ): array {
         $classes = [];
-        $instance = is_array($settings['style'] ?? null) ? $settings['style'] : [];
-        foreach ($targets->stylePathsFor($target) as $path) {
+        if ($targets->isPart($target)) {
+            // A part's own record and capabilities (a links block's links); the block's style
+            // classes are the block's, and never reach a part.
+            $parts = is_array($settings['parts'] ?? null) ? $settings['parts'] : [];
+            $instance = is_array($parts[$target] ?? null) ? $parts[$target] : [];
+            $paths = array_values(array_filter(
+                array_keys(StyleSchema::properties()),
+                static fn (string $path): bool => $targets->partCapabilities($target)->allows($path),
+            ));
+            $classDefinitions = [];
+        } else {
+            $instance = is_array($settings['style'] ?? null) ? $settings['style'] : [];
+            $paths = $targets->stylePathsFor($target);
+        }
+        foreach ($paths as $path) {
             $def = StyleSchema::property($path);
             if ($def === null) {
                 continue;

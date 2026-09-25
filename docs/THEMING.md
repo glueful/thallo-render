@@ -844,6 +844,11 @@ placed on the element the target names:
   <a class="{{ linkClass }}{{ style_classes('control') }}"{{ style_attrs('control') }} href="…">
 ```
 
+A block may also declare **parts** (`style_targets.parts`): repeated elements with a
+style of their own, such as a Links block's links. Put `{{ style_classes('link') }}` on
+every element the part names; the classes come from the part's own record
+(`settings.parts.link`), never from the block's style or its style classes.
+
 `style_classes(target)` returns the utility classes the block's settings resolve to
 for that target (with a leading space); `style_attrs(target)` returns only the
 attributes the target owns — `id` from the anchor, `data-*` attributes, the

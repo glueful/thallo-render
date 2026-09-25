@@ -573,7 +573,7 @@ final class RenderContextExtension extends AbstractExtension
         if ($targets === null) {
             return [null, null];
         }
-        if (!in_array($target, $targets->names(), true)) {
+        if (!in_array($target, $targets->names(), true) && !$targets->isPart($target)) {
             throw new RuntimeError(sprintf(
                 'Style target "%s" is not declared by block type "%s".',
                 $target,

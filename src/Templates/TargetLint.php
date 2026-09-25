@@ -58,6 +58,19 @@ final class TargetLint
                 ];
             }
         }
+        // A part (a links block's links) is styled the same way, on each element it names.
+        foreach ($targets->parts() as $name) {
+            if (!isset($used[$name])) {
+                $violations[] = [
+                    'line' => 1,
+                    'message' => sprintf(
+                        'Declared style part "%s" is never styled: add style_classes(\'%s\') to its elements.',
+                        $name,
+                        $name,
+                    ),
+                ];
+            }
+        }
         return $violations;
     }
 
@@ -85,14 +98,15 @@ final class TargetLint
                 $violations[] = ['line' => $line, 'message' => "{$helper}() target must be a constant string."];
             } else {
                 $name = $first->getAttribute('value');
-                if (!in_array($name, $targets->names(), true)) {
+                if (!in_array($name, $targets->names(), true) && !$targets->isPart($name)) {
                     $violations[] = [
                         'line' => $line,
                         'message' => sprintf('Style target "%s" is not declared by the block type.', $name),
                     ];
                 } elseif ($helper === 'style_classes') {
                     $used[$name] = true;
-                    if (!in_array($name, $order, true)) {
+                    // The outermost-element rule orders targets; a part is inside the block.
+                    if (!$targets->isPart($name) && !in_array($name, $order, true)) {
                         $order[] = $name;
                     }
                 }

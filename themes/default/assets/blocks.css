@@ -893,7 +893,9 @@ main > article > :where(.thallo-preview-block):first-child > .thallo-block-carou
 
 /* logo — the site logo (setting-backed) */
 .thallo-block-logo { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
-.thallo-block-logo__link { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
+/* The link is its own box, as wide as the logo: an inline link sat on a line of text and kept the
+   room a line reserves below the letters, a gap under the logo no setting could reach. */
+.thallo-block-logo__link { display: flex; width: fit-content; align-items: center; text-decoration: none; color: inherit; }
 .thallo-block-logo__image { display: block; width: auto; }
 .thallo-block-logo--small .thallo-block-logo__image { height: 1.75rem; }
 .thallo-block-logo--medium .thallo-block-logo__image { height: 2.5rem; }
