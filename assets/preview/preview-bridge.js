@@ -1731,6 +1731,24 @@
   }
 
   function activate() {
+    // Region-only mode (regions stage spec §5.4): on the regions stage the page body is published
+    // context — only the header and footer are edited. Outside them nothing navigates, submits or
+    // activates, and nothing is selected; these capture listeners run before every other one, so
+    // the bridge never hears a gesture there. Scrolling and wheel are untouched. The mode is read
+    // from the document's canvas marker as each event arrives.
+    var inertOutsideRegions = function (e) {
+      if (document.documentElement.getAttribute('data-thallo-canvas') !== 'regions') return
+      var t = e.target
+      if (t && t.closest && t.closest('[data-thallo-slot="header"],[data-thallo-slot="footer"]')) return
+      e.preventDefault()
+      e.stopImmediatePropagation()
+    }
+    document.addEventListener('click', inertOutsideRegions, true)
+    document.addEventListener('auxclick', inertOutsideRegions, true)
+    document.addEventListener('submit', inertOutsideRegions, true)
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') inertOutsideRegions(e)
+    }, true)
     document.addEventListener('mouseover', function (e) {
       if (drag) return
       var w = wrapperFor(e.target)
