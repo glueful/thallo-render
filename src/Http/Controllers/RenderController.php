@@ -278,10 +278,15 @@ final class RenderController
     }
 
     /** The verified preview session from the detection middleware, if any. */
+    /**
+     * The request's entry preview session, or null. A regions-stage session in the cookie is no
+     * session here (regions-stage spec §4.7): ordinary pages render as a visitor sees them — no
+     * draft, no annotation, no banner — whatever the canvas cookie says.
+     */
     private function session(Request $request): ?PreviewSession
     {
         $session = $request->attributes->get(PreviewSessionMiddleware::ATTRIBUTE);
-        return $session instanceof PreviewSession ? $session : null;
+        return $session instanceof PreviewSession && $session->isEntry() ? $session : null;
     }
 
     /** @return array<string,mixed> banner context for in-session renders */
