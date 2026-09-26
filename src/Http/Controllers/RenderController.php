@@ -109,8 +109,15 @@ final class RenderController
         private ?\Thallo\Contracts\Delivery\RegionStageSnapshots $regionStage = null,
         /** Type layouts (spec §7.2); null = no layouts, every entry renders through the theme. */
         private readonly ?\Thallo\Contracts\Layouts\LayoutReader $layouts = null,
+        /** The layout stage's session snapshots (type layouts spec §5.4); null = no stage. */
+        private readonly ?\Thallo\Contracts\Layouts\LayoutStageSnapshots $layoutSnapshots = null,
+        /** What each layout surface renders against (its frame, its placeholder sample). */
+        private readonly ?\Thallo\Contracts\Layouts\LayoutSurfaceRegistry $layoutSurfaces = null,
     ) {
     }
+
+    /** The layout stage's session reader while it renders, else null: {@see layoutStage()}. */
+    private ?\Thallo\Contracts\Layouts\LayoutReader $layoutOverride = null;
 
     /**
      * The layout an entry renders through (type layouts spec §7.2): its type's, unless the page opts
@@ -121,10 +128,11 @@ final class RenderController
      */
     private function layoutFor(string $typeSlug, ?array $presentation): ?array
     {
-        if ($this->layouts === null || $typeSlug === '' || ($presentation['use_layout'] ?? true) === false) {
+        $reader = $this->layoutOverride ?? $this->layouts;
+        if ($reader === null || $typeSlug === '' || ($presentation['use_layout'] ?? true) === false) {
             return null;
         }
-        $layout = $this->layouts->for('entry', $typeSlug);
+        $layout = $reader->for('entry', $typeSlug);
         return $layout === null ? null : $layout + ['surface' => 'entry', 'target' => $typeSlug];
     }
 
@@ -420,6 +428,9 @@ final class RenderController
         $session = $this->sessionVerifier?->verify($token);
         // The header & footer stage (regions-stage spec §4.4): a session of the other kind renders
         // a published page with the chrome from its snapshot — never the entry path below.
+        if ($session !== null && $session->kind === PreviewSession::KIND_LAYOUT) {
+            return $this->layoutStage($session, $canvas);
+        }
         if ($session !== null && !$session->isEntry()) {
             return $this->regionsStage($session, $canvas);
         }
@@ -521,6 +532,82 @@ final class RenderController
      * picked page's PUBLISHED version as the body, untagged; the placeholder body when there is no
      * page; the expired page when the session's records are gone. Never the live rows.
      */
+    /**
+     * The layout stage (type layouts spec §5.4): the session's layout — its working copy, else its
+     * baseline — rendered in the surface's frame around a published sample, or around a placeholder
+     * built in memory when there is none (or the sample has gone). In `layout` scope the layout's
+     * own blocks are selectable and the sample's content is not.
+     */
+    private function layoutStage(PreviewSession $session, bool $canvas): Response
+    {
+        $this->annotationScope = $canvas ? 'layout' : 'none';
+        $this->appearanceSession = null;
+        $snapshot = $session->session !== null ? $this->layoutSnapshots?->snapshot($session->session) : null;
+        if ($snapshot === null || $snapshot['retired']) {
+            $response = $this->render('layout-session-ended.twig', $this->defaultLocale(), null, 200, [
+                'retired' => $snapshot['retired'] ?? false,
+            ]);
+        } else {
+            $this->layoutOverride = new \Thallo\Render\Layouts\LayoutSessionReader($snapshot, $this->layouts);
+            try {
+                $response = $this->layoutSample($snapshot, $canvas);
+            } finally {
+                $this->layoutOverride = null;
+            }
+        }
+        $response->headers->remove('Cache-Tag');
+        $response->headers->set('Cache-Control', 'no-store');
+        $response->headers->set('X-Robots-Tag', 'noindex');
+        return $this->withPreviewBridge($response);
+    }
+
+    /**
+     * One render of the layout stage: the sample when it is still published and of the target type,
+     * else the surface's placeholder (which writes nothing).
+     *
+     * @param array<string,mixed> $snapshot
+     */
+    private function layoutSample(array $snapshot, bool $canvas): Response
+    {
+        $target = (string) $snapshot['target'];
+        $surface = $this->layoutSurfaces?->get((string) $snapshot['surface']);
+        $layout = $snapshot['layout'] + [
+            'lock_version' => $snapshot['lock_version'],
+            'surface' => $snapshot['surface'],
+            'target' => $target,
+        ];
+        $revision = $snapshot['epoch'] === null ? null : [
+            'epoch' => $snapshot['epoch'],
+            'revision' => $snapshot['revision'],
+            'style_generation' => $this->extension->styleSnapshotGeneration(),
+        ];
+        $result = is_string($snapshot['sample']) ? $this->resolver->resolveEntry($snapshot['sample']) : [];
+        $published = ($result['kind'] ?? null) === 'content' && ($result['type'] ?? null) === $target;
+        $extra = [
+            'layout' => $layout,
+            'type' => $target,
+            'type_listing' => $published && is_array($result['type_listing'] ?? null) ? $result['type_listing'] : null,
+            'presentation' => $this->presentationContext(
+                $target,
+                $published ? ($result['presentation'] ?? null) : null,
+                $layout['settings'],
+            ),
+            'preview_revision' => $revision,
+        ];
+        if (!$published) {
+            // The label names the surface's items ("Posts — single post"): the notice says what is missing.
+            $items = mb_strtolower(explode(' — ', $surface?->label($target) ?? 'items')[0]);
+            $extra['layout_placeholder'] = $canvas ? "No published {$items} yet — showing a placeholder" : null;
+        }
+        return $this->render(
+            $surface?->frame() ?? 'layouts/entry.twig',
+            $published ? (string) $result['locale'] : $this->defaultLocale(),
+            $published ? $result['content'] : ($surface?->placeholder($target) ?? ['fields' => []]),
+            200,
+            $extra,
+        );
+    }
+
     private function regionsStage(PreviewSession $session, bool $canvas): Response
     {
         $this->annotationScope = $canvas ? 'regions' : 'none';

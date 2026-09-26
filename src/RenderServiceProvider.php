@@ -492,6 +492,12 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->has(\Thallo\Contracts\Layouts\LayoutReader::class)
                 ? $container->get(\Thallo\Contracts\Layouts\LayoutReader::class)
                 : null,
+            $container->has(\Thallo\Contracts\Layouts\LayoutStageSnapshots::class)
+                ? $container->get(\Thallo\Contracts\Layouts\LayoutStageSnapshots::class)
+                : null,
+            $container->has(\Thallo\Contracts\Layouts\LayoutSurfaceRegistry::class)
+                ? $container->get(\Thallo\Contracts\Layouts\LayoutSurfaceRegistry::class)
+                : null,
         );
     }
 

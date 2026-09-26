@@ -4,5 +4,7 @@
 {% extends 'layout.twig' %}
 {% block title %}{{ seo.title|default(entry.fields.title|default(site.name)) }}{% endblock %}
 {% block content %}
+  {# The layout stage's placeholder sample (spec §5.2): named, so no one takes it for content. #}
+  {% if layout_placeholder|default(null) %}<div class="thallo-layout-placeholder-notice" data-thallo-placeholder>{{ layout_placeholder }}</div>{% endif %}
   <article class="thallo-layout thallo-layout--entry">{{ layout_blocks(layout.blocks|default([])) }}</article>
 {% endblock %}

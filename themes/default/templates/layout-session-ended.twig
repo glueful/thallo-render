@@ -1,0 +1,21 @@
+{# The layout stage after its editing session ended (type layouts spec §5.5): the layout was removed
+   (the editor says so and offers to start again), or the session expired (the admin renews it and
+   applies the editor's document again). No layout content at all — never the saved row. #}
+<!DOCTYPE html>
+<html lang="{{ site.locale|default('en') }}" data-thallo-canvas="layout" {{ retired|default(false) ? 'data-thallo-session-retired' : 'data-thallo-session-expired' }}>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{{ retired|default(false) ? 'Layout removed' : 'Editing session expired' }}</title>
+</head>
+<body>
+  <main id="main">
+    {% if retired|default(false) %}
+      <p>This layout was removed. Pages of this type render through the theme again.</p>
+    {% else %}
+      <p>This editing session expired. It is being renewed.</p>
+    {% endif %}
+  </main>
+</body>
+</html>
