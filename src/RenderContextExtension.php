@@ -897,6 +897,11 @@ final class RenderContextExtension extends AbstractExtension
         $this->annotateBlocks = $this->annotationScope === 'layout';
         try {
             $html = $this->blocks($env, ['layout_source' => $source] + $context, $list);
+            // On the layout's stage its list is the root slot the stage drops into, named as the
+            // editor's root field is (`blocks`), as a region's list is named for its region.
+            if ($this->annotateBlocks) {
+                $html = '<div class="layout-blocks" data-thallo-slot="blocks">' . $html . '</div>';
+            }
         } finally {
             $this->annotateBlocks = $saved;
         }
