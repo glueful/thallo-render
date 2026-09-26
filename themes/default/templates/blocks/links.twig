@@ -4,7 +4,8 @@
    keyed off the __element classes, and the active/muted link recipe is lifted
    from navigationMenu (active → --accent, others muted → --ink on hover).
    Fields: title (optional, editable_text), items — a plain array (NOT child
-   blocks) of { label, url, icon (optional), active (optional bool) }. The title is the `title`
+   blocks) of { label, url, icon (optional), active (optional bool), new_tab (optional bool — as a
+   menu item's: target=_blank with rel=noopener noreferrer) }. The title is the `title`
    target: its size, weight, line height, colour and alignment are its own. Each link carries the
    block's `link` part: its text style, colour and padding. #}
 <nav class="thallo-block thallo-block-links{{ style_classes('root') }}"{{ style_attrs('root') }}>
@@ -14,7 +15,7 @@
   <ul class="thallo-block-links__list">
     {% for item in data.items|default([]) %}
       <li class="thallo-block-links__item">
-        <a class="thallo-block-links__link{% if item.active|default(false) %} thallo-block-links__link--active{% endif %}{{ style_classes('link') }}" href="{{ item.url|default('')|safe_url }}">
+        <a class="thallo-block-links__link{% if item.active|default(false) %} thallo-block-links__link--active{% endif %}{{ style_classes('link') }}" href="{{ item.url|default('')|safe_url }}"{% if item.new_tab|default(false) is same as(true) %} target="_blank" rel="noopener noreferrer"{% endif %}>
           {% if item.icon|default('') is not empty %}<span class="thallo-block-links__icon" aria-hidden="true">{{ icon(item.icon) ?? item.icon }}</span>{% endif %}
           <span class="thallo-block-links__label">{{ item.label }}</span>
         </a>
