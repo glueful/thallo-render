@@ -1,0 +1,15 @@
+{# entry_field — any other scalar field of the current entry (type layouts spec §4), as text, rich
+   text (sanitised), a number or a date. #}
+{% set field = data.field|default('') %}
+{% set value = field != '' ? entry.fields[field]|default(null) : null %}
+{% set format = ({text: 'text', rich: 'rich', number: 'number', date: 'date'}[data.format|default('text')] ?? 'text') %}
+{% if value is not null and value is not iterable and value != '' %}
+<div class="thallo-block thallo-block-entry_field thallo-block-entry_field--{{ format }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- if format == 'rich' %}{{ value|safe_html }}
+  {%- elseif format == 'number' %}{{ value|number_format }}
+  {%- elseif format == 'date' %}{{ value|date('F j, Y') }}
+  {%- else %}{{ value }}{% endif -%}
+</div>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_field thallo-field-empty">{{ field != '' ? field|replace({'_': ' '})|capitalize : 'Field' }} — this entry has none</div>
+{% endif %}

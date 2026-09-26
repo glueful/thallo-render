@@ -351,6 +351,14 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-container__inner > .thallo-block-gallery,
 .thallo-block-container__inner > .thallo-block-code,
 .thallo-block-container__inner > .thallo-block-map,
+.thallo-block-container__inner > .thallo-block-entry_title,
+.thallo-block-container__inner > .thallo-block-entry_date,
+.thallo-block-container__inner > .thallo-block-entry_cover,
+.thallo-block-container__inner > .thallo-block-entry_excerpt,
+.thallo-block-container__inner > .thallo-block-entry_field,
+.thallo-block-container__inner > .thallo-block-entry_terms,
+.thallo-block-container__inner > .thallo-block-entry_neighbours,
+.thallo-block-container__inner > .thallo-block-entry_related,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-image,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-rich_text,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-heading,
@@ -368,7 +376,15 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-form,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-gallery,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-code,
-.thallo-block-container__inner > .thallo-preview-block > .thallo-block-map {
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-map,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_title,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_date,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_cover,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_excerpt,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_field,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_terms,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_neighbours,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-entry_related {
   max-width: none;
   margin-inline: 0;
   padding-inline: 0;
@@ -1927,3 +1943,70 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
   border-radius: var(--radius-sm, 6px); padding: 0.125rem var(--space-2); cursor: pointer;
 }
 .thallo-block-code__copy:hover, .thallo-block-code__copy:focus-visible { border-color: var(--accent); color: var(--accent); }
+
+/* Field blocks (type layouts spec §4) — the entry's own title, date, cover, excerpt, terms, fields,
+   neighbours and related list, placed by a layout. Text sits on the reading measure like a heading;
+   the cover takes the container width. entry_content is a pass-through: the entry's blocks keep
+   their own containment. */
+.thallo-block-entry_title, .thallo-block-entry_date, .thallo-block-entry_excerpt, .thallo-block-entry_field, .thallo-block-entry_terms, .thallo-block-entry_neighbours, .thallo-block-entry_related {
+  max-width: var(--content);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.thallo-block-entry_date,
+.thallo-block-entry_field { display: block; color: var(--muted); font-size: 0.95rem; }
+.thallo-block-entry_excerpt { color: var(--muted); font-size: clamp(1.05rem, 1rem + 0.3vw, 1.2rem); line-height: 1.55; }
+.thallo-block-entry_excerpt--clamp-1,
+.thallo-block-entry_excerpt--clamp-2,
+.thallo-block-entry_excerpt--clamp-3,
+.thallo-block-entry_excerpt--clamp-4,
+.thallo-block-entry_excerpt--clamp-5,
+.thallo-block-entry_excerpt--clamp-6 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.thallo-block-entry_excerpt--clamp-1 { -webkit-line-clamp: 1; line-clamp: 1; }
+.thallo-block-entry_excerpt--clamp-2 { -webkit-line-clamp: 2; line-clamp: 2; }
+.thallo-block-entry_excerpt--clamp-3 { -webkit-line-clamp: 3; line-clamp: 3; }
+.thallo-block-entry_excerpt--clamp-4 { -webkit-line-clamp: 4; line-clamp: 4; }
+.thallo-block-entry_excerpt--clamp-5 { -webkit-line-clamp: 5; line-clamp: 5; }
+.thallo-block-entry_excerpt--clamp-6 { -webkit-line-clamp: 6; line-clamp: 6; }
+
+.thallo-block-entry_cover {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+.thallo-block-entry_cover__image { display: block; width: 100%; max-width: 100%; }
+.thallo-block-entry_cover--16-9 .thallo-block-entry_cover__image { aspect-ratio: 16 / 9; object-fit: cover; }
+.thallo-block-entry_cover--4-3 .thallo-block-entry_cover__image { aspect-ratio: 4 / 3; object-fit: cover; }
+.thallo-block-entry_cover--1-1 .thallo-block-entry_cover__image { aspect-ratio: 1; object-fit: cover; }
+.thallo-block-entry_cover--natural .thallo-block-entry_cover__image { height: auto; }
+
+.thallo-block-entry_terms--badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.thallo-block-entry_terms--badges .thallo-block-entry_terms__term {
+  padding: 0.15em 0.65em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.thallo-block-entry_terms--text .thallo-block-entry_terms__term + .thallo-block-entry_terms__term::before { content: ", "; }
+
+.thallo-block-entry_neighbours { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-4); }
+.thallo-block-entry_neighbours__link { display: flex; flex-direction: column; gap: var(--space-1); max-width: 48%; text-decoration: none; }
+.thallo-block-entry_neighbours__link--next { margin-inline-start: auto; text-align: end; }
+.thallo-block-entry_neighbours__label { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.thallo-block-entry_neighbours__title { font-weight: 600; }
+
+.thallo-block-entry_related__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--space-4); }
+.thallo-block-entry_related__card { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius, 0.5rem); text-decoration: none; }
+.thallo-block-entry_related__title { font-weight: 600; }
+.thallo-block-entry_related__date { color: var(--muted); font-size: 0.85rem; }
+
+/* An empty field on a layout stage names itself (never rendered on the site). */
+.thallo-field-empty {
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius, 0.5rem);
+  color: var(--muted);
+  font-size: 0.9rem;
+}

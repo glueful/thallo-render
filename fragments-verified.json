@@ -5,6 +5,7 @@
         "entry/post.twig"
     ],
     "templates": {
+        "_listing_rows.twig": "89e37b4f987c5f7a6b310dfd373de2fb6058aa1e7e8f14e95b494e251705be69",
         "blocks/accordion.twig": "7ae78c9818b80aa530bbe0754b57ea8e4f456f2172964480ef531a0601d69271",
         "blocks/accordion_item.twig": "17b70a698e57db771c749934aa38711d89104eb9416bc2d174fa136ed384e284",
         "blocks/animated_text.twig": "db65924ba078b81d33d6a81707640f8298c9dea947e204713a10ffb029167903",
@@ -18,6 +19,15 @@
         "blocks/color_mode.twig": "10cdd701a4f26380198b3721a2318818e24e38b1b98b39e3bd491747c441d014",
         "blocks/container.twig": "9ec8f2fe69617511a33f4392374e5dec6a9e9a89f69716a4c13140301a7db308",
         "blocks/cta.twig": "33c9a3ac87d3c1a0e6b632ef5a8a7f382904e35017827aa71fbd6d76fc58cf67",
+        "blocks/entry_content.twig": "45fb589b61778de9ce803da0d05fced865dce8eac49ffad513e875f007d5031b",
+        "blocks/entry_cover.twig": "37c7d4c31e3bba3933557001aad1f2daee1d0659fdc43c8be02babca46bfe20e",
+        "blocks/entry_date.twig": "a02aed1fbc821815b60724c5f6a4dd241bba2447a107897f61f04d9be87ecdb5",
+        "blocks/entry_excerpt.twig": "f0571cee0a4e5b2328e17bd4b89cfaa2e37111aa73823c9958dfb4c7ea8f75ed",
+        "blocks/entry_field.twig": "b688a8468c5a60ef7379ba645c614a9970e38a578d3907ea0fff54eef5322ca3",
+        "blocks/entry_neighbours.twig": "2eb91060b8bfe551c21018a3cd4965368e9416113cd1d9e58560415a91384e34",
+        "blocks/entry_related.twig": "b3d110e8529515312c4b44c4383fcf15ddd7dc63c25843f183b8e461f0030cfb",
+        "blocks/entry_terms.twig": "771f3d1189850011f3fbb5c48bba1aa2fee24c6428f107768ba7cd48a749f2c8",
+        "blocks/entry_title.twig": "afdf3d44bb72a6bd10a79a1a20cf417287efb873d3908784e554210e04b932a6",
         "blocks/feature.twig": "7ae5fefc9f848690e1e3cade1b7ddc84f61272c74c1f580ad1bed5bf487da682",
         "blocks/file.twig": "b2f1321c577d76705ab43740803df4c8bdedd5914815906ab6315d7d4ee0aa07",
         "blocks/footer.twig": "1f6406645b2df82a8d183738afb0ceee7a120af555de877fbfb07192a028911b",

@@ -1,0 +1,10 @@
+{# entry_title — the current entry's title (type layouts spec §4). Holds no text: the level, and
+   whether it links to the entry (for a loop card), are its only settings. #}
+{% set level = ({h1: 'h1', h2: 'h2', h3: 'h3', h4: 'h4'}[data.level|default('h1')] ?? 'h1') %}
+{% set text = entry.fields.title|default('') %}
+{% set href = data.link|default(false) and entry.uuid|default(null) ? path(entry.uuid) : null %}
+{% if text != '' %}
+<{{ level }} class="thallo-block thallo-block-entry_title{{ style_classes('root') }}"{{ style_attrs('root') }}>{% if href %}<a href="{{ href }}">{{ text }}</a>{% else %}{{ text }}{% endif %}</{{ level }}>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_title thallo-field-empty">Title — this entry has none</div>
+{% endif %}

@@ -1,0 +1,27 @@
+{# entry_related — the newest other entries of the type (type layouts spec §4): `count` of them, as
+   listing rows or cards; never the entry itself. #}
+{% set count = max(1, min(6, data.count|default(3))) %}
+{% set style = data.style|default('list') == 'cards' ? 'cards' : 'list' %}
+{% set others = [] %}
+{% for item in entries(type|default(''), {limit: min(12, count + 1), order: 'newest'}) %}
+  {% if item.uuid != entry.uuid|default('') and others|length < count %}{% set others = others|merge([item]) %}{% endif %}
+{% endfor %}
+{% if others is not empty %}
+<section class="thallo-block thallo-block-entry_related thallo-block-entry_related--{{ style }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- if style == 'cards' -%}
+  <div class="thallo-block-entry_related__grid">
+    {%- for item in others -%}
+    <article class="thallo-block-entry_related__card">
+      {%- if item.href %}<a class="thallo-block-entry_related__title" href="{{ item.href }}">{{ item.fields.title|default(item.uuid) }}</a>
+      {%- else %}<span class="thallo-block-entry_related__title">{{ item.fields.title|default(item.uuid) }}</span>{% endif -%}
+      {%- if item.published_at|default(null) %}<time class="thallo-block-entry_related__date" datetime="{{ item.published_at|date('Y-m-d') }}">{{ item.published_at|date('M j, Y') }}</time>{% endif -%}
+    </article>
+    {%- endfor -%}
+  </div>
+  {%- else -%}
+  {% include '_listing_rows.twig' with {items: others} only %}
+  {%- endif -%}
+</section>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_related thallo-field-empty">Related entries — none to show yet</div>
+{% endif %}

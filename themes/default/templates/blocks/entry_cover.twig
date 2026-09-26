@@ -1,0 +1,20 @@
+{# entry_cover — an asset field's image (type layouts spec §4), loaded first as the page's priority
+   image when it is the first to claim it. #}
+{% set field = data.field|default('cover') %}
+{% set asset = entry.fields[field]|default(null) %}
+{% set image = asset ? media_image(asset, [640, 960, 1280, 1920]) : null %}
+{% set aspect = ({'natural': 'natural', '16:9': '16-9', '4:3': '4-3', '1:1': '1-1'}[data.aspect|default('natural')] ?? 'natural') %}
+{% set href = data.link|default(false) and entry.uuid|default(null) ? path(entry.uuid) : null %}
+{% if image %}
+  {% set priority = claim_priority_image() %}
+<figure class="thallo-block thallo-block-entry_cover thallo-block-entry_cover--{{ aspect }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- if href %}<a href="{{ href }}">{% endif -%}
+  <img class="thallo-block-entry_cover__image{{ style_classes('picture') }}"{{ style_attrs('picture') }} src="{{ image.src }}"
+       {%- if image.srcset %} srcset="{{ image.srcset }}" sizes="(max-width: 72rem) 100vw, 72rem"{% endif %}
+       alt=""
+       {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
+  {%- if href %}</a>{% endif -%}
+</figure>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_cover thallo-field-empty">{{ field|replace({'_': ' '})|capitalize }} — this entry has none</div>
+{% endif %}

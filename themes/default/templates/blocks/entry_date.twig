@@ -1,0 +1,15 @@
+{# entry_date — when the current entry was published (type layouts spec §4): long ("June 2, 2026"),
+   short ("Jun 2, 2026") or relative ("3 days ago", the long date past a month). #}
+{% set at = entry.published_at|default(null) %}
+{% if at %}
+  {% set format = data.format|default('long') %}
+  {% if format == 'relative' %}
+    {% set days = ((('now'|date('U')) - (at|date('U'))) / 86400)|round(0, 'floor') %}
+    {% set label = days < 1 ? 'Today' : (days < 2 ? 'Yesterday' : (days < 30 ? days ~ ' days ago' : at|date('F j, Y'))) %}
+  {% else %}
+    {% set label = at|date(format == 'short' ? 'M j, Y' : 'F j, Y') %}
+  {% endif %}
+<time class="thallo-block thallo-block-entry_date{{ style_classes('root') }}"{{ style_attrs('root') }} datetime="{{ at|date('Y-m-d') }}">{% if data.prefix|default('') != '' %}{{ data.prefix }} {% endif %}{{ label }}</time>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_date thallo-field-empty">Date — this entry is not published yet</div>
+{% endif %}

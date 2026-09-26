@@ -310,6 +310,15 @@ final class RenderContextExtension extends AbstractExtension
                 'needs_environment' => true,
                 'needs_context' => true,
             ]),
+            new TwigFunction('layout_blocks', $this->layoutBlocks(...), [
+                'needs_environment' => true,
+                'needs_context' => true,
+            ]),
+            new TwigFunction('entry_slot', $this->entrySlot(...), [
+                'needs_environment' => true,
+                'needs_context' => true,
+            ]),
+            new TwigFunction('neighbours', $this->neighbours(...)),
             new TwigFunction('region_settings', $this->regionSettings(...)),
             // The header & footer stage (regions-stage spec §4.4): the region wrappers' drop slots,
             // whether this render is that stage, and the <html> canvas marker's value.
@@ -867,6 +876,71 @@ final class RenderContextExtension extends AbstractExtension
             $this->annotateBlocks = $saved;
         }
         return new \Twig\Markup($html, 'UTF-8');
+    }
+
+    /**
+     * A layout's own blocks (type layouts spec §5.4, §6.3): selectable on the layout's stage (scope
+     * `layout`) and nowhere else — on an entry's stage the layout is inert context around the body.
+     *
+     * @param array<string,mixed> $context
+     */
+    public function layoutBlocks(Environment $env, array $context, mixed $list): \Twig\Markup
+    {
+        $saved = $this->annotateBlocks;
+        $this->annotateBlocks = $this->annotationScope === 'layout';
+        try {
+            $html = $this->blocks($env, $context, $list);
+        } finally {
+            $this->annotateBlocks = $saved;
+        }
+        return new \Twig\Markup($html, 'UTF-8');
+    }
+
+    /**
+     * An entry's own blocks, placed by a layout's slot (type layouts spec §4.1): selectable on the
+     * entry's stage (scope `entry`, with the slot's `data-thallo-slot`) and never on the layout's,
+     * where they are the sample's content. The nesting depth restarts at the slot — an entry valid
+     * on its own renders whole however deep the slot sits — and is restored after it.
+     *
+     * @param array<string,mixed> $context
+     */
+    public function entrySlot(Environment $env, array $context, string $field): \Twig\Markup
+    {
+        $entry = is_array($context['entry'] ?? null) ? $context['entry'] : [];
+        $list = $entry['fields'][$field] ?? null;
+        if (!is_array($list) || !array_is_list($list)) {
+            return new \Twig\Markup('', 'UTF-8');
+        }
+        $savedAnnotate = $this->annotateBlocks;
+        $savedDepth = $this->blockDepth;
+        $this->annotateBlocks = $this->annotationScope === 'entry';
+        $this->blockDepth = 0;
+        try {
+            $slot = $this->annotateBlocks
+                ? ' data-thallo-slot="' . htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"'
+                : '';
+            $html = '<div class="entry-blocks"' . $slot . '>' . $this->blocks($env, $context, $list) . '</div>';
+        } finally {
+            $this->annotateBlocks = $savedAnnotate;
+            $this->blockDepth = $savedDepth;
+        }
+        return new \Twig\Markup($html, 'UTF-8');
+    }
+
+    /**
+     * The published entries of a type either side of one, by publish date (type layouts spec §4):
+     * `previous` the older, `next` the newer; null where there is none. Collects its cache tags.
+     *
+     * @return array{previous: ?array<string,mixed>, next: ?array<string,mixed>}
+     */
+    public function neighbours(string $type, string $uuid): array
+    {
+        if ($this->entryReader === null || $type === '' || $uuid === '') {
+            return ['previous' => null, 'next' => null];
+        }
+        $result = $this->entryReader->neighbours($type, $uuid, $this->locale);
+        $this->collectTags($result['cache_tags']);
+        return ['previous' => $result['previous'], 'next' => $result['next']];
     }
 
     /** @return array<string,mixed> */
@@ -1474,6 +1548,10 @@ final class RenderContextExtension extends AbstractExtension
                         // Region identity for form_render()'s source key (form-block
                         // spec §5): set by regionBlocks(), null for page-body blocks.
                         'region_slug' => $context['region_slug'] ?? null,
+                        // The entry's type and where it is browsed (type layouts spec §4): field
+                        // blocks link terms to archives and find related entries by them.
+                        'type' => $context['type'] ?? null,
+                        'type_listing' => $context['type_listing'] ?? null,
                         'index' => $index,
                     ]);
                 } finally {
@@ -1568,7 +1646,7 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function setAnnotationScope(string $scope): void
     {
-        if (!in_array($scope, ['none', 'entry', 'regions'], true)) {
+        if (!in_array($scope, ['none', 'entry', 'regions', 'layout'], true)) {
             throw new \InvalidArgumentException("unknown annotation scope '{$scope}'");
         }
         $this->annotationScope = $scope;

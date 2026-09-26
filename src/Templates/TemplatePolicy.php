@@ -78,7 +78,9 @@ final class TemplatePolicy
     //         alt text and caption from the media library).
     // bumped: map_embed joined the function allowlist (the map block: a Google map built from a
     //         place, or Google's own embed link once it proves to be one).
-    public const CACHE_VERSION = 28;
+    // bumped: layout_blocks, entry_slot and neighbours joined the function allowlist (type
+    //         layouts spec §2 — the layout frame, the entry_content slot, the previous/next pair).
+    public const CACHE_VERSION = 29;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -98,7 +100,8 @@ final class TemplatePolicy
         'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
         'canvas_scope', 'region_stage', 'region_slot_attrs',
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script', 'map_embed',
-        'entries', 'entry_tree', 'markdown', 'markdown_toc', 'search_enabled',
+        'entries', 'entry_tree', 'layout_blocks', 'entry_slot', 'neighbours',
+        'markdown', 'markdown_toc', 'search_enabled',
         'is_preview', 'media_image', 'media_text', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',
         'include', 'parent', 'block', 'cycle', 'date', 'min', 'max', 'plan_checkout_url',

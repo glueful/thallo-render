@@ -1,0 +1,21 @@
+{# entry_terms — a reference field's terms (type layouts spec §4): links to their archive pages only
+   where those pages exist (`type_listing` names the archived fields; null when the type is not
+   listed), plain text otherwise — never a link that 404s. #}
+{% set field = data.field|default('categories') %}
+{% set terms = entry.fields[field]|default([]) %}
+{% set archive = data.link|default(true) ? type_listing.archives[field]|default(null) : null %}
+{% set style = data.style|default('badges') == 'text' ? 'text' : 'badges' %}
+{% if terms is iterable and terms is not empty %}
+<p class="thallo-block thallo-block-entry_terms thallo-block-entry_terms--{{ style }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- for term in terms -%}
+    {%- set name = term.fields.title|default(term.fields.slug)|default('') -%}
+    {%- set slug = archive and archive.slug_field ? term.fields[archive.slug_field]|default(term.entry_uuid) : term.entry_uuid -%}
+    {%- if name != '' -%}
+      {%- if archive -%}<a class="thallo-block-entry_terms__term" href="{{ archive.path }}/{{ slug|url_encode }}">{{ name }}</a>
+      {%- else -%}<span class="thallo-block-entry_terms__term">{{ name }}</span>{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+</p>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_terms thallo-field-empty">{{ field|replace({'_': ' '})|capitalize }} — this entry has none</div>
+{% endif %}

@@ -1,0 +1,8 @@
+{# entry_content — the slot for the entry's own blocks (type layouts spec §4.1). entry_slot() makes
+   them selectable on the entry's stage only, and restarts the nesting depth here. #}
+{% set field = data.field|default('body') %}
+<div class="thallo-block thallo-block-entry_content{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- if entry.fields[field]|default([]) is empty and is_canvas() -%}
+  <div class="thallo-field-empty thallo-block-entry_content__empty">Each entry's own {{ field|replace({'_': ' '}) }} goes here.</div>
+  {%- else -%}{{ entry_slot(field) }}{%- endif -%}
+</div>

@@ -1,0 +1,10 @@
+{# entry_excerpt — a short text field shown as the lead (type layouts spec §4); `clamp` limits it to
+   that many lines, for a loop card. #}
+{% set field = data.field|default('excerpt') %}
+{% set text = entry.fields[field]|default('') %}
+{% set clamp = data.clamp|default(0) %}
+{% if text is not iterable and text != '' %}
+<p class="thallo-block thallo-block-entry_excerpt{% if clamp >= 1 and clamp <= 6 %} thallo-block-entry_excerpt--clamp-{{ clamp }}{% endif %}{{ style_classes('root') }}"{{ style_attrs('root') }}>{{ text }}</p>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_excerpt thallo-field-empty">{{ field|replace({'_': ' '})|capitalize }} — this entry has none</div>
+{% endif %}

@@ -1,0 +1,18 @@
+{# entry_neighbours — the previous (older) and next (newer) published entry of the type (type layouts
+   spec §4), by publish date. #}
+{% set around = neighbours(type|default(''), entry.uuid|default('')) %}
+{% if around.previous or around.next %}
+<nav class="thallo-block thallo-block-entry_neighbours{{ style_classes('root') }}"{{ style_attrs('root') }} aria-label="Previous and next">
+  {%- for side in ['previous', 'next'] -%}
+    {%- set item = around[side] -%}
+    {%- if item and item.href -%}
+    <a class="thallo-block-entry_neighbours__link thallo-block-entry_neighbours__link--{{ side }}" rel="{{ side == 'previous' ? 'prev' : 'next' }}" href="{{ item.href }}">
+      <span class="thallo-block-entry_neighbours__label">{{ side == 'previous' ? data.previous_label|default('Previous') : data.next_label|default('Next') }}</span>
+      <span class="thallo-block-entry_neighbours__title">{{ item.fields.title|default('') }}</span>
+    </a>
+    {%- endif -%}
+  {%- endfor -%}
+</nav>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-entry_neighbours thallo-field-empty">Previous and next — none to show yet</div>
+{% endif %}
