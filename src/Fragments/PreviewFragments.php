@@ -31,6 +31,8 @@ final class PreviewFragments implements PreviewFragmentRenderer
         private readonly bool $enabled,
         private readonly bool $debug = false,
         private readonly ?LoggerInterface $logger = null,
+        /** An entry under a layout refreshes whole (type layouts spec §6.3); null = no layouts. */
+        private readonly ?\Thallo\Contracts\Layouts\LayoutReader $layouts = null,
     ) {
     }
 
@@ -99,6 +101,15 @@ final class PreviewFragments implements PreviewFragmentRenderer
             return null;
         }
         $type = (string) ($result['type'] ?? '');
+        // Under a layout the page refreshes whole: layout blocks can change what the body renders
+        // (a cover claims the priority image first), and no composed-layout proof exists yet.
+        $presentation = is_array($result['presentation'] ?? null) ? $result['presentation'] : [];
+        if (
+            $this->layouts !== null && $type !== '' && ($presentation['use_layout'] ?? true) !== false
+            && $this->layouts->for('entry', $type) !== null
+        ) {
+            return null;
+        }
         $entryTemplate = $type !== '' && $env->getLoader()->exists("entry/{$type}.twig")
             ? "entry/{$type}.twig"
             : 'entry.twig';

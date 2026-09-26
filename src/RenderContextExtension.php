@@ -871,7 +871,8 @@ final class RenderContextExtension extends AbstractExtension
         try {
             // Thread the region slug so a form placed in a region gets a stable,
             // region-scoped source key (form-block spec §5).
-            $html = $this->blocks($env, ['region_slug' => $slug] + $context, $list);
+            // Chrome is never part of a layout: a form in the header keeps the region's identity.
+            $html = $this->blocks($env, ['region_slug' => $slug, 'layout_source' => null] + $context, $list);
         } finally {
             $this->annotateBlocks = $saved;
         }
@@ -886,10 +887,16 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function layoutBlocks(Environment $env, array $context, mixed $list): \Twig\Markup
     {
+        // The layout's identity reaches its own blocks only (a form in the layout is one form across
+        // the type); entry_slot() takes it away again for the entry's blocks.
+        $layout = is_array($context['layout'] ?? null) ? $context['layout'] : [];
+        $source = is_string($layout['surface'] ?? null) && is_string($layout['target'] ?? null)
+            ? $layout['surface'] . ':' . $layout['target']
+            : null;
         $saved = $this->annotateBlocks;
         $this->annotateBlocks = $this->annotationScope === 'layout';
         try {
-            $html = $this->blocks($env, $context, $list);
+            $html = $this->blocks($env, ['layout_source' => $source] + $context, $list);
         } finally {
             $this->annotateBlocks = $saved;
         }
@@ -919,7 +926,8 @@ final class RenderContextExtension extends AbstractExtension
             $slot = $this->annotateBlocks
                 ? ' data-thallo-slot="' . htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"'
                 : '';
-            $html = '<div class="entry-blocks"' . $slot . '>' . $this->blocks($env, $context, $list) . '</div>';
+            $body = $this->blocks($env, ['layout_source' => null] + $context, $list);
+            $html = '<div class="entry-blocks"' . $slot . '>' . $body . '</div>';
         } finally {
             $this->annotateBlocks = $savedAnnotate;
             $this->blockDepth = $savedDepth;
@@ -1018,7 +1026,8 @@ final class RenderContextExtension extends AbstractExtension
         $entry = is_array($context['entry'] ?? null) ? $context['entry'] : null;
         $path = is_string($context['current_path'] ?? null) ? $context['current_path'] : null;
         $region = is_string($context['region_slug'] ?? null) ? $context['region_slug'] : null;
-        $sealed = $this->formSealer->describe($block, $entry, $path, $region);
+        $layout = is_string($context['layout_source'] ?? null) ? $context['layout_source'] : null;
+        $sealed = $this->formSealer->describe($block, $entry, $path, $region, $layout);
         if ($sealed === null) {
             return null; // un-routable / underivable → disabled notice
         }
@@ -1548,6 +1557,9 @@ final class RenderContextExtension extends AbstractExtension
                         // Region identity for form_render()'s source key (form-block
                         // spec §5): set by regionBlocks(), null for page-body blocks.
                         'region_slug' => $context['region_slug'] ?? null,
+                        // The layout a block belongs to (type layouts spec §5.6): set by
+                        // layout_blocks(), cleared for the entry's blocks and the chrome.
+                        'layout_source' => $context['layout_source'] ?? null,
                         // The entry's type and where it is browsed (type layouts spec §4): field
                         // blocks link terms to archives and find related entries by them.
                         'type' => $context['type'] ?? null,

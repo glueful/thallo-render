@@ -107,7 +107,25 @@ final class RenderController
         private readonly ?ContentTypeReader $contentTypes = null,
         /** The header & footer stage's session snapshots (regions-stage spec §4.4); null = no stage. */
         private ?\Thallo\Contracts\Delivery\RegionStageSnapshots $regionStage = null,
+        /** Type layouts (spec §7.2); null = no layouts, every entry renders through the theme. */
+        private readonly ?\Thallo\Contracts\Layouts\LayoutReader $layouts = null,
     ) {
+    }
+
+    /**
+     * The layout an entry renders through (type layouts spec §7.2): its type's, unless the page opts
+     * out (`_presentation.use_layout: false`). The homepage route never asks.
+     *
+     * @param array<string,mixed>|null $presentation the raw per-page _presentation
+     * @return array<string,mixed>|null the layout, with its surface and target
+     */
+    private function layoutFor(string $typeSlug, ?array $presentation): ?array
+    {
+        if ($this->layouts === null || $typeSlug === '' || ($presentation['use_layout'] ?? true) === false) {
+            return null;
+        }
+        $layout = $this->layouts->for('entry', $typeSlug);
+        return $layout === null ? null : $layout + ['surface' => 'entry', 'target' => $typeSlug];
     }
 
     /**
@@ -429,7 +447,16 @@ final class RenderController
             $template = $candidate !== '' && ($env ?? $this->twig())->getLoader()->exists($candidate)
                 ? $candidate
                 : 'entry.twig';
+            // The Design view shows the entry inside its layout (type layouts spec §6.3): the
+            // layout inert around the body, which stays the entry's own root list.
+            $layout = $this->layoutFor($typeSlug, $result['presentation'] ?? null);
+            if ($layout !== null) {
+                $template = 'layouts/entry.twig';
+            }
             $response = $this->render($template, $locale, $entry, 200, [
+                'layout' => $layout,
+                'type' => $typeSlug,
+                'type_listing' => is_array($result['type_listing'] ?? null) ? $result['type_listing'] : null,
                 'preview' => true,
                 'preview_bar' => $session !== null
                     ? $this->previewBar($session->entry, $typeSlug, $locale)
@@ -437,6 +464,7 @@ final class RenderController
                 'presentation' => $this->presentationContext(
                     $typeSlug !== '' ? $typeSlug : null,
                     $result['presentation'] ?? null,
+                    $layout['settings'] ?? null,
                 ),
                 // The accepted working-copy pair (visual builder spec §3.5) on <main>, with the
                 // generation of the style class snapshot this request renders from (spec §4.3).
@@ -859,9 +887,16 @@ final class RenderController
         $template = $candidate !== '' && ($env ?? $this->twig())->getLoader()->exists($candidate)
             ? $candidate
             : 'entry.twig';
+        // A layout wins over the hierarchy while it exists (type layouts spec §7.2).
+        $layout = $this->layoutFor($typeSlug, $result['presentation'] ?? null);
+        if ($layout !== null) {
+            $template = 'layouts/entry.twig';
+            $extra['layout'] = $layout;
+        }
         $extra['presentation'] = $this->presentationContext(
             $typeSlug !== '' ? $typeSlug : null,
             $result['presentation'] ?? null,
+            $layout['settings'] ?? null,
         );
         // The entry's type, as listing and archive templates already get it: a template that
         // navigates its type (a docs sidebar, entry_tree(type)) need not be named after one.
@@ -884,6 +919,11 @@ final class RenderController
         $response = $this->render($template, $locale, $entry, 200, $extra, $env, $assetBase, $assetsDir);
         $this->tagResponse($response, $entry ?? [], $typeSlug);
         $this->mergeCacheTags($response, array_values(array_map('strval', (array) ($result['cache_tags'] ?? []))));
+        // Every entry page carries its type's layout tag, layout or not (spec §7.4): a first save
+        // purges pages cached through the theme's template, a removal those cached through the layout.
+        if ($typeSlug !== '') {
+            $this->mergeCacheTags($response, ["thallo:layout:entry:{$typeSlug}"]);
+        }
         return $response;
     }
 
@@ -1013,20 +1053,29 @@ final class RenderController
      *
      * `style_classes` is the page's own style frame (PageStyle) as utility classes for <main>.
      *
+     * A type layout's Frame sits between the page and the theme (type layouts spec §6.4): the page's
+     * own setting wins where it sets one; the layout's wins over the theme's.
+     *
      * @param array<string,mixed>|null $override the raw per-page _presentation
+     * @param array<string,mixed>|null $frame the layout's Frame settings (width, header, footer)
      * @return array{show_title: bool, layout: string, header: string, footer: string, style_classes: string}
      */
-    private function presentationContext(?string $typeSlug, ?array $override): array
+    private function presentationContext(?string $typeSlug, ?array $override, ?array $frame = null): array
     {
         $settings = $this->themes?->settings() ?? [];
         $type = $typeSlug !== null && is_array($settings['types'][$typeSlug] ?? null)
             ? $settings['types'][$typeSlug]
             : [];
-        $layout = $override['layout'] ?? $type['layout'] ?? $settings['layout'] ?? 'centered';
+        $width = match ($frame['width'] ?? null) {
+            'full' => 'full',
+            'contained' => 'centered',
+            default => null,
+        };
+        $layout = $override['layout'] ?? $width ?? $type['layout'] ?? $settings['layout'] ?? 'centered';
         // Chrome suppression (global-regions spec §7): anything but the exact
         // 'hidden' composes to 'default' — future variant values degrade safely.
-        $header = $override['header'] ?? $type['header'] ?? $settings['header'] ?? 'default';
-        $footer = $override['footer'] ?? $type['footer'] ?? $settings['footer'] ?? 'default';
+        $header = $override['header'] ?? $frame['header'] ?? $type['header'] ?? $settings['header'] ?? 'default';
+        $footer = $override['footer'] ?? $frame['footer'] ?? $type['footer'] ?? $settings['footer'] ?? 'default';
         return [
             'show_title' => (bool) ($override['show_title'] ?? $type['show_title'] ?? $settings['show_title'] ?? true),
             'layout' => $layout === 'full' ? 'full' : 'centered',

@@ -1,0 +1,8 @@
+{# The entry frame (type layouts spec §7.1): the page an entry renders as while its type has a layout
+   — the theme's shell around the layout's blocks, which place the title, the body and everything
+   else. A theme may override this file; a theme without one gets this frame. #}
+{% extends 'layout.twig' %}
+{% block title %}{{ seo.title|default(entry.fields.title|default(site.name)) }}{% endblock %}
+{% block content %}
+  <article class="thallo-layout thallo-layout--entry">{{ layout_blocks(layout.blocks|default([])) }}</article>
+{% endblock %}
