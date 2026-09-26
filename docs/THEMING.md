@@ -34,6 +34,15 @@ themes/<name>/
 `listing/{type}.twig` all receive the content type's slug as `type`, so a template that
 navigates its type — `entry_tree(type)` — need not be named after one.
 
+**An entry template knows where its type is browsed.** `type_listing` is null unless the type
+is listed (Admin → **Settings › General**); then `type_listing.path` is its listing page
+(`/post`), and `type_listing.archives.{field}` gives each archived reference field its `path`
+(`/post/categories`) and `slug_field` (the term field its URLs use, or null for the term's
+uuid). A term's archive is `{{ archive.path }}/{{ term.fields[archive.slug_field]|default(term.entry_uuid)|url_encode }}`.
+Link only through it and a template never links to a page that 404s. The default theme's
+`entry/post.twig` (a post's categories, date, lead and cover, the newest other posts, and
+**All posts**) is the worked example.
+
 **Activation** — one of:
 - Admin → **Site › Appearance → Theme**, or
 - `.env` → `RENDER_THEME=<name>`

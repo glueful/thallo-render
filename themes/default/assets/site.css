@@ -362,6 +362,42 @@ main { min-height: 60vh; padding-block: var(--space-5) var(--space-7); }
   .listing-row { flex-direction: column; }
 }
 
+/* ── A single post (entry/post.twig): categories, title, date and lead in the reading column,
+   the cover at the container width, then the body's own blocks; the newest other posts and the
+   way back to them all below. ──────────────────────────────────────────────────────────── */
+.post__header { padding-block: var(--space-5) var(--space-3); display: grid; gap: var(--space-2); }
+.post__categories { margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.post__category {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+}
+a.post__category:hover { text-decoration: underline; }
+.post__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.post__meta { margin: 0; font-size: 0.9rem; color: var(--muted); }
+.post__lead { margin: var(--space-2) 0 0; font-size: 1.2rem; line-height: 1.55; color: var(--muted); }
+.post__cover { max-width: var(--container); margin: 0 auto var(--space-5); padding-inline: var(--space-4); }
+.post__cover img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-lg); }
+.post__more { margin-top: var(--space-6); padding-block: var(--space-5); border-top: 1px solid var(--line); }
+.post__more-title { margin: 0 0 var(--space-2); font-size: 1.25rem; }
+.post__all { font-weight: 600; color: var(--accent); text-decoration: none; }
+.post__all:hover { text-decoration: underline; }
+@media (max-width: 48rem) {
+  .post__header { padding-block: var(--space-4) var(--space-3); }
+  .post__cover { padding-inline: 0; }
+  .post__cover img { border-radius: 0; }
+}
+
 /* ── Cross-document view transitions (storefront-performance spec §7): root crossfade
    only — no named elements, no morphs, no JS. The opt-in itself sits inside the
    reduced-motion guard so `reduce` users get instant navigation, not a shorter fade.

@@ -866,6 +866,10 @@ final class RenderController
         // The entry's type, as listing and archive templates already get it: a template that
         // navigates its type (a docs sidebar, entry_tree(type)) need not be named after one.
         $extra['type'] = $typeSlug;
+        // Where the type is browsed — its listing and archive paths, null unless it is listed —
+        // so an entry template links to them (a post's "All posts", its category archives)
+        // without ever emitting a link that 404s.
+        $extra['type_listing'] = is_array($result['type_listing'] ?? null) ? $result['type_listing'] : null;
         $extra['rich_fields'] = $this->richFields($typeSlug);
         // seo-head spec §3: composed head data for the SAME entry identity the
         // cache tags below carry (tagResponse's uuid derivation) — entry renders

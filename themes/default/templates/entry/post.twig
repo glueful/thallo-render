@@ -1,0 +1,74 @@
+{% extends 'layout.twig' %}
+{#
+  A single post (the seeded `post` type: title, excerpt, cover, body, categories). Above the body:
+  its categories, title, date and excerpt as the lead, then the cover. Below: the newest other
+  posts and a link to them all.
+
+  Links go only where the page exists: `type_listing` is null unless this type is listed
+  (Settings › General), and names only the archives that resolve, so a category is plain text
+  where it has no archive. A body built on the stage renders as direct flow, as in entry.twig;
+  `presentation.show_title` hides the title when the body opens with its own heading.
+#}
+{% block title %}{{ seo.title|default(entry.fields.title|default(site.name)) }}{% endblock %}
+{% block content %}
+  {% set f = entry.fields %}
+  {% set archive = type_listing.archives.categories|default(null) %}
+  <article class="post">
+    <header class="post__header entry-content">
+      {% if f.categories is defined and f.categories is not empty %}
+        <p class="post__categories">
+          {% for cat in f.categories %}
+            {% set name = cat.fields.title|default(cat.fields.slug)|default('') %}
+            {% set term = archive and archive.slug_field ? cat.fields[archive.slug_field]|default(cat.entry_uuid) : cat.entry_uuid %}
+            {% if name != '' %}
+              {% if archive %}<a class="post__category" href="{{ archive.path }}/{{ term|url_encode }}">{{ name }}</a>{% else %}<span class="post__category">{{ name }}</span>{% endif %}
+            {% endif %}
+          {% endfor %}
+        </p>
+      {% endif %}
+      {% if presentation.show_title ?? true %}
+        <h1 class="post__title">{{ f.title }}</h1>
+      {% endif %}
+      {% if entry.published_at|default(null) %}
+        <p class="post__meta"><time class="post__date" datetime="{{ entry.published_at|date('Y-m-d') }}">{{ entry.published_at|date('F j, Y') }}</time></p>
+      {% endif %}
+      {% if f.excerpt|default('') != '' %}
+        <p class="post__lead">{{ f.excerpt }}</p>
+      {% endif %}
+    </header>
+
+    {% set cover = f.cover|default(null) ? media_image(f.cover, [640, 960, 1280, 1920]) : null %}
+    {% if cover %}
+      {% set priority = claim_priority_image() %}
+      <figure class="post__cover">
+        <img src="{{ cover.src }}"
+             {%- if cover.srcset %} srcset="{{ cover.srcset }}" sizes="(max-width: 72rem) 100vw, 72rem"{% endif %}
+             alt=""
+             {%- if priority %} loading="eager" fetchpriority="high"{% else %} loading="lazy" decoding="async"{% endif %}>
+      </figure>
+    {% endif %}
+
+    {% if f.body is defined %}
+      {% if f.body is iterable %}<div class="entry-blocks post__body"{{ slot_attrs('body') }}>{{ blocks(f.body) }}</div>
+      {% elseif 'body' in rich_fields|default([]) %}<div class="entry-content post__body"><div class="body">{{ f.body|safe_html }}</div></div>
+      {% else %}<div class="entry-content post__body"><div class="body">{{ f.body }}</div></div>{% endif %}
+    {% endif %}
+  </article>
+
+  {# The newest other posts: four asked for, so three remain once this one is left out. #}
+  {% set others = [] %}
+  {% for item in entries(type|default('post'), {limit: 4, order: 'newest'}) %}
+    {% if item.uuid != entry.uuid and others|length < 3 %}{% set others = others|merge([item]) %}{% endif %}
+  {% endfor %}
+  {% if others is not empty or type_listing %}
+    <aside class="post__more entry-content" aria-labelledby="post-more-title">
+      {% if others is not empty %}
+        <h2 class="post__more-title" id="post-more-title">More posts</h2>
+        {% include '_listing_rows.twig' with {items: others} only %}
+      {% endif %}
+      {% if type_listing %}
+        <p><a class="post__all" href="{{ type_listing.path }}">All posts <span aria-hidden="true">→</span></a></p>
+      {% endif %}
+    </aside>
+  {% endif %}
+{% endblock %}

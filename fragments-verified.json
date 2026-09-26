@@ -1,6 +1,9 @@
 {
     "theme": "default",
-    "entry_template": "entry.twig",
+    "entry_templates": [
+        "entry.twig",
+        "entry/post.twig"
+    ],
     "templates": {
         "blocks/accordion.twig": "7ae78c9818b80aa530bbe0754b57ea8e4f456f2172964480ef531a0601d69271",
         "blocks/accordion_item.twig": "17b70a698e57db771c749934aa38711d89104eb9416bc2d174fa136ed384e284",
@@ -46,6 +49,7 @@
         "blocks/tab.twig": "b2e3043534687b2aaf008e592398cefc38597cf1a5b315c73bb21767c01b42cf",
         "blocks/tabs.twig": "8ccb63b179955410f2957c7ff116125250374e596da6f5442e709f1a42f408f1",
         "blocks/video.twig": "d4c89cdd31980681746eec016feb58d45f675ae94168406e9b61c42c915095a2",
-        "entry.twig": "81fcb082d6c613775a8025a8e99a08993782caf18dbdb3638fa4db09e3e096a6"
+        "entry.twig": "81fcb082d6c613775a8025a8e99a08993782caf18dbdb3638fa4db09e3e096a6",
+        "entry/post.twig": "4f49e6e89668fa89aa22d08935c72f07d89b1dbea465e1dd3917681a7c14b962"
     }
 }

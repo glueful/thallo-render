@@ -10,29 +10,34 @@ namespace Thallo\Render\Fragments;
  * by the verification test that renders every fixture block-by-block and whole-page and diffs
  * them. A fragment is served only when every template it would use hashes as recorded, so a
  * change to any of them — a shipped edit or a DB override — falls back to the whole page
- * until the test verifies it again. In v1 only the default theme's `entry.twig` is verified.
+ * until the test verifies it again. The record names every entry template the test verified —
+ * the default theme's `entry.twig`, and the type templates it ships (`entry/post.twig`).
  */
 final class FragmentVerification
 {
     public const RECORD = __DIR__ . '/../../fragments-verified.json';
 
-    /** @var array{theme: string, entry_template: string, templates: array<string,string>}|null */
+    /** @var array{theme: string, entry_templates: list<string>, templates: array<string,string>}|null */
     private ?array $record = null;
 
     public function __construct(private readonly string $recordPath = self::RECORD)
     {
     }
 
-    /** @return array{theme: string, entry_template: string, templates: array<string,string>} */
+    /** @return array{theme: string, entry_templates: list<string>, templates: array<string,string>} */
     public function record(): array
     {
         if ($this->record === null) {
             $decoded = is_file($this->recordPath)
                 ? json_decode((string) file_get_contents($this->recordPath), true)
                 : null;
+            // A record written before type templates were verified names one `entry_template`.
+            $entries = is_array($decoded['entry_templates'] ?? null)
+                ? $decoded['entry_templates']
+                : (isset($decoded['entry_template']) ? [$decoded['entry_template']] : []);
             $this->record = [
                 'theme' => (string) ($decoded['theme'] ?? ''),
-                'entry_template' => (string) ($decoded['entry_template'] ?? ''),
+                'entry_templates' => array_values(array_map('strval', $entries)),
                 'templates' => is_array($decoded['templates'] ?? null) ? $decoded['templates'] : [],
             ];
         }
@@ -52,7 +57,7 @@ final class FragmentVerification
         array $templates,
     ): bool {
         $record = $this->record();
-        if ($record['theme'] !== $theme || $record['entry_template'] !== $entryTemplate) {
+        if ($record['theme'] !== $theme || !in_array($entryTemplate, $record['entry_templates'], true)) {
             return false;
         }
         foreach (array_unique([$entryTemplate, ...$templates]) as $name) {
@@ -68,27 +73,28 @@ final class FragmentVerification
      * The record for the templates as they are now (the verification test writes it once the
      * block-by-block render matches the whole page).
      *
+     * @param list<string> $entryTemplates the entry templates the test rendered its fixtures through
      * @param list<string> $templates
-     * @return array{theme: string, entry_template: string, templates: array<string,string>}
+     * @return array{theme: string, entry_templates: list<string>, templates: array<string,string>}
      */
     public function build(
         TemplateDependencies $dependencies,
         string $theme,
-        string $entryTemplate,
+        array $entryTemplates,
         array $templates,
     ): array {
         $hashes = [];
-        foreach (array_unique([$entryTemplate, ...$templates]) as $name) {
+        foreach (array_unique([...$entryTemplates, ...$templates]) as $name) {
             $hash = $dependencies->templateHash($name);
             if ($hash !== null) {
                 $hashes[$name] = $hash;
             }
         }
         ksort($hashes);
-        return ['theme' => $theme, 'entry_template' => $entryTemplate, 'templates' => $hashes];
+        return ['theme' => $theme, 'entry_templates' => array_values($entryTemplates), 'templates' => $hashes];
     }
 
-    /** @param array{theme: string, entry_template: string, templates: array<string,string>} $record */
+    /** @param array{theme: string, entry_templates: list<string>, templates: array<string,string>} $record */
     public function write(array $record): void
     {
         file_put_contents(
