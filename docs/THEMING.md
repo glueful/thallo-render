@@ -113,6 +113,32 @@ and fills `{% block content %}`.
 | `_pagination.twig` | Shared pagination partial (path-based: `/blog/page/2`). |
 | `region-stage.twig` | The Header & footer page's stage when no published page can be shown: the layout around a placeholder body. |
 | `region-session-expired.twig` | What that stage shows once its session has expired. |
+| `layouts/entry.twig` | The frame for an entry whose type has a layout: `layout.twig` around `{{ layout_blocks(layout.blocks) }}`. It wins over `entry.twig` and `entry/{type}.twig` while the layout exists. |
+| `layout-session-ended.twig` | A layout's stage once its layout is removed (`retired`) or its session has expired. |
+
+### 2.1 Layout frames
+
+A layout is a block list an editor builds under **Site › Layouts**; the frame is the one template
+that renders it. A frame extends `layout.twig`, emits what the page must always have (its title,
+the SEO head through `layout.twig`) and hands the layout's blocks to `layout_blocks()`. The
+entry's own content arrives through the **Entry content** block, whose template calls
+`entry_slot(field)`; the default frame:
+
+```twig
+{% extends 'layout.twig' %}
+{% block title %}{{ seo.title|default(entry.fields.title|default(site.name)) }}{% endblock %}
+{% block content %}
+  {% if layout_placeholder|default(null) %}<div class="thallo-layout-placeholder-notice" data-thallo-placeholder>{{ layout_placeholder }}</div>{% endif %}
+  <article class="thallo-layout thallo-layout--entry">{{ layout_blocks(layout.blocks|default([])) }}</article>
+{% endblock %}
+```
+
+Keep `layout_blocks()` and `entry_slot()` the only way a layout's blocks and an entry's slot
+render: they decide what is selectable on which stage, restart the nesting depth at the slot, and
+keep a form's identity — a layout's form is one form across its type, a body's form its page's.
+A theme may ship `templates/layouts/entry.twig` to change the frame; one that does not gets the
+default theme's. A layout's **Frame** settings (width, header, footer) reach `layout.twig` through
+`presentation`, below the page's own settings and above the theme's.
 
 `blog` in these paths stands for any content type you create; Thallo ships no `blog` type.
 
