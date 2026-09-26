@@ -31,6 +31,7 @@
         "blocks/links.twig": "9e5639e401ffa1a2df453e594f71689f562a0fbca33f8bbb0268a810471c91fc",
         "blocks/logo.twig": "aa153708a3ec004c41a5651a05102edf19e6ec2ef1838decb0b54d6dc22a340e",
         "blocks/logos.twig": "34dda46e8af28339d90a677dfda627b83fbaa91b99760dd755a2a80c32901f7f",
+        "blocks/map.twig": "853c4d1be3ed77a260cc38392bddf447a6b69b66604d31d64656f47896a9c78d",
         "blocks/navigation.twig": "95482a65eba18c421fe6c666181e383c886964bbd43a71795384e25e2a64f592",
         "blocks/pricing_feature.twig": "2fd6691bf44be0f60ed5de3cc13b8549fcdeca20a5741ef7d45be22e0cc10d57",
         "blocks/pricing_plan.twig": "43cb66f96a9ac504b626e7b666d334ee9e73c5b1b1cc059b201a37390ea73086",

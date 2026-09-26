@@ -1,0 +1,31 @@
+{# map — a Google map of a place, with no API key. map_embed() builds the address from the place,
+   zoom and view, or takes Google's own "Embed a map" link once it proves to be one: nothing typed
+   reaches the page as an address of its own. With click_to_load, nothing of Google loads (and no
+   cookie is set) until the visitor asks: block-map.js reveals the button and puts the map in
+   its place; without the script, the link to Google Maps still gets there. #}
+{% set map = map_embed(data) %}
+{% set height = ({small: 'small', medium: 'medium', large: 'large'}[data.height|default('medium')] ?? 'medium') %}
+<figure class="thallo-block thallo-block-map thallo-block-map--{{ height }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {% if map %}
+    {% if data.click_to_load|default(false) %}
+      <div class="thallo-block-map__frame thallo-block-map__consent{{ style_classes('frame') }}"{{ style_attrs('frame') }} data-map-src="{{ map.src }}" data-map-title="{{ map.title }}">
+        <span class="thallo-block-map__pin">{{ icon('map-pin') }}</span>
+        <p class="thallo-block-map__notice">This map comes from Google, which may set cookies when it loads.</p>
+        <button type="button" class="thallo-block-map__load" hidden>Show map</button>
+        {% if map.open %}<a class="thallo-block-map__open" href="{{ map.open }}" target="_blank" rel="noopener">Open in Google Maps</a>{% endif %}
+      </div>
+      {{ block_script('map') }}
+    {% else %}
+      <iframe class="thallo-block-map__frame{{ style_classes('frame') }}"{{ style_attrs('frame') }} src="{{ map.src }}" title="{{ map.title }}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    {% endif %}
+    {% set directions = data.directions|default(false) and map.directions %}
+    {% if data.caption|default('') != '' or directions %}
+      <figcaption class="thallo-block-map__caption">
+        {% if data.caption|default('') != '' %}<span class="thallo-block-map__text">{{ data.caption|editable_text('caption') }}</span>{% endif %}
+        {% if directions %}<a class="thallo-block-map__directions" href="{{ map.directions }}" target="_blank" rel="noopener">Get directions</a>{% endif %}
+      </figcaption>
+    {% endif %}
+  {% elseif is_preview() %}
+    <div class="thallo-block-map__empty">Add an address or place to show a map.</div>
+  {% endif %}
+</figure>

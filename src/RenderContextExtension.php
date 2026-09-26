@@ -87,7 +87,7 @@ final class RenderContextExtension extends AbstractExtension
 
     /** Closed block-asset catalog (modern-blocks spec §1) — block_script() is
      *  DB-template vocabulary; only these names ever resolve to a script tag. */
-    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'code', 'docs-search', 'gallery', 'motion'];
+    public const BLOCK_SCRIPT_ASSETS = ['animated-text', 'code', 'docs-search', 'gallery', 'map', 'motion'];
 
     /** @var array<string,bool> per-render emitted set (bandwidth dedupe only —
      *  the asset's own exactly-once IIFE guard is the correctness authority). */
@@ -301,6 +301,7 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('claim_priority_image', $this->claimPriorityImage(...), ['needs_context' => true]),
             new TwigFunction('site_logo', $this->siteLogo(...)),
             new TwigFunction('video_embed', $this->videoEmbed(...)),
+            new TwigFunction('map_embed', $this->mapEmbed(...)),
             new TwigFunction('icon', $this->icon(...)), // NO is_safe — safety travels in the Markup value
             // NO is_safe — the layout assigns the result via {% set %}, where
             // compile-time safety is lost; Markup carries safety in the VALUE
@@ -1012,6 +1013,77 @@ final class RenderContextExtension extends AbstractExtension
     {
         $uuid = $this->favicon?->faviconUuid();
         return $uuid === null ? null : $this->media($uuid);
+    }
+
+    /**
+     * A Google map of a place, for the map block — no API key: Google's own embed. The address
+     * the template emits is built here from the block's place, zoom and view, or taken from
+     * Google's "Embed a map" link (the link itself, or the whole `<iframe>` Google hands out)
+     * once it proves to be exactly that: https, a Google host, `/maps/embed`, and a `pb`
+     * parameter of the characters Google uses. Nothing typed is ever emitted as an address of
+     * its own. `directions` and `open` go to Google Maps' official URLs, for a place only.
+     *
+     * @return array{src: string, title: string, directions: ?string, open: ?string}|null
+     */
+    public function mapEmbed(mixed $data): ?array
+    {
+        $d = is_array($data) ? $data : [];
+        $place = trim(is_string($d['place'] ?? null) ? $d['place'] : '');
+        $zoom = is_numeric($d['zoom'] ?? null) ? (int) round((float) $d['zoom']) : 15;
+        $zoom = max(1, min(21, $zoom));
+        $src = self::googleMapsEmbed(is_string($d['embed_url'] ?? null) ? $d['embed_url'] : '');
+        if ($src === null && $place !== '') {
+            $src = 'https://www.google.com/maps?' . http_build_query([
+                'q' => $place,
+                'z' => $zoom,
+                't' => ($d['view'] ?? 'map') === 'satellite' ? 'k' : 'm',
+                'output' => 'embed',
+            ]);
+        }
+        if ($src === null) {
+            return null;
+        }
+        return [
+            'src' => $src,
+            'title' => $place !== '' ? "Map of {$place}" : 'Map',
+            'directions' => $place === ''
+                ? null
+                : 'https://www.google.com/maps/dir/?' . http_build_query(['api' => 1, 'destination' => $place]),
+            'open' => $place === ''
+                ? null
+                : 'https://www.google.com/maps/search/?' . http_build_query(['api' => 1, 'query' => $place]),
+        ];
+    }
+
+    /** Google's "Embed a map" address, rebuilt from its `pb` alone; null for anything else. */
+    private static function googleMapsEmbed(string $value): ?string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+        if (stripos($value, '<iframe') !== false) {
+            if (preg_match('~\bsrc\s*=\s*"([^"]*)"~i', $value, $m) !== 1) {
+                return null;
+            }
+            $value = html_entity_decode($m[1], ENT_QUOTES | ENT_HTML5);
+        }
+        $parts = parse_url($value);
+        if (!is_array($parts) || strtolower((string) ($parts['scheme'] ?? '')) !== 'https') {
+            return null;
+        }
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        if (!in_array($host, ['www.google.com', 'google.com', 'maps.google.com'], true)) {
+            return null;
+        }
+        if (($parts['path'] ?? '') !== '/maps/embed' || isset($parts['user']) || isset($parts['port'])) {
+            return null;
+        }
+        $query = (string) ($parts['query'] ?? '');
+        if (strlen($query) > 4000 || preg_match('#\Apb=([A-Za-z0-9!._~%*:\-]+)\z#', $query, $m) !== 1) {
+            return null;
+        }
+        return 'https://www.google.com/maps/embed?pb=' . $m[1];
     }
 
     /**

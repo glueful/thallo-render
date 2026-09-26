@@ -350,6 +350,7 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-container__inner > .thallo-block-form,
 .thallo-block-container__inner > .thallo-block-gallery,
 .thallo-block-container__inner > .thallo-block-code,
+.thallo-block-container__inner > .thallo-block-map,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-image,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-rich_text,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-heading,
@@ -366,7 +367,8 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-separator,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-form,
 .thallo-block-container__inner > .thallo-preview-block > .thallo-block-gallery,
-.thallo-block-container__inner > .thallo-preview-block > .thallo-block-code {
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-code,
+.thallo-block-container__inner > .thallo-preview-block > .thallo-block-map {
   max-width: none;
   margin-inline: 0;
   padding-inline: 0;
@@ -967,6 +969,81 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .thallo-block-audio { max-width: var(--content); margin-inline: auto; padding-inline: var(--space-4); }
 .thallo-block-audio__player { width: 100%; }
 .thallo-block-audio__title { font-weight: 600; margin-bottom: var(--space-2); }
+
+/* map — a Google map of a place. The frame (the map, or the click-to-load placeholder) is the
+   `frame` style target: corners, border and shadow land there. Its height is the block's size. */
+.thallo-block-map { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }
+.thallo-block-map__frame {
+  display: block;
+  width: 100%;
+  height: 22.5rem;
+  border: 0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  background: var(--surface);
+  overflow: hidden;
+}
+.thallo-block-map--small .thallo-block-map__frame { height: 15rem; }
+.thallo-block-map--large .thallo-block-map__frame { height: 30rem; }
+@media (max-width: 48rem) {
+  .thallo-block-map--medium .thallo-block-map__frame { height: 18rem; }
+  .thallo-block-map--large .thallo-block-map__frame { height: 22.5rem; }
+}
+.thallo-block-map__consent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--muted);
+  background: var(--surface);
+}
+.thallo-block-map__pin {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.thallo-block-map__pin .thallo-icon { width: 1.5rem; height: 1.5rem; }
+.thallo-block-map__consent--loaded { padding: 0; background: var(--surface); }
+.thallo-block-map__notice { margin: 0; max-width: 28rem; font-size: 0.9rem; }
+.thallo-block-map__load {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 1.1rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--accent-ink);
+  background: var(--accent);
+  cursor: pointer;
+}
+.thallo-block-map__load:hover { filter: brightness(1.08); }
+.thallo-block-map__open { font-size: 0.9rem; color: var(--accent); }
+.thallo-block-map__map { display: block; width: 100%; height: 100%; border: 0; }
+.thallo-block-map__caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.thallo-block-map__directions { font-weight: 600; color: var(--accent); text-decoration: none; }
+.thallo-block-map__directions:hover { text-decoration: underline; }
+.thallo-block-map__empty {
+  padding: var(--space-5) var(--space-4);
+  border: 2px dashed var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  text-align: center;
+}
 
 /* file — a download link/button to an uploaded blob. */
 .thallo-block-file { max-width: var(--content); margin-inline: auto; padding-inline: var(--space-4); }

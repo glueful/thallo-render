@@ -395,3 +395,7 @@
   from { transform: var(--t-kb-from, none); }
   to { transform: var(--t-kb-to, none); }
 }
+
+/* On the stage a map is the block, not a place to pan: the editor's click selects it. A plain
+   preview and the live site keep the map fully interactive. */
+html[data-thallo-canvas] .thallo-block-map__frame { pointer-events: none; }
