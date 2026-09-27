@@ -115,6 +115,7 @@ and fills `{% block content %}`.
 | `region-session-expired.twig` | What that stage shows once its session has expired. |
 | `layouts/entry.twig` | The frame for an entry whose type has a layout: `layout.twig` around `{{ layout_blocks(layout.blocks) }}`. It wins over `entry.twig` and `entry/{type}.twig` while the layout exists. |
 | `layout-session-ended.twig` | A layout's stage once its layout is removed (`retired`) or its session has expired. |
+| `layouts/product.twig` | Shipped by the Commerce pack, not the default theme: the frame for the shop's product page while it has a layout (§2.1). |
 
 ### 2.1 Layout frames
 
@@ -139,6 +140,16 @@ keep a form's identity — a layout's form is one form across its type, a body's
 A theme may ship `templates/layouts/entry.twig` to change the frame; one that does not gets the
 default theme's. A layout's **Frame** settings (width, header, footer) reach `layout.twig` through
 `presentation`, below the page's own settings and above the theme's.
+
+With Commerce on, the product page has a frame too: `layouts/product.twig`, shipped in the Commerce
+pack's templates. Its layout's field blocks read the product from `layout_context` — the frame's
+own variables, which `layout_blocks()` threads to every block at any depth (and takes away again
+for an entry's slot and for the header and footer). A theme may override the product frame by file;
+an override keeps what the page must always carry: the canonical `<link>` (the shop's URL), the
+structured data (`{% include 'shop/_product_structured_data.twig' %}`), the `data-shop-scope`
+root, the `shop.js` script, and `{{ layout_blocks(layout.blocks|default([])) }}`. It must **not**
+link `shop.css`: the shop's styles already reach every page inside the theme artifact's
+`@layer theme`, and a raw, unlayered link would beat the values an editor sets on a product block.
 
 `blog` in these paths stands for any content type you create; Thallo ships no `blog` type.
 
