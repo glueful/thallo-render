@@ -581,6 +581,9 @@ final class RenderController
             'revision' => $snapshot['revision'],
             'style_generation' => $this->extension->styleSnapshotGeneration(),
         ];
+        if ($surface instanceof \Thallo\Contracts\Layouts\LayoutSampleContext) {
+            return $this->layoutSampleOfSurface($surface, $snapshot, $layout, $revision, $canvas);
+        }
         $result = is_string($snapshot['sample']) ? $this->resolver->resolveEntry($snapshot['sample']) : [];
         $published = ($result['kind'] ?? null) === 'content' && ($result['type'] ?? null) === $target;
         $extra = [
@@ -606,6 +609,38 @@ final class RenderController
             200,
             $extra,
         );
+    }
+
+    /**
+     * One render of the layout stage for a surface that builds its frame's variables itself (the
+     * shop's product page, type layouts plan C1): the sample's, while it is still available, else the
+     * surface's placeholder. The frame's presentation is the layout's Frame over the page's own
+     * default, as the live page composes it.
+     *
+     * @param array<string,mixed> $snapshot
+     * @param array<string,mixed> $layout
+     * @param array<string,mixed>|null $revision
+     */
+    private function layoutSampleOfSurface(
+        \Thallo\Contracts\Layouts\LayoutSurface&\Thallo\Contracts\Layouts\LayoutSampleContext $surface,
+        array $snapshot,
+        array $layout,
+        ?array $revision,
+        bool $canvas,
+    ): Response {
+        $target = (string) $snapshot['target'];
+        $vars = is_string($snapshot['sample']) ? $surface->sampleContext($target, $snapshot['sample']) : null;
+        $extra = [];
+        if ($vars === null) {
+            $vars = $surface->placeholder($target);
+            $items = mb_strtolower(explode(' — ', $surface->label($target))[0]);
+            $extra['layout_placeholder'] = $canvas ? "No published {$items} yet — showing a placeholder" : null;
+        }
+        return $this->render($surface->frame(), $this->defaultLocale(), null, 200, [
+            'layout' => $layout,
+            'presentation' => \Thallo\Render\Layouts\FramePresentation::fixed($layout['settings'] ?? null),
+            'preview_revision' => $revision,
+        ] + $extra + $vars);
     }
 
     private function regionsStage(PreviewSession $session, bool $canvas): Response
