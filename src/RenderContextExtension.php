@@ -82,6 +82,9 @@ final class RenderContextExtension extends AbstractExtension
     /** Render-scoped nesting depth (see resetBlockDepth). */
     private int $blockDepth = 0;
 
+    /** An entry slot is rendering: a slot inside it renders nothing ({@see entrySlot()}). */
+    private bool $inSlot = false;
+
     /** Render-scoped priority-image claim (see claimPriorityImage/resetPriorityImageClaim). */
     private bool $priorityImageClaimed = false;
 
@@ -920,13 +923,16 @@ final class RenderContextExtension extends AbstractExtension
     {
         $entry = is_array($context['entry'] ?? null) ? $context['entry'] : [];
         $list = $entry['fields'][$field] ?? null;
-        if (!is_array($list) || !array_is_list($list)) {
+        // A slot inside the entry's own content (a raw import; saves refuse field blocks) renders
+        // nothing: the slot resets the depth, so re-entering it would never end.
+        if (!is_array($list) || !array_is_list($list) || $this->inSlot) {
             return new \Twig\Markup('', 'UTF-8');
         }
         $savedAnnotate = $this->annotateBlocks;
         $savedDepth = $this->blockDepth;
         $this->annotateBlocks = $this->annotationScope === 'entry';
         $this->blockDepth = 0;
+        $this->inSlot = true;
         try {
             $slot = $this->annotateBlocks
                 ? ' data-thallo-slot="' . htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"'
@@ -936,6 +942,7 @@ final class RenderContextExtension extends AbstractExtension
         } finally {
             $this->annotateBlocks = $savedAnnotate;
             $this->blockDepth = $savedDepth;
+            $this->inSlot = false;
         }
         return new \Twig\Markup($html, 'UTF-8');
     }
@@ -1595,6 +1602,7 @@ final class RenderContextExtension extends AbstractExtension
     public function resetBlockDepth(): void
     {
         $this->blockDepth = 0;
+        $this->inSlot = false;
     }
 
     /**

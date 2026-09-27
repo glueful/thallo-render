@@ -645,10 +645,20 @@ final class RenderController
                     $template = $candidate !== '' && $this->twig()->getLoader()->exists($candidate)
                         ? $candidate
                         : 'entry.twig';
+                    // The page as the site serves it: through its type's layout when it has one
+                    // (type layouts spec §7.2); on this stage the layout is as inert as the body.
+                    $layout = $this->layoutFor($typeSlug, $result['presentation'] ?? null);
+                    if ($layout !== null) {
+                        $template = 'layouts/entry.twig';
+                    }
                     $response = $this->render($template, (string) $result['locale'], $result['content'], 200, [
+                        'layout' => $layout,
+                        'type' => $typeSlug,
+                        'type_listing' => is_array($result['type_listing'] ?? null) ? $result['type_listing'] : null,
                         'presentation' => $this->presentationContext(
                             $typeSlug !== '' ? $typeSlug : null,
                             $result['presentation'] ?? null,
+                            $layout['settings'] ?? null,
                         ),
                         'preview_revision' => $revision,
                     ]);
