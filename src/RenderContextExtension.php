@@ -875,7 +875,11 @@ final class RenderContextExtension extends AbstractExtension
             // Thread the region slug so a form placed in a region gets a stable,
             // region-scoped source key (form-block spec §5).
             // Chrome is never part of a layout: a form in the header keeps the region's identity.
-            $html = $this->blocks($env, ['region_slug' => $slug, 'layout_source' => null] + $context, $list);
+            $html = $this->blocks(
+                $env,
+                ['region_slug' => $slug, 'layout_source' => null, 'layout_context' => null] + $context,
+                $list,
+            );
         } finally {
             $this->annotateBlocks = $saved;
         }
@@ -937,7 +941,7 @@ final class RenderContextExtension extends AbstractExtension
             $slot = $this->annotateBlocks
                 ? ' data-thallo-slot="' . htmlspecialchars($field, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"'
                 : '';
-            $body = $this->blocks($env, ['layout_source' => null] + $context, $list);
+            $body = $this->blocks($env, ['layout_source' => null, 'layout_context' => null] + $context, $list);
             $html = '<div class="entry-blocks"' . $slot . '>' . $body . '</div>';
         } finally {
             $this->annotateBlocks = $savedAnnotate;
@@ -1572,6 +1576,10 @@ final class RenderContextExtension extends AbstractExtension
                         // The layout a block belongs to (type layouts spec §5.6): set by
                         // layout_blocks(), cleared for the entry's blocks and the chrome.
                         'layout_source' => $context['layout_source'] ?? null,
+                        // What a layout's frame hands its field blocks (the product page's
+                        // product): threaded like layout_source, cleared with it for the entry's
+                        // blocks and the chrome.
+                        'layout_context' => $context['layout_context'] ?? null,
                         // The entry's type and where it is browsed (type layouts spec §4): field
                         // blocks link terms to archives and find related entries by them.
                         'type' => $context['type'] ?? null,
