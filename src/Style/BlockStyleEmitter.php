@@ -70,10 +70,14 @@ final class BlockStyleEmitter
             }
             // A container that declares no track count still needs a track class at every
             // breakpoint: a span pairs with it, and `auto` is the default track state (one track).
+            // A target whose theme gives it tracks of its own (declared `defaults.columns`: the
+            // Product list's adaptive grid, type layouts plan C2) takes `theme` instead, whose rule
+            // declares nothing, so the theme's tracks are not overridden by `auto`'s `none`.
             if ($path === 'layout.columns') {
+                $state = isset($targets->defaults($target)['columns']) ? 'theme' : 'auto';
                 foreach ($resolved as $breakpoint => $resolution) {
                     if ($resolution->state === 'theme-default') {
-                        $classes[] = ClassNames::for($path, 'auto', $breakpoint);
+                        $classes[] = ClassNames::for($path, $state, $breakpoint);
                     }
                 }
             }
