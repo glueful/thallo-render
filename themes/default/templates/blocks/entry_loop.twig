@@ -1,0 +1,13 @@
+{# entry_loop — the Entry list (type layouts plan B): every entry on the listing or archive page, each
+   shown as the card the layout designs once (`data.card`, repeated by loop_cards()). The root is the
+   block's own box; `cards` arranges the repeated cards — rows, or a grid of cards — and never the
+   card's content, which sits in the card's own block flow. No entries: the empty text on the site,
+   and on the stage one placeholder card, so the card stays editable. #}
+{% set items = layout_context.items|default([]) %}
+<div class="thallo-block thallo-block-entry_loop{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- if items is empty and not is_canvas() %}
+  <p class="listing-empty">{{ data.empty_text|default('') != '' ? data.empty_text : 'Nothing here yet.' }}</p>
+  {%- else %}
+  <ul class="thallo-block-entry_loop__cards listing-rows{{ style_classes('cards') }}"{{ style_attrs('cards') }}>{{ loop_cards(data.card|default([]), items, 'entry', 'card', 'listing-row') }}</ul>
+  {%- endif %}
+</div>

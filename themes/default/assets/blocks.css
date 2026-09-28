@@ -2002,6 +2002,15 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 .thallo-block-entry_related__title { font-weight: 600; }
 .thallo-block-entry_related__date { color: var(--muted); font-size: 0.85rem; }
 
+/* The Entry list (type layouts plan B): the Layout tab arranges its cards — rows, or a grid of
+   cards — on `__cards`; a card's own content is block flow, not a flex or grid of the loop's. Today's
+   `.listing-row` is a flex row (thumbnail beside text); a card keeps its padding and rule and drops
+   the flex. Its first and last blocks sit flush with the card's padding. */
+.thallo-block-entry_loop__cards > .thallo-loop-card { display: block; }
+.thallo-block-entry_loop__cards > .thallo-loop-card > :first-child { margin-top: 0; }
+.thallo-block-entry_loop__cards > .thallo-loop-card > :last-child { margin-bottom: 0; }
+.listing-empty { color: var(--muted); }
+
 /* An empty field on a layout stage names itself (never rendered on the site). */
 .thallo-field-empty {
   padding: var(--space-3) var(--space-4);

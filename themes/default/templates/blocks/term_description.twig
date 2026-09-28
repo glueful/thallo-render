@@ -1,0 +1,11 @@
+{# term_description — the Term description (type layouts plan B): an archive term's `description`
+   field, rich text sanitised or plain text escaped (the frame says which), nothing without one. #}
+{% set term = layout_context.term|default(null) %}
+{% set text = term ? term.fields.description|default('') : '' %}
+{% if text is not iterable and text != '' %}
+<div class="thallo-block thallo-block-term_description{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- if layout_context.term_description_format|default('plain') == 'rich' %}{{ text|safe_html }}{% else %}{{ text }}{% endif -%}
+</div>
+{% elseif is_canvas() and term %}
+<div class="thallo-block thallo-block-term_description thallo-field-empty">Description — this term has none</div>
+{% endif %}

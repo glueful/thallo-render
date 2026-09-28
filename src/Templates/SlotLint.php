@@ -13,7 +13,9 @@ use Twig\Node\Node;
  * and renders its children through `blocks()`: every slot is named once by `slot_attrs('<slot>')`
  * on the element that holds it, and `slot_attrs()` never names a slot the type does not declare.
  * A type that renders its children's data inline (`renders_children_inline`) has no slot
- * elements and is exempt.
+ * elements and is exempt. A loop (type layouts plan B) renders its card through `loop_cards()`,
+ * which puts the card's slot on the first card: that call names the slot its `field` argument says
+ * (`card` when it is left out).
  */
 final class SlotLint
 {
@@ -49,15 +51,19 @@ final class SlotLint
      */
     private static function walk(Node $node, array $slots, array &$named, array &$violations): void
     {
-        if ($node instanceof FunctionExpression && (string) $node->getAttribute('name') === 'slot_attrs') {
+        $name = $node instanceof FunctionExpression ? (string) $node->getAttribute('name') : '';
+        if ($name === 'slot_attrs' || $name === 'loop_cards') {
             $line = max(1, $node->getTemplateLine());
-            $first = null;
+            $args = [];
             foreach ($node->getNode('arguments') as $arg) {
-                $first = $arg;
-                break;
+                $args[] = $arg;
             }
+            // slot_attrs('<slot>'); loop_cards(card, items, name, '<slot>' = 'card', class).
+            $first = $name === 'slot_attrs'
+                ? ($args[0] ?? null)
+                : ($args[3] ?? new ConstantExpression('card', $line));
             if (!$first instanceof ConstantExpression || !is_string($first->getAttribute('value'))) {
-                $violations[] = ['line' => $line, 'message' => 'slot_attrs() slot must be a constant string.'];
+                $violations[] = ['line' => $line, 'message' => "{$name}() slot must be a constant string."];
             } else {
                 $slot = $first->getAttribute('value');
                 if (!in_array($slot, $slots, true)) {

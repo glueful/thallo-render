@@ -1,0 +1,10 @@
+{# listing_title — the Listing title (type layouts plan B): the content type's name on a listing, the
+   term's title on an archive (its slug, else its id, as today's archive heading). #}
+{% set level = ({h1: 'h1', h2: 'h2', h3: 'h3', h4: 'h4'}[data.level|default('h1')] ?? 'h1') %}
+{% set term = layout_context.term|default(null) %}
+{% set text = term ? (term.fields.title|default('') ?: (term.fields.slug|default('') ?: term.uuid|default(''))) : layout_context.type_name|default(layout_context.type|default('')) %}
+{% if text != '' %}
+<{{ level }} class="thallo-block thallo-block-listing_title{{ style_classes('root') }}"{{ style_attrs('root') }}>{{ text }}</{{ level }}>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-listing_title thallo-field-empty">Listing title</div>
+{% endif %}

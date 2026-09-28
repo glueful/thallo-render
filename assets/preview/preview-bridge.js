@@ -778,6 +778,9 @@
   /** The drop zone at a viewport point: null outside every slot or inside a dragged subtree. */
   function zoneAt(x, y, exclude) {
     var hit = document.elementFromPoint ? document.elementFromPoint(x, y) : null
+    // A loop's later cards repeat the first card's blocks for their items: nothing drops there (the
+    // first card is the loop's card slot), rather than falling through to the layout's root.
+    if (hit && hit.closest && hit.closest('[data-thallo-card-copy]')) return null
     var slotEl = hit && hit.closest ? hit.closest('[data-thallo-slot]') : null
     if (!slotEl) return null
     if (excluded(slotEl, exclude)) return null

@@ -1,0 +1,12 @@
+{# pagination — Page navigation (type layouts plan B): the listing page's newer and older links and
+   its "Page X of Y", as _pagination.twig renders them; nothing on a single page (the stage names it). #}
+{% set p = layout_context.pagination|default(null) %}
+{% if p and p.total_pages > 1 %}
+<nav class="thallo-block thallo-block-pagination pagination{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {% if p.prev_path %}<a href="{{ p.prev_path }}" rel="prev">{{ data.previous_label|default('') != '' ? data.previous_label : 'Newer' }}</a>{% endif %}
+  {% if data.count ?? true %}<span>Page {{ p.page }} of {{ p.total_pages }}</span>{% endif %}
+  {% if p.next_path %}<a href="{{ p.next_path }}" rel="next">{{ data.next_label|default('') != '' ? data.next_label : 'Older' }}</a>{% endif %}
+</nav>
+{% elseif is_canvas() %}
+<div class="thallo-block thallo-block-pagination thallo-field-empty">Page navigation — one page</div>
+{% endif %}

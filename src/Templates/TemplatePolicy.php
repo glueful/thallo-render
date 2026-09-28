@@ -100,7 +100,7 @@ final class TemplatePolicy
         'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
         'canvas_scope', 'region_stage', 'region_slot_attrs',
         'shop_product_url', 'shop_category_url', 'shop_index_url', 'json_script', 'block_script', 'map_embed',
-        'entries', 'entry_tree', 'layout_blocks', 'entry_slot', 'neighbours',
+        'entries', 'entry_tree', 'layout_blocks', 'entry_slot', 'loop_cards', 'neighbours',
         'markdown', 'markdown_toc', 'search_enabled',
         'is_preview', 'media_image', 'media_text', 'claim_priority_image',
         'color_mode_enabled', 'color_mode_script', 'theme_colors_style', 'theme_style_scope',
