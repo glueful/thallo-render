@@ -1979,6 +1979,9 @@
     }
     markEmptySlots()
     post('blocks-index', { ids: idsIndex() })
+    // What the stage shows: a layout stage's placeholder page (its sample gone) is named in the frame,
+    // outside every block — it comes and goes only with the shell, which reloads the stage whole.
+    post('stage-state', { placeholder: !!document.querySelector('[data-thallo-placeholder]') })
   }
 
   window.addEventListener('message', function (event) {

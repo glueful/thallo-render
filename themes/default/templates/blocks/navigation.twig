@@ -90,7 +90,7 @@
                  may keep several open — the runtime guarantees one-open-sibling.
                  Hover reveal stays a --reveal-hover CSS concern on top. #}
               <li class="thallo-block-navigation__item thallo-block-navigation__item--parent{% if active %} thallo-block-navigation__item--active{% endif %}">
-                <details class="thallo-block-navigation__details" name="nav-{{ block.dom_key|default(block.id) }}">
+                <details class="thallo-block-navigation__details" name="nav-{{ block.dom_key }}">
                   <summary class="thallo-block-navigation__link" data-nav-toggle>{% if item.icon|default('') %}<span class="thallo-block-navigation__icon">{{ icon(item.icon) }}</span>{% endif %}<span class="thallo-block-navigation__label">{{ item.label }}</span>{% if subicon != 'none' %}<span class="thallo-block-navigation__chevron">{{ icon(subicon) }}</span>{% endif %}</summary>
                   {{ nav.panel(item, sublayout, current_path) }}
                 </details>

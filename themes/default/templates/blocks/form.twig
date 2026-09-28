@@ -25,15 +25,15 @@
       <div class="thallo-block-form__field thallo-block-form__field--{{ field.type }}">
         {% if field.type == 'checkbox' %}
           <label class="thallo-block-form__checkbox">
-            <input id="ff-{{ field.key }}" type="checkbox" name="{{ field.key }}"{% if field.required %} required{% endif %}>
+            <input id="ff-{{ block.dom_key }}-{{ field.key }}" type="checkbox" name="{{ field.key }}"{% if field.required %} required{% endif %}>
             <span>{{ field.label }}{% if field.required %} <span aria-hidden="true">*</span>{% endif %}</span>
           </label>
         {% else %}
-          <label for="ff-{{ field.key }}">{{ field.label }}{% if field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+          <label for="ff-{{ block.dom_key }}-{{ field.key }}">{{ field.label }}{% if field.required %} <span aria-hidden="true">*</span>{% endif %}</label>
           {% if field.type == 'textarea' %}
-            <textarea id="ff-{{ field.key }}" name="{{ field.key }}"{% if field.required %} required{% endif %} placeholder="{{ field.placeholder }}"></textarea>
+            <textarea id="ff-{{ block.dom_key }}-{{ field.key }}" name="{{ field.key }}"{% if field.required %} required{% endif %} placeholder="{{ field.placeholder }}"></textarea>
           {% else %}
-            <input id="ff-{{ field.key }}" type="{{ field.type }}" name="{{ field.key }}"{% if field.required %} required{% endif %} placeholder="{{ field.placeholder }}">
+            <input id="ff-{{ block.dom_key }}-{{ field.key }}" type="{{ field.type }}" name="{{ field.key }}"{% if field.required %} required{% endif %} placeholder="{{ field.placeholder }}">
           {% endif %}
         {% endif %}
       </div>

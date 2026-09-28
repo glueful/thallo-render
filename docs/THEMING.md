@@ -274,8 +274,8 @@ optional ones.
 radio group, an exclusive `<details name>`, a `for`/`id` pair — use
 **`block.dom_key`** instead: the id itself on a page, and the id with the card's
 position inside a loop's card, where the same block renders once per entry. The
-default templates do (`tabs`, `accordion`, `navigation`), so a tab chosen in one
-card never switches another.
+default templates do (`tabs`, `accordion`, `navigation`, `form`), so a tab chosen in
+one card never switches another and two forms never share a field id.
 
 ### 4.2 Helpers available in templates
 
