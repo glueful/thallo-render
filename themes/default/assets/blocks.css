@@ -2054,6 +2054,10 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
    (96px on phones), cropped and rounded while its aspect is natural; the title is the text size in
    the row's weight, the date small, the excerpt the text size. A value set on the block wins. */
 .thallo-loop-card .thallo-block-container__inner { gap: 1.25rem; }
+/* A container in a card may shrink below its longest word, as today's row's text column does
+   (`.listing-row__content { min-width: 0 }`): a narrow card — a grid of cards on a phone — wraps its
+   text inside the card instead of pushing it out. */
+.thallo-loop-card .thallo-block-container { min-width: 0; }
 .thallo-loop-card .thallo-block-entry_cover { flex: 0 0 auto; width: 160px; }
 .thallo-loop-card .thallo-block-entry_cover--natural .thallo-block-entry_cover__image {
   aspect-ratio: 160 / 110;
