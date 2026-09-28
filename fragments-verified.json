@@ -20,7 +20,7 @@
         "blocks/container.twig": "9ec8f2fe69617511a33f4392374e5dec6a9e9a89f69716a4c13140301a7db308",
         "blocks/cta.twig": "33c9a3ac87d3c1a0e6b632ef5a8a7f382904e35017827aa71fbd6d76fc58cf67",
         "blocks/entry_content.twig": "45fb589b61778de9ce803da0d05fced865dce8eac49ffad513e875f007d5031b",
-        "blocks/entry_cover.twig": "37c7d4c31e3bba3933557001aad1f2daee1d0659fdc43c8be02babca46bfe20e",
+        "blocks/entry_cover.twig": "d76d2c6577435f80f8343eca2d1a5bf177dfdc60c717f129a2a1e65e0be3c165",
         "blocks/entry_date.twig": "a02aed1fbc821815b60724c5f6a4dd241bba2447a107897f61f04d9be87ecdb5",
         "blocks/entry_excerpt.twig": "f0571cee0a4e5b2328e17bd4b89cfaa2e37111aa73823c9958dfb4c7ea8f75ed",
         "blocks/entry_field.twig": "b688a8468c5a60ef7379ba645c614a9970e38a578d3907ea0fff54eef5322ca3",
