@@ -2005,11 +2005,76 @@ html:not([data-color-mode-enabled="true"]) thallo-color-mode-toggle { display: n
 /* The Entry list (type layouts plan B): the Layout tab arranges its cards — rows, or a grid of
    cards — on `__cards`; a card's own content is block flow, not a flex or grid of the loop's. Today's
    `.listing-row` is a flex row (thumbnail beside text); a card keeps its padding and rule and drops
-   the flex. Its first and last blocks sit flush with the card's padding. */
+   the flex — the starter's card holds a row container instead. The list itself sits where today's
+   rows do: no block margin of its own. */
+.thallo-block-entry_loop { margin-block: 0; }
 .thallo-block-entry_loop__cards > .thallo-loop-card { display: block; }
-.thallo-block-entry_loop__cards > .thallo-loop-card > :first-child { margin-top: 0; }
-.thallo-block-entry_loop__cards > .thallo-loop-card > :last-child { margin-bottom: 0; }
 .listing-empty { color: var(--muted); }
+
+/* A card is a content area, as a container's is (its containment release above): its blocks leave
+   the page's reading column and carry no block margin — the card's padding and the containers in it
+   space them. On the stage each block sits in a selection wrapper, released alike. */
+:is(.thallo-loop-card, .thallo-loop-card > .thallo-preview-block) > .thallo-block { margin-block: 0; }
+:is(.thallo-loop-card, .thallo-loop-card > .thallo-preview-block) > :is(
+  .thallo-block-image,
+  .thallo-block-rich_text,
+  .thallo-block-heading,
+  .thallo-block-tabs,
+  .thallo-block-button,
+  .thallo-block-carousel,
+  .thallo-block-logo,
+  .thallo-block-icon,
+  .thallo-block-video,
+  .thallo-block-audio,
+  .thallo-block-file,
+  .thallo-block-html,
+  .thallo-block-shortcode,
+  .thallo-block-separator,
+  .thallo-block-form,
+  .thallo-block-gallery,
+  .thallo-block-code,
+  .thallo-block-map,
+  .thallo-block-entry_title,
+  .thallo-block-entry_date,
+  .thallo-block-entry_cover,
+  .thallo-block-entry_excerpt,
+  .thallo-block-entry_field,
+  .thallo-block-entry_terms,
+  .thallo-block-entry_neighbours,
+  .thallo-block-entry_related,
+  .thallo-block-container
+) {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+/* A card's defaults are today's row (the user's B7 ruling): a container in it steps its children
+   1.25rem apart (0.875rem on phones) rather than the page's 2.5rem; the cover is a 160px thumbnail
+   (96px on phones), cropped and rounded while its aspect is natural; the title is the text size in
+   the row's weight, the date small, the excerpt the text size. A value set on the block wins. */
+.thallo-loop-card .thallo-block-container__inner { gap: 1.25rem; }
+.thallo-loop-card .thallo-block-entry_cover { flex: 0 0 auto; width: 160px; }
+.thallo-loop-card .thallo-block-entry_cover--natural .thallo-block-entry_cover__image {
+  aspect-ratio: 160 / 110;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+.thallo-loop-card .thallo-block-entry_title { font-size: inherit; line-height: inherit; font-weight: 650; }
+.thallo-loop-card .thallo-block-entry_title a { color: var(--ink); text-decoration: none; }
+.thallo-loop-card .thallo-block-entry_title a:hover { text-decoration: underline; }
+.thallo-loop-card .thallo-block-entry_date { font-size: 0.85rem; line-height: inherit; }
+.thallo-loop-card .thallo-block-entry_excerpt { font-size: inherit; line-height: inherit; }
+@media (max-width: 48rem) {
+  .thallo-loop-card .thallo-block-container__inner { gap: 0.875rem; }
+  .thallo-loop-card .thallo-block-entry_cover { width: 96px; }
+  .thallo-loop-card .thallo-block-entry_cover--natural .thallo-block-entry_cover__image { aspect-ratio: 96 / 72; }
+}
+
+/* The listing page's title and navigation keep today's margins: the heading's own, the navigation
+   none (its spacing is the pagination rule's). */
+.thallo-block-listing_title { margin-block: 0.67em; }
+.thallo-block-pagination { margin-block: 0; }
 
 /* An empty field on a layout stage names itself (never rendered on the site). */
 .thallo-field-empty {
