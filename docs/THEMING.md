@@ -270,6 +270,13 @@ fields, plus the theme helper functions. Example — the real `hero` block reads
 Access fields with `data.<field>` and always provide a `|default(...)` for
 optional ones.
 
+`block.id` is the block's id. To name a group or build an id in the markup — a
+radio group, an exclusive `<details name>`, a `for`/`id` pair — use
+**`block.dom_key`** instead: the id itself on a page, and the id with the card's
+position inside a loop's card, where the same block renders once per entry. The
+default templates do (`tabs`, `accordion`, `navigation`), so a tab chosen in one
+card never switches another.
+
 ### 4.2 Helpers available in templates
 
 Every function and filter below is registered on every render; the ones that need a package

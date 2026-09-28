@@ -114,6 +114,14 @@ final class RenderContextExtension extends AbstractExtension
     private bool $cardCopy = false;
 
     /**
+     * Where a block renders among a loop's cards — '' outside every loop, else each enclosing card's
+     * position (`-c0`, `-c1-c0`, …). A block's `dom_key` is its id with it: what a template names a
+     * group or builds an id from (a tabs block's radios, an accordion's exclusive details), so every
+     * card's are its own.
+     */
+    private string $cardPath = '';
+
+    /**
      * Which subtree the stage annotates (regions-stage spec §4.4): `entry` (the Design view — the
      * entry's blocks; the chrome untagged), `regions` (the header & footer stage — the chrome's
      * blocks; the page body untagged) or `none`. `$annotateBlocks` is the effective flag for the
@@ -1002,6 +1010,7 @@ final class RenderContextExtension extends AbstractExtension
         $classes = trim('thallo-loop-card ' . $class);
         $saved = $this->annotateBlocks;
         $savedCopy = $this->cardCopy;
+        $savedPath = $this->cardPath;
         $html = [];
         try {
             foreach ($items as $i => $item) {
@@ -1009,7 +1018,9 @@ final class RenderContextExtension extends AbstractExtension
                     continue;
                 }
                 $this->annotateBlocks = $saved && $i === 0;
-                $this->cardCopy = $i > 0;
+                // A copy stays a copy all the way down: a loop inside a later card has no first card.
+                $this->cardCopy = $savedCopy || $i > 0;
+                $this->cardPath = $savedPath . '-c' . $i;
                 $attributes = $saved ? ($i === 0 ? $this->slotAttrs($field) : ' data-thallo-card-copy') : '';
                 $cardContext = ['item' => $item, 'layout_context' => [$name => $item] + $layoutContext] + $context;
                 if ($name === 'entry') {
@@ -1021,6 +1032,7 @@ final class RenderContextExtension extends AbstractExtension
         } finally {
             $this->annotateBlocks = $saved;
             $this->cardCopy = $savedCopy;
+            $this->cardPath = $savedPath;
         }
         return new \Twig\Markup(implode('', $html), 'UTF-8');
     }
@@ -1633,6 +1645,7 @@ final class RenderContextExtension extends AbstractExtension
                     $rendered = $env->render($template, [
                         'block' => [
                             'id' => $item['id'] ?? null,
+                            'dom_key' => ($item['id'] ?? '') . $this->cardPath,
                             'type' => $type,
                             'data' => $data,
                             'settings' => $settings,
@@ -1722,6 +1735,7 @@ final class RenderContextExtension extends AbstractExtension
     public function resetPerRenderState(): void
     {
         $this->cardCopy = false;
+        $this->cardPath = '';
         $this->resetBlockDepth();
         $this->resetBlockFrames();
         $this->resetPriorityImageClaim();

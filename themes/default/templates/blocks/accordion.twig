@@ -15,7 +15,7 @@
   {# Items rendered inline: native <details name> needs the PARENT accordion's
      group id for exclusive-open — a child template can't know it. #}
   {% for item in data.items|default([]) %}
-  <details class="thallo-block-accordion__item"{% if not multiple %} name="accordion-{{ block.id }}"{% endif %}>
+  <details class="thallo-block-accordion__item"{% if not multiple %} name="accordion-{{ block.dom_key|default(block.id) }}"{% endif %}>
     <summary class="thallo-block-accordion__summary">
       <span class="thallo-block-accordion__question">{{ item.data.question|default('') }}</span>
       <span class="thallo-block-accordion__chevron" aria-hidden="true">
