@@ -614,9 +614,10 @@ final class RenderController
 
     /**
      * One render of the layout stage for a surface that builds its frame's variables itself (the
-     * shop's product page, type layouts plan C1): the sample's, while it is still available, else the
-     * surface's placeholder. The frame's presentation is the layout's Frame over the page's own
-     * default, as the live page composes it.
+     * shop's product page, type layouts plan C1; a type's listing and archive pages, plan B): the
+     * sample's, while it is still available, else the surface's placeholder. The frame's presentation
+     * is the layout's Frame over the page's own default, as the live page composes it — the theme's
+     * settings for listing and archive pages, a fixed default for the product page.
      *
      * @param array<string,mixed> $snapshot
      * @param array<string,mixed> $layout
@@ -639,7 +640,9 @@ final class RenderController
         }
         return $this->render($surface->frame(), $this->defaultLocale(), null, 200, [
             'layout' => $layout,
-            'presentation' => \Thallo\Render\Layouts\FramePresentation::fixed($layout['settings'] ?? null),
+            'presentation' => in_array($surface->key(), ['listing', 'archive'], true)
+                ? $this->presentationContext(null, null, $layout['settings'] ?? null)
+                : \Thallo\Render\Layouts\FramePresentation::fixed($layout['settings'] ?? null),
             'preview_revision' => $revision,
         ] + $extra + $vars);
     }
