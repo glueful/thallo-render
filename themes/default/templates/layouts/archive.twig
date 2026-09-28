@@ -1,0 +1,10 @@
+{# The archive frame (type layouts plan B, spec §7.1): every page of an archived field's term pages
+   while it has an archive layout — the theme's shell around the layout's blocks, which place the
+   term's title and description, the Entry list and the page navigation. The page (`layout_context`:
+   the term, its members, the pagination) reaches the blocks. A theme may override this file. #}
+{% extends 'layout.twig' %}
+{% block title %}{{ term.fields.title|default(term.fields.slug)|default(term.uuid) }} — {{ site.name }}{% endblock %}
+{% block content %}
+  {% if layout_placeholder|default(null) %}<div class="thallo-layout-placeholder-notice" data-thallo-placeholder>{{ layout_placeholder }}</div>{% endif %}
+  <article class="thallo-layout thallo-layout--archive">{{ layout_blocks(layout.blocks|default([])) }}</article>
+{% endblock %}

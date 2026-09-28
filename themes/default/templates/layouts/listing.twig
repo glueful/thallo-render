@@ -1,0 +1,11 @@
+{# The listing frame (type layouts plan B, spec §7.1): every page of a type's listing while the type
+   has a listing layout — the theme's shell around the layout's blocks, which place the title, the
+   Entry list and the page navigation. The page (`layout_context`: its items, its pagination) reaches
+   the blocks. A theme may override this file; a theme without one gets this frame. #}
+{% extends 'layout.twig' %}
+{% block title %}{{ type_name|default(type) }} — {{ site.name }}{% endblock %}
+{% block content %}
+  {# The layout stage's placeholder page (spec §5.2): named, so no one takes it for content. #}
+  {% if layout_placeholder|default(null) %}<div class="thallo-layout-placeholder-notice" data-thallo-placeholder>{{ layout_placeholder }}</div>{% endif %}
+  <article class="thallo-layout thallo-layout--listing">{{ layout_blocks(layout.blocks|default([])) }}</article>
+{% endblock %}

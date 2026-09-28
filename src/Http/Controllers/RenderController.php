@@ -120,20 +120,21 @@ final class RenderController
     private ?\Thallo\Contracts\Layouts\LayoutReader $layoutOverride = null;
 
     /**
-     * The layout an entry renders through (type layouts spec §7.2): its type's, unless the page opts
-     * out (`_presentation.use_layout: false`). The homepage route never asks.
+     * The layout a page renders through (type layouts spec §7.2): an entry its type's, unless the
+     * page opts out (`_presentation.use_layout: false`); a listing its type's listing layout; an
+     * archive its field's archive layout. The homepage route never asks.
      *
-     * @param array<string,mixed>|null $presentation the raw per-page _presentation
+     * @param array<string,mixed>|null $presentation the raw per-page _presentation (entries)
      * @return array<string,mixed>|null the layout, with its surface and target
      */
-    private function layoutFor(string $typeSlug, ?array $presentation): ?array
+    private function layoutFor(string $surface, string $target, ?array $presentation): ?array
     {
         $reader = $this->layoutOverride ?? $this->layouts;
-        if ($reader === null || $typeSlug === '' || ($presentation['use_layout'] ?? true) === false) {
+        if ($reader === null || $target === '' || ($presentation['use_layout'] ?? true) === false) {
             return null;
         }
-        $layout = $reader->for('entry', $typeSlug);
-        return $layout === null ? null : $layout + ['surface' => 'entry', 'target' => $typeSlug];
+        $layout = $reader->for($surface, $target);
+        return $layout === null ? null : $layout + ['surface' => $surface, 'target' => $target];
     }
 
     /**
@@ -460,7 +461,7 @@ final class RenderController
                 : 'entry.twig';
             // The Design view shows the entry inside its layout (type layouts spec §6.3): the
             // layout inert around the body, which stays the entry's own root list.
-            $layout = $this->layoutFor($typeSlug, $result['presentation'] ?? null);
+            $layout = $this->layoutFor('entry', $typeSlug, $result['presentation'] ?? null);
             if ($layout !== null) {
                 $template = 'layouts/entry.twig';
             }
@@ -682,7 +683,7 @@ final class RenderController
                         : 'entry.twig';
                     // The page as the site serves it: through its type's layout when it has one
                     // (type layouts spec §7.2); on this stage the layout is as inert as the body.
-                    $layout = $this->layoutFor($typeSlug, $result['presentation'] ?? null);
+                    $layout = $this->layoutFor('entry', $typeSlug, $result['presentation'] ?? null);
                     if ($layout !== null) {
                         $template = 'layouts/entry.twig';
                     }
@@ -1020,7 +1021,7 @@ final class RenderController
             ? $candidate
             : 'entry.twig';
         // A layout wins over the hierarchy while it exists (type layouts spec §7.2).
-        $layout = $this->layoutFor($typeSlug, $result['presentation'] ?? null);
+        $layout = $this->layoutFor('entry', $typeSlug, $result['presentation'] ?? null);
         if ($layout !== null) {
             $template = 'layouts/entry.twig';
             $extra['layout'] = $layout;
@@ -1086,6 +1087,11 @@ final class RenderController
 
         $candidate = "{$family}/{$typeSlug}.twig";
         $template = ($env ?? $this->twig())->getLoader()->exists($candidate) ? $candidate : "{$family}.twig";
+        // The page's layout (type layouts plan B): a listing's is its type's, an archive's its field's
+        // (`{type}:{field}`). While one exists it wins over the theme's templates, the type's own
+        // included (spec §7.2); the resolver has already decided the page exists.
+        $target = $family === 'archive' ? $typeSlug . ':' . (string) ($result['field'] ?? '') : $typeSlug;
+        $layout = $this->layoutFor($family, $target, null);
 
         $page = (int) $listing['page'];
         $totalPages = (int) $listing['total_pages'];
@@ -1112,10 +1118,20 @@ final class RenderController
             $extra['term'] = $result['term'];
             $extra['field'] = $result['field'];
         }
+        if ($layout !== null) {
+            $template = "layouts/{$family}.twig";
+            $extra = $sessionExtra + \Thallo\Contracts\Layouts\CollectionPage::context($result, $path) + [
+                'layout' => $layout,
+                'presentation' => $this->presentationContext(null, null, $layout['settings'] ?? null),
+            ];
+        }
 
         $response = $this->render($template, $locale, null, 200, $extra, $env, $assetBase, $assetsDir);
         $this->tagCollection($response, $result);
         $this->mergeCacheTags($response, array_values(array_map('strval', (array) ($result['cache_tags'] ?? []))));
+        // Every listing and archive page carries its surface tag, layout or not (spec §7.4): a first
+        // save purges pages cached through the theme's template, a removal those cached through it.
+        $this->mergeCacheTags($response, ["thallo:layout:{$family}:{$target}"]);
         return $response;
     }
 
