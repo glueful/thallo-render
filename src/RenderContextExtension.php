@@ -108,6 +108,12 @@ final class RenderContextExtension extends AbstractExtension
     private bool $annotateBlocks = false;
 
     /**
+     * Rendering a loop's second or later card: the card repeats the first card's design for another
+     * item, so a block's anchor — an id, one element per page — stays on the first card's.
+     */
+    private bool $cardCopy = false;
+
+    /**
      * Which subtree the stage annotates (regions-stage spec §4.4): `entry` (the Design view — the
      * entry's blocks; the chrome untagged), `regions` (the header & footer stage — the chrome's
      * blocks; the page body untagged) or `none`. `$annotateBlocks` is the effective flag for the
@@ -542,7 +548,10 @@ final class RenderContextExtension extends AbstractExtension
         return ' data-thallo-slot="' . htmlspecialchars($slot, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
     }
 
-    /** The attributes `$target` owns (anchor, `data-*`, accessibility label), escaped, leading space. */
+    /**
+     * The attributes `$target` owns (anchor, `data-*`, accessibility label), escaped, leading space. In
+     * a loop's later cards the anchor is left off: it names the first card's element.
+     */
     public function styleAttrs(string $target): string
     {
         [$frame, $targets] = $this->styleFrame($target);
@@ -551,6 +560,9 @@ final class RenderContextExtension extends AbstractExtension
         }
         $out = '';
         foreach ($this->styleEmitter->attrsFor($frame['settings'], $targets, $target) as $name => $value) {
+            if ($name === 'id' && $this->cardCopy) {
+                continue;
+            }
             $out .= ' ' . $name . '="' . htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '"';
         }
         return $out;
@@ -989,6 +1001,7 @@ final class RenderContextExtension extends AbstractExtension
         }
         $classes = trim('thallo-loop-card ' . $class);
         $saved = $this->annotateBlocks;
+        $savedCopy = $this->cardCopy;
         $html = [];
         try {
             foreach ($items as $i => $item) {
@@ -996,6 +1009,7 @@ final class RenderContextExtension extends AbstractExtension
                     continue;
                 }
                 $this->annotateBlocks = $saved && $i === 0;
+                $this->cardCopy = $i > 0;
                 $attributes = $saved ? ($i === 0 ? $this->slotAttrs($field) : ' data-thallo-card-copy') : '';
                 $cardContext = ['item' => $item, 'layout_context' => [$name => $item] + $layoutContext] + $context;
                 if ($name === 'entry') {
@@ -1006,6 +1020,7 @@ final class RenderContextExtension extends AbstractExtension
             }
         } finally {
             $this->annotateBlocks = $saved;
+            $this->cardCopy = $savedCopy;
         }
         return new \Twig\Markup(implode('', $html), 'UTF-8');
     }
@@ -1706,6 +1721,7 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function resetPerRenderState(): void
     {
+        $this->cardCopy = false;
         $this->resetBlockDepth();
         $this->resetBlockFrames();
         $this->resetPriorityImageClaim();
