@@ -114,6 +114,8 @@ and fills `{% block content %}`.
 | `region-stage.twig` | The Header & footer page's stage when no published page can be shown: the layout around a placeholder body. |
 | `region-session-expired.twig` | What that stage shows once its session has expired. |
 | `layouts/entry.twig` | The frame for an entry whose type has a layout: `layout.twig` around `{{ layout_blocks(layout.blocks) }}`. It wins over `entry.twig` and `entry/{type}.twig` while the layout exists. |
+| `layouts/listing.twig` | The frame for a type's listing pages while the type has a listing layout. It wins over `listing.twig` and `listing/{type}.twig` while the layout exists (§2.1). |
+| `layouts/archive.twig` | The frame for a field's archive pages while it has an archive layout. It wins over `archive.twig` while the layout exists (§2.1). |
 | `layout-session-ended.twig` | A layout's stage once its layout is removed (`retired`) or its session has expired. |
 | `layouts/product.twig` | Shipped by the Commerce pack, not the default theme: the frame for the shop's product page while it has a layout (§2.1). |
 
@@ -140,6 +142,21 @@ keep a form's identity — a layout's form is one form across its type, a body's
 A theme may ship `templates/layouts/entry.twig` to change the frame; one that does not gets the
 default theme's. A layout's **Frame** settings (width, header, footer) reach `layout.twig` through
 `presentation`, below the page's own settings and above the theme's.
+
+A type's listing pages and its archives have frames too: `layouts/listing.twig` and
+`layouts/archive.twig`, the same shape as the entry's (an `<article class="thallo-layout
+thallo-layout--listing">`, or `--archive`, around `layout_blocks()`), with today's page titles —
+the type's name, the term's title. The page reaches them as the listing and archive templates get
+it — `items`, `pagination`, `type`, `type_name`, `term`, `field`, `type_listing` — and every block
+reads the same values under `layout_context`. A layout never decides which of these pages exist:
+the resolver still answers 404 and 301 as without one. A theme may override either frame by file.
+
+The **Entry list** block repeats its card with `loop_cards(data.card, layout_context.items,
+'entry')`: each card an `<li class="thallo-loop-card">` whose blocks read the entry as `entry` and
+`item`. Keep `loop_cards()` the only way a loop renders its cards — on the stage it marks the first
+card as the card slot, where the card's blocks select and a dragged block lands, and the rest as
+copies, where nothing selects or drops. A card is block flow: the loop's own layout (a column, a
+row, a grid of cards) arranges the `<li>` cards and never what is inside one.
 
 With Commerce on, the product page has a frame too: `layouts/product.twig`, shipped in the Commerce
 pack's templates. Its layout's field blocks read the product from `layout_context` — the frame's
@@ -269,6 +286,10 @@ Functions:
 - `blocks(list)` — render a list of **child blocks** (nesting; e.g. hero links, carousel slides).
   Blocks nest up to five levels deep (container → container → card → container → heading); a
   deeper list renders nothing and the validator refuses it.
+- `loop_cards(card, items, name, field?, class?)` — a loop block's cards: `card` rendered once
+  per item, each an `li.thallo-loop-card`, the item reaching the card's blocks as `item` (and
+  `entry` when `name` is `entry`); on the stage the first card is the card slot, the rest copies
+  (§2.1).
 - `slot_attrs('field')` — **emit this on the element that wraps a `blocks()` call.** On the
   canvas it renders `data-thallo-slot="field"`, so the builder knows the real element a slot
   occupies — where a dragged block may land, which layout the slot has (a flex row splits
