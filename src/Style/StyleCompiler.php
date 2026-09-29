@@ -24,7 +24,8 @@ final class StyleCompiler
     // 9: motion — entrances, and the one shared rule that animates them.
     // 10: a hero's aside — aside.padding and aside.surface.
     // 11: the aside's padding is a side each.
-    public const VERSION = 11;
+    // 12: layout.columns `theme` — the theme's own tracks, for a target that declares them.
+    public const VERSION = 12;
 
     /** Where an entrance STARTS from; `none` starts nowhere. */
     private const ENTRANCES = [
