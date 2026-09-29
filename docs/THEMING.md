@@ -171,7 +171,7 @@ link `shop.css`: the shop's styles already reach every page inside the theme art
 
 The shop home and the category pages have frames of their own, `layouts/shop_index.twig` and
 `layouts/shop_category.twig`, in the same place. Their blocks read the page from `layout_context` —
-`products` (each card as an array: `name`, `url`, `coverUrl`, `rating`, `priceFormatted`,
+`products` (each card as an array: `uuid`, `name`, `url`, `coverUrl`, `rating`, `priceFormatted`,
 `compareAtFormatted`, `categoryName`, `cartMode`, `directVariantUuid`), `total`, `pagination`,
 `categories`, `shop_index` and `category` (null on the shop home). The **Product list** repeats its
 card with `loop_cards(data.card, layout_context.products, 'product', 'card', 'shop-grid__item')`,
