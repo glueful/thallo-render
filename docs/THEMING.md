@@ -118,6 +118,7 @@ and fills `{% block content %}`.
 | `layouts/archive.twig` | The frame for a field's archive pages while it has an archive layout. It wins over `archive.twig` while the layout exists (§2.1). |
 | `layout-session-ended.twig` | A layout's stage once its layout is removed (`retired`) or its session has expired. |
 | `layouts/product.twig` | Shipped by the Commerce pack, not the default theme: the frame for the shop's product page while it has a layout (§2.1). |
+| `layouts/shop_index.twig`, `layouts/shop_category.twig` | Shipped by the Commerce pack: the frames for the shop home's pages and for every category's page while each has a layout (§2.1). |
 
 ### 2.1 Layout frames
 
@@ -167,6 +168,24 @@ structured data (`{% include 'shop/_product_structured_data.twig' %}`), the `dat
 root, the `shop.js` script, and `{{ layout_blocks(layout.blocks|default([])) }}`. It must **not**
 link `shop.css`: the shop's styles already reach every page inside the theme artifact's
 `@layer theme`, and a raw, unlayered link would beat the values an editor sets on a product block.
+
+The shop home and the category pages have frames of their own, `layouts/shop_index.twig` and
+`layouts/shop_category.twig`, in the same place. Their blocks read the page from `layout_context` —
+`products` (each card as an array: `name`, `url`, `coverUrl`, `rating`, `priceFormatted`,
+`compareAtFormatted`, `categoryName`, `cartMode`, `directVariantUuid`), `total`, `pagination`,
+`categories`, `shop_index` and `category` (null on the shop home). The **Product list** repeats its
+card with `loop_cards(data.card, layout_context.products, 'product', 'card', 'shop-grid__item')`,
+so a block inside the card reads its product as `layout_context.product` and knows it is in a card
+because `item` is set. An override of either frame keeps the canonical `<link>`, the
+`data-shop-scope` root around `{{ layout_blocks(layout.blocks|default([])) }}`, and the
+`shop-index`/`shop-category` class on that root (the shop's styles are scoped to it), and it links no
+`shop.css`, for the reason above.
+
+A block type may declare what its theme gives a style target when nothing is set, as `defaults` on
+the target in its `style_targets` (`display`, a `columns` label, the `gap` values as written). The
+**Product list** declares the shop's adaptive grid on its `cards` target, so the Layout tab shows
+that grid as the default, and the compiled utilities leave the theme's `grid-template-columns` in
+force until a track count is chosen.
 
 `blog` in these paths stands for any content type you create; Thallo ships no `blog` type.
 
