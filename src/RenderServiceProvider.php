@@ -728,6 +728,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             storefrontLinks: $container->has(StorefrontLinkResolver::class)
                 ? $container->get(StorefrontLinkResolver::class)
                 : null,
+            // shop_block_product_label() (sections and templates design §6): soft-bound; null =
+            // a shop block's stage placeholder says "choose a product".
+            blockPreview: $container->has(\Thallo\Contracts\Delivery\StorefrontBlockPreview::class)
+                ? $container->get(\Thallo\Contracts\Delivery\StorefrontBlockPreview::class)
+                : null,
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).
             mediaVariants: $container->has(MediaVariantUrlResolver::class)
