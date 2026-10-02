@@ -505,7 +505,7 @@ caching.
 
 The pack ships with Thallo: `glueful/thallo-core` requires it at the same version and the project's
 `config/serviceproviders.php` loads its provider, so there is nothing to install or enable per pack.
-An operator turns `thallo.render` off or on in the admin under **Extensions › Capabilities**
+An operator turns `thallo.render` off or on in the admin under **Features**
 (stored system-wide; it overrides the deploy-time `thallo.capabilities` config map). Off, the
 headless product is untouched.
 
