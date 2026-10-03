@@ -19,6 +19,7 @@ use Thallo\Render\Templates\BlockTemplateTargetChecker;
 use Thallo\Render\Templates\TemplateLinter;
 use Thallo\Render\Templates\TemplateRepository;
 use Thallo\Contracts\Capability\Capability;
+use Thallo\Contracts\Capability\DeclaresCapabilities;
 use Thallo\Contracts\Capability\CapabilityRegistry;
 use Thallo\Contracts\Content\BlockEditableFieldResolver;
 use Thallo\Contracts\Content\FormSealer;
@@ -79,7 +80,7 @@ use Thallo\Render\Style\ThemeStylesheetArtifacts;
 
 use function config;
 
-final class RenderServiceProvider extends ServiceProvider implements DeclaresLoadOrder
+final class RenderServiceProvider extends ServiceProvider implements DeclaresLoadOrder, DeclaresCapabilities
 {
     public static function loadAfter(): array
     {
@@ -806,6 +807,17 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
         $this->mergeConfig('render', require __DIR__ . '/../config/render.php');
     }
 
+    public function capabilities(): array
+    {
+        return [
+            new Capability(
+                'thallo.render',
+                label: 'Rendered delivery',
+                description: 'Server-rendered pages from published content via filesystem Twig themes.',
+            ),
+        ];
+    }
+
     public function boot(ApplicationContext $context): void
     {
         // OUTSIDE the capability gate (pack convention): schema must exist regardless
@@ -815,12 +827,6 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
         // carried as the descriptor's legacy alias.
 
         $registry = app($context, CapabilityRegistry::class);
-
-        $registry->register(new Capability(
-            'thallo.render',
-            label: 'Rendered delivery',
-            description: 'Server-rendered pages from published content via filesystem Twig themes.',
-        ));
 
         if ($registry->isEnabled('thallo.render')) {
             $this->loadRoutesFrom(__DIR__ . '/../routes/public-routes.php');
