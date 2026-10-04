@@ -30,6 +30,12 @@ final class RenderContributionRegistry
     /** @var list<string>|null */
     private ?array $frozenStylesheetSnapshot = null;
 
+    /** @var array<string, BlockScriptContributor> */
+    private array $blockScripts = [];
+
+    /** @var array<string, string>|null */
+    private ?array $frozenBlockScriptSnapshot = null;
+
     private bool $frozen = false;
 
     /** @var array{prefixes: list<string>, exacts: list<string>}|null */
@@ -67,6 +73,27 @@ final class RenderContributionRegistry
             throw new \LogicException("Duplicate stylesheet contributor id '{$id}'.");
         }
         $this->stylesheets[$id] = $contributor;
+    }
+
+    public function registerBlockScripts(BlockScriptContributor $contributor): void
+    {
+        $id = $contributor->contributorId();
+        $this->guardNotFrozen($id);
+        if (isset($this->blockScripts[$id])) {
+            throw new \LogicException("Duplicate block-script contributor id '{$id}'.");
+        }
+        $this->blockScripts[$id] = $contributor;
+    }
+
+    /**
+     * Every contributed block script, name => URL.
+     *
+     * @return array<string, string>
+     */
+    public function frozenBlockScripts(): array
+    {
+        $this->freeze();
+        return $this->frozenBlockScriptSnapshot ?? [];
     }
 
     /**
@@ -131,6 +158,16 @@ final class RenderContributionRegistry
         $reservedSnapshot = $this->buildReservedSnapshot();
         $templateSnapshot = $this->buildTemplateSnapshot();
 
+        $blockScriptSnapshot = [];
+        foreach ($this->ordered($this->blockScripts) as $contributor) {
+            foreach ($contributor->blockScripts() as $name => $url) {
+                if (isset($blockScriptSnapshot[$name])) {
+                    throw new \LogicException("Duplicate block script '{$name}'.");
+                }
+                $blockScriptSnapshot[$name] = $url;
+            }
+        }
+
         $stylesheetSnapshot = [];
         foreach ($this->ordered($this->stylesheets) as $contributor) {
             foreach ($contributor->stylesheets() as $file) {
@@ -141,6 +178,7 @@ final class RenderContributionRegistry
         $this->frozenReservedSnapshot = $reservedSnapshot;
         $this->frozenTemplateSnapshot = $templateSnapshot;
         $this->frozenStylesheetSnapshot = $stylesheetSnapshot;
+        $this->frozenBlockScriptSnapshot = $blockScriptSnapshot;
         $this->frozen = true;
     }
 

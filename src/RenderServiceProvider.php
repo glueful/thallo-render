@@ -750,6 +750,8 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             searchScopes: $container->has(\Thallo\Contracts\Search\SearchScopeStatus::class)
                 ? $container->get(\Thallo\Contracts\Search\SearchScopeStatus::class)
                 : null,
+            contributedBlockScripts: static fn (): array => $container
+                ->get(\Thallo\Render\Contribution\RenderContributionRegistry::class)->frozenBlockScripts(),
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).
             mediaVariants: $container->has(MediaVariantUrlResolver::class)

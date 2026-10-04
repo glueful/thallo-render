@@ -271,6 +271,13 @@ final class RenderContextExtension extends AbstractExtension
          * unavailable ("Search is off"), so a Search block renders nothing.
          */
         private readonly ?\Thallo\Contracts\Search\SearchScopeStatus $searchScopes = null,
+        /**
+         * Packages' block scripts, name => fingerprinted URL (BlockScriptContributor), read on
+         * first use so the contribution registry freezes only once rendering starts.
+         *
+         * @var (\Closure(): array<string, string>)|null
+         */
+        private readonly ?\Closure $contributedBlockScripts = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -773,15 +780,29 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function blockScript(string $name): \Twig\Markup
     {
-        if (!in_array($name, self::BLOCK_SCRIPT_ASSETS, true) || isset($this->emittedBlockScripts[$name])) {
+        if (isset($this->emittedBlockScripts[$name])) {
             return new \Twig\Markup('', 'UTF-8');
+        }
+        if (in_array($name, self::BLOCK_SCRIPT_ASSETS, true)) {
+            $src = '/_thallo/runtime/block-' . $name . '.js';
+        } else {
+            $this->blockScriptUrls ??= $this->contributedBlockScripts !== null
+                ? ($this->contributedBlockScripts)()
+                : [];
+            $src = $this->blockScriptUrls[$name] ?? null;
+            if ($src === null) {
+                return new \Twig\Markup('', 'UTF-8');
+            }
         }
         $this->emittedBlockScripts[$name] = true;
         return new \Twig\Markup(
-            '<script defer src="/_thallo/runtime/block-' . $name . '.js"></script>',
+            '<script defer src="' . htmlspecialchars($src, ENT_QUOTES, 'UTF-8') . '"></script>',
             'UTF-8',
         );
     }
+
+    /** @var array<string, string>|null packages' block scripts, resolved on first use */
+    private ?array $blockScriptUrls = null;
 
     /** The verbatim no-flash resolver (color-mode spec §3.1), or empty markup when disabled. */
     public function colorModeScript(): \Twig\Markup
