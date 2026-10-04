@@ -266,6 +266,11 @@ final class RenderContextExtension extends AbstractExtension
          * null, so a shop block's stage placeholder says "choose a product".
          */
         private readonly ?\Thallo\Contracts\Delivery\StorefrontBlockPreview $blockPreview = null,
+        /**
+         * Soft-bound (search block spec §3.1): null → search_scope_state() reports every scope
+         * unavailable ("Search is off"), so a Search block renders nothing.
+         */
+        private readonly ?\Thallo\Contracts\Search\SearchScopeStatus $searchScopes = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -375,6 +380,7 @@ final class RenderContextExtension extends AbstractExtension
             // Stage only: the named placeholder of a Featured product or Add to cart. Off the stage
             // it answers null without a lookup, so the public path stays cache-safe.
             new TwigFunction('shop_block_product_label', $this->shopBlockProductLabel(...)),
+            new TwigFunction('search_scope_state', $this->searchScopeState(...)),
             new TwigFunction('shop_category_url', $this->shopCategoryUrl(...)),
             new TwigFunction('shop_index_url', $this->shopIndexUrl(...)),
             new TwigFunction('json_script', $this->jsonScript(...)),
@@ -632,6 +638,18 @@ final class RenderContextExtension extends AbstractExtension
      * The name of the product a shop block would show, for its stage placeholder; null when none,
      * and always null off the stage — a public render never pays for the lookup.
      */
+    /**
+     * Whether a Search block's scope can be searched now, and if not, why (search block spec §3.1).
+     *
+     * @return array{available: bool, label: ?string, reason: ?string}
+     */
+    public function searchScopeState(mixed $scope = ''): array
+    {
+        $scope = is_string($scope) ? $scope : '';
+        return $this->searchScopes?->stateOf($scope)
+            ?? ['available' => false, 'label' => null, 'reason' => 'Search is off'];
+    }
+
     public function shopBlockProductLabel(?string $slug, ?string $entryUuid): ?string
     {
         if (!$this->annotateBlocks) {

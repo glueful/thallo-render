@@ -745,6 +745,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             blockPreview: $container->has(\Thallo\Contracts\Delivery\StorefrontBlockPreview::class)
                 ? $container->get(\Thallo\Contracts\Delivery\StorefrontBlockPreview::class)
                 : null,
+            // search_scope_state() (search block spec §3.1): soft-bound; null = every scope reads
+            // unavailable and a Search block renders nothing.
+            searchScopes: $container->has(\Thallo\Contracts\Search\SearchScopeStatus::class)
+                ? $container->get(\Thallo\Contracts\Search\SearchScopeStatus::class)
+                : null,
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).
             mediaVariants: $container->has(MediaVariantUrlResolver::class)

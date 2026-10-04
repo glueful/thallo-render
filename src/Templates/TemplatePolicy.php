@@ -80,7 +80,9 @@ final class TemplatePolicy
     //         place, or Google's own embed link once it proves to be one).
     // bumped: layout_blocks, entry_slot and neighbours joined the function allowlist (type
     //         layouts spec §2 — the layout frame, the entry_content slot, the previous/next pair).
-    public const CACHE_VERSION = 29;
+    // bumped: search_scope_state joined the function allowlist (the Search block asks whether its
+    //         scope can be searched now — search block spec §3.1).
+    public const CACHE_VERSION = 30;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -96,7 +98,8 @@ final class TemplatePolicy
         'menu', 'path', 'asset', 'facets', 'blocks', 'media', 'site_logo', 'video_embed', 'icon',
         'region_blocks', 'region_settings', 'region_style_classes', 'site_favicon', 'custom_css', 'form_render',
         'runtime_script', 'seo_head', 'font_faces_style',
-        'shop_wishlist_scope', 'shop_wishlist_url', 'layers_stylesheet_url', 'theme_stylesheet_url',
+        'shop_wishlist_scope', 'shop_wishlist_url', 'search_scope_state', 'layers_stylesheet_url',
+        'theme_stylesheet_url',
         'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
         'canvas_scope', 'region_stage', 'region_slot_attrs',
         'shop_product_url', 'shop_block_product_label', 'shop_category_url', 'shop_index_url',
