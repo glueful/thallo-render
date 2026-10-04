@@ -642,10 +642,6 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
-     * The name of the product a shop block would show, for its stage placeholder; null when none,
-     * and always null off the stage — a public render never pays for the lookup.
-     */
-    /**
      * Whether a Search block's scope can be searched now, and if not, why (search block spec §3.1).
      *
      * @return array{available: bool, label: ?string, reason: ?string}
@@ -657,6 +653,10 @@ final class RenderContextExtension extends AbstractExtension
             ?? ['available' => false, 'label' => null, 'reason' => 'Search is off'];
     }
 
+    /**
+     * The name of the product a shop block would show, for its stage placeholder; null when none,
+     * and always null off the stage — a public render never pays for the lookup.
+     */
     public function shopBlockProductLabel(?string $slug, ?string $entryUuid): ?string
     {
         if (!$this->annotateBlocks) {
