@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render;
 
+use Thallo\Contracts\Capability\AvailabilityFingerprint;
 use Glueful\Extensions\DeclaresLoadOrder;
 use Glueful\Bootstrap\ApplicationContext;
 use Glueful\Cache\CacheStore;
@@ -415,10 +416,15 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     {
         $context = $container->get(ApplicationContext::class);
         $appearance = $container->get(ThemeAppearanceSource::class);
+        // Which features are on is part of a cached page's identity (search block spec §3.6).
+        $availability = $container->has(AvailabilityFingerprint::class)
+            ? $container->get(AvailabilityFingerprint::class)
+            : null;
         return new RenderErrorCache(
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            static fn (): string => $appearance->fingerprint(),
+            static fn (): string => $appearance->fingerprint()
+                . ($availability !== null ? '-a' . $availability->current() : ''),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
             $container->get(TenantCacheSegment::class),
@@ -430,12 +436,17 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     {
         $context = $container->get(ApplicationContext::class);
         $appearance = $container->get(ThemeAppearanceSource::class);
+        // Which features are on is part of a cached page's identity (search block spec §3.6).
+        $availability = $container->has(AvailabilityFingerprint::class)
+            ? $container->get(AvailabilityFingerprint::class)
+            : null;
         return new RenderPageCache(
             // The SAME binding InvalidateCacheTagsListener invalidates (spec §3 pin) —
             // this identity is what makes zero-new-purge-code true.
             $container->get(CacheStore::class),
             $container->get(ThemeLocator::class)->activePaths()['name'],
-            static fn (): string => $appearance->fingerprint(),
+            static fn (): string => $appearance->fingerprint()
+                . ($availability !== null ? '-a' . $availability->current() : ''),
             (bool) config($context, 'render.cache_enabled', true),
             (int) config($context, 'render.cache_ttl', 3600),
             $container->get(TenantCacheSegment::class),
