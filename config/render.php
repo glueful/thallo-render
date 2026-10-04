@@ -42,6 +42,12 @@ return [
     // invalidation. On non-tag cache drivers this TTL is the ONLY freshness bound.
     'cache_ttl' => (int) env('RENDER_CACHE_TTL', 3600),
 
+    // Seconds before the CDN purge that follows a change in the features in use is repeated. A
+    // response rendered under the old state can still reach the CDN after the first purge; this
+    // is a retry window, not a staleness bound (rendered pages are sent max-age=0,
+    // must-revalidate).
+    'availability_edge_grace' => (int) env('RENDER_AVAILABILITY_EDGE_GRACE', 300),
+
     // Content types with rendered listing pages at /{type} (and term archives at
     // /{type}/{field}/{term}) — comma-separated slugs. EMPTY (the default) keeps the
     // whole listing/archive grammar dormant. Types must also be publicly deliverable.
