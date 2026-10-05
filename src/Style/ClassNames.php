@@ -64,6 +64,8 @@ final class ClassNames
         'colors.surface_opacity' => 'bgo',
         'backdrop.blur' => 'blur',
         'typography.line_height' => 'leading',
+        // The typeface (block typeface spec §3.3): `t-font-serif`, `t-font-<id>`, `t-font-reset`.
+        'typography.family' => 'font',
         'motion.entrance' => 'enter',
         'motion.duration' => 'enterdur',
         'motion.delay' => 'enterdelay',

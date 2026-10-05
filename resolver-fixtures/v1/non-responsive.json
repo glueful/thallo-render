@@ -101,6 +101,65 @@
           "state": "theme-default"
         }
       }
+    },
+    {
+      "name": "instance typeface reset ends the cascade over a class typeface",
+      "property": "typography.family",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "typography": {
+              "family": {
+                "type": "font",
+                "value": "serif"
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "typography": {
+          "family": {
+            "type": "reset"
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        }
+      }
+    },
+    {
+      "name": "a class typeface applies when the instance is silent",
+      "property": "typography.family",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "typography": {
+              "family": {
+                "type": "font",
+                "value": "Ab3dE5fG7hJ9"
+              }
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": {
+            "type": "font",
+            "value": "Ab3dE5fG7hJ9"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        }
+      }
     }
   ]
 }

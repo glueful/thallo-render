@@ -25,7 +25,8 @@ final class StyleCompiler
     // 10: a hero's aside — aside.padding and aside.surface.
     // 11: the aside's padding is a side each.
     // 12: layout.columns `theme` — the theme's own tracks, for a target that declares them.
-    public const VERSION = 12;
+    // 13: typography.family's reset (t-font-reset: family and synthesis back to the context's).
+    public const VERSION = 13;
 
     /** Where an entrance STARTS from; `none` starts nowhere. */
     private const ENTRANCES = [
@@ -206,6 +207,15 @@ final class StyleCompiler
             }
             // A span has no rule of its own: spanRules() pairs it with the parent's track count.
             if ($path === 'layout.span') {
+                continue;
+            }
+            // The typeface's values are not a token or choice table: the built-ins are compiled with
+            // the theme's face (block typeface plan Task 4), uploaded families into the workspace's
+            // fonts artifact (Task 6). Its reset returns the target to its contextual default —
+            // family and synthesis both, since synthesis is set with every resolved family.
+            if ($path === 'typography.family') {
+                $out .= ClassNames::selector(ClassNames::reset($path, $bp))
+                    . " { font-family: revert-layer; font-synthesis: revert-layer; }\n";
                 continue;
             }
             foreach (self::valuesFor($path, $def->tokenDomain, $def->choices) as $value) {
