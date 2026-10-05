@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Theme;
 
+use Thallo\Contracts\Style\FontStacks;
+
 /**
  * Site-wide design tokens (website plan phase 1b): corner radius, typeface pairing and
  * page ground, chosen in Settings next to the theme colours. Closed enums; the defaults
@@ -26,12 +28,13 @@ final class ThemeDesign
     public const DEFAULT_FONT = 'sans';
     public const DEFAULT_BACKGROUND = 'plain';
 
-    private const SERIF = '"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif';
-    private const SYSTEM = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-    private const HUMANIST = 'Seravek,"Gill Sans Nova",Ubuntu,Calibri,"DejaVu Sans",source-sans-pro,sans-serif';
-    private const GEOMETRIC = 'Avenir,Montserrat,Corbel,"URW Gothic",source-sans-pro,sans-serif';
-    private const SLAB = 'Rockwell,"Rockwell Nova","Roboto Slab","DejaVu Serif","Sitka Small",serif';
-    private const MONO = 'ui-monospace,"Cascadia Code","Source Code Pro",Menlo,Consolas,"DejaVu Sans Mono",monospace';
+    // The named stacks are shared with the font library and the typeface utilities (FontStacks).
+    private const SERIF = FontStacks::SERIF;
+    private const SYSTEM = FontStacks::SYSTEM;
+    private const HUMANIST = FontStacks::HUMANIST;
+    private const GEOMETRIC = FontStacks::GEOMETRIC;
+    private const SLAB = FontStacks::SLAB;
+    private const MONO = FontStacks::MONO;
 
     /**
      * A pairing as [display, body]; null leaves that role to the theme's own face.
