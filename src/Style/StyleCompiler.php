@@ -28,7 +28,8 @@ final class StyleCompiler
     // 12: layout.columns `theme` — the theme's own tracks, for a target that declares them.
     // 13: typography.family's reset (t-font-reset: family and synthesis back to the context's).
     // 14: the built-in typefaces, Theme from the theme's declared face, and t-font-inherit.
-    public const VERSION = 14;
+    // 15: color.black, a literal #000000 like white — its token and its colour utilities.
+    public const VERSION = 15;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';

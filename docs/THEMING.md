@@ -903,7 +903,7 @@ The platform owns the names; the theme maps each to a CSS value (`theme.json`
 | `spacing` | `none xs sm md lg xl 2xl 3xl` |
 | `width` | `narrow content container full` |
 | `radius` | `none sm md lg full` |
-| `color` | `background surface surface-2 text muted line accent accent-contrast transparent white` — `white` is literal `#ffffff` in every scheme (text on an accent or inverted band); a theme that omits it gets the literal |
+| `color` | `background surface surface-2 text muted line accent accent-contrast transparent white black` — `white` and `black` are literal `#ffffff` and `#000000` in every scheme; a theme that omits them gets the literal |
 | `shadow` | `none xs sm md lg xl` |
 | `typography.size` | `xs sm md lg xl 2xl 3xl` |
 
