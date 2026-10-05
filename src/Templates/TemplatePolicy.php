@@ -82,7 +82,9 @@ final class TemplatePolicy
     //         layouts spec §2 — the layout frame, the entry_content slot, the previous/next pair).
     // bumped: search_scope_state joined the function allowlist (the Search block asks whether its
     //         scope can be searched now — search block spec §3.1).
-    public const CACHE_VERSION = 30;
+    // bumped: fonts_stylesheet_url joined the function allowlist (block typeface spec §3.4 — the
+    //         workspace's fonts stylesheet is linked after the compiled style artifact).
+    public const CACHE_VERSION = 31;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
@@ -100,7 +102,8 @@ final class TemplatePolicy
         'runtime_script', 'seo_head', 'font_faces_style',
         'shop_wishlist_scope', 'shop_wishlist_url', 'search_scope_state', 'layers_stylesheet_url',
         'theme_stylesheet_url',
-        'settings_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs', 'is_canvas',
+        'settings_stylesheet_url', 'fonts_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs',
+        'is_canvas',
         'canvas_scope', 'region_stage', 'region_slot_attrs',
         'shop_product_url', 'shop_block_product_label', 'shop_category_url', 'shop_index_url',
         'json_script', 'block_script', 'map_embed',

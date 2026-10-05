@@ -33,6 +33,8 @@ final class ThemeAppearanceSource
         private readonly ?\Closure $settingsArtifactHash = null,
         /** The style class generation (spec §4.3), lazily: the request's snapshot names the entry. */
         private readonly ?\Closure $styleGeneration = null,
+        /** The fonts stylesheet's hash (block typeface spec §3.4), lazily; '' when there is none. */
+        private readonly ?\Closure $fontsArtifactHash = null,
     ) {
     }
 
@@ -130,6 +132,11 @@ final class ThemeAppearanceSource
         }
         if ($this->styleGeneration !== null) {
             $segments[] = 'g' . (int) ($this->styleGeneration)();
+        }
+        // A library change re-keys every cached page; with no current family, the fingerprint it had.
+        $fonts = $this->fontsArtifactHash !== null ? (string) ($this->fontsArtifactHash)() : '';
+        if ($fonts !== '') {
+            $segments[] = 'l' . substr($fonts, 0, 8);
         }
         return implode('-', $segments);
     }

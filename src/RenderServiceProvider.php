@@ -169,6 +169,16 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 'shared' => true,
                 'factory' => [self::class, 'makeCompiledStyleArtifacts'],
             ],
+            // The font library as one request sees it, and each workspace's fonts stylesheets
+            // (block typeface spec §3.4).
+            \Thallo\Render\Style\RequestFontSnapshot::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeRequestFontSnapshot'],
+            ],
+            \Thallo\Render\Style\FontsArtifacts::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeFontsArtifacts'],
+            ],
             // Asked by whoever saves a block type's style declaration: does its template honour it?
             BlockTemplateTargetCheck::class => [
                 'shared' => true,
@@ -510,6 +520,8 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->has(\Thallo\Contracts\Layouts\LayoutSurfaceRegistry::class)
                 ? $container->get(\Thallo\Contracts\Layouts\LayoutSurfaceRegistry::class)
                 : null,
+            $container->get(\Thallo\Render\Style\FontsArtifacts::class),
+            $container->get(\Thallo\Render\Style\RequestFontSnapshot::class),
         );
     }
 
@@ -580,6 +592,37 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             static fn (): int => $container->has(\Thallo\Contracts\Style\StyleClassProvider::class)
                 ? $container->get(\Thallo\Contracts\Style\StyleClassProvider::class)->snapshot()->generation
                 : 0,
+            // The fonts stylesheet's hash (block typeface spec §3.4), from the request's library
+            // snapshot — the one the page renders from; '' when the library has no current family.
+            static function () use ($container): string {
+                $snapshot = $container->get(\Thallo\Render\Style\RequestFontSnapshot::class)->current();
+                if ($snapshot === null) {
+                    return '';
+                }
+                $artifact = $container->get(\Thallo\Render\Style\FontsArtifacts::class)->forSnapshot($snapshot);
+                return $artifact['css'] === '' ? '' : $artifact['hash'];
+            },
+        );
+    }
+
+    public static function makeRequestFontSnapshot(
+        ContainerInterface $container,
+    ): \Thallo\Render\Style\RequestFontSnapshot {
+        return new \Thallo\Render\Style\RequestFontSnapshot(
+            $container->has(\Thallo\Contracts\Fonts\FontLibraryReader::class)
+                ? $container->get(\Thallo\Contracts\Fonts\FontLibraryReader::class)
+                : null,
+        );
+    }
+
+    public static function makeFontsArtifacts(ContainerInterface $container): \Thallo\Render\Style\FontsArtifacts
+    {
+        $context = $container->get(ApplicationContext::class);
+        $segment = $container->get(TenantCacheSegment::class);
+        // One directory per workspace: `site` on a single-site install, the tenant's otherwise.
+        return new \Thallo\Render\Style\FontsArtifacts(
+            $context->getBasePath() . '/storage/cache/fonts',
+            static fn (): string => trim($segment->segment($context, 'fonts'), ':') ?: 'site',
         );
     }
 
@@ -752,11 +795,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 : null,
             contributedBlockScripts: static fn (): array => $container
                 ->get(\Thallo\Render\Contribution\RenderContributionRegistry::class)->frozenBlockScripts(),
-            // style_classes() typefaces (block typeface spec §3.3): soft-bound; null = only the
-            // built-ins resolve and any other ID renders as `inherit`.
-            fontLibrary: $container->has(\Thallo\Contracts\Fonts\FontLibraryReader::class)
-                ? $container->get(\Thallo\Contracts\Fonts\FontLibraryReader::class)
-                : null,
+            // style_classes() typefaces and fonts_stylesheet_url() (block typeface spec §3.3–§3.4):
+            // the request's library snapshot (no library bound = only the built-ins resolve).
+            fontSnapshots: $container->get(\Thallo\Render\Style\RequestFontSnapshot::class),
+            fontsArtifacts: $container->get(\Thallo\Render\Style\FontsArtifacts::class),
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).
             mediaVariants: $container->has(MediaVariantUrlResolver::class)

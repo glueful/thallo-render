@@ -279,21 +279,42 @@ final class RenderContextExtension extends AbstractExtension
          */
         private readonly ?\Closure $contributedBlockScripts = null,
         /**
-         * Soft-bound (block typeface spec §3.3): the workspace's font library. Null → only the
-         * built-in typefaces resolve; any other ID renders as `inherit`.
+         * Soft-bound (block typeface spec §3.3–§3.4): the request's font library snapshot. Null →
+         * only the built-in typefaces resolve, any other ID renders as `inherit`, and no fonts
+         * stylesheet is linked.
          */
-        private readonly ?\Thallo\Contracts\Fonts\FontLibraryReader $fontLibrary = null,
+        private readonly ?\Thallo\Render\Style\RequestFontSnapshot $fontSnapshots = null,
+        /** The workspace's fonts stylesheets (spec §3.4): null → none is linked. */
+        private readonly ?\Thallo\Render\Style\FontsArtifacts $fontsArtifacts = null,
     ) {
         $this->locale = $defaultLocale;
     }
 
     /**
-     * The font library as this render sees it: one snapshot, taken on first use and kept until
-     * resetPerRenderState(), so every typeface decision in a page reads the same library.
+     * The font library as this request sees it: one snapshot for the page's typeface utilities, its
+     * fonts stylesheet, the link and the page cache's fingerprint (RequestFontSnapshot).
      */
     public function fontSnapshot(): ?\Thallo\Contracts\Fonts\FontLibrarySnapshotView
     {
-        return $this->fontSnapshotMemo ??= $this->fontLibrary?->snapshot();
+        return $this->fontSnapshots?->current();
+    }
+
+    /**
+     * The workspace's fonts stylesheet URL (spec §3.4), published before it is returned; null when
+     * the library has no current family (nothing to link).
+     */
+    public function fontsStylesheetUrl(): ?string
+    {
+        $snapshot = $this->fontSnapshot();
+        if ($snapshot === null || $this->fontsArtifacts === null) {
+            return null;
+        }
+        $artifact = $this->fontsArtifacts->forSnapshot($snapshot);
+        if ($artifact['css'] === '') {
+            return null;
+        }
+        $file = \Thallo\Render\Style\FontsArtifacts::fileName($artifact['hash']);
+        return ($this->assetBase ?? '/theme-assets') . '/' . $file;
     }
 
     /** The generation of the style class snapshot this request renders from (spec §4.3). */
@@ -410,6 +431,7 @@ final class RenderContextExtension extends AbstractExtension
             new TwigFunction('layers_stylesheet_url', $this->layersStylesheetUrl(...)),
             new TwigFunction('theme_stylesheet_url', $this->themeStylesheetUrl(...)),
             new TwigFunction('settings_stylesheet_url', $this->settingsStylesheetUrl(...)),
+            new TwigFunction('fonts_stylesheet_url', $this->fontsStylesheetUrl(...)),
             // Style targets (visual builder spec §2.5): a block template styles its declared
             // targets through these; nothing else turns a setting into markup.
             new TwigFunction('style_classes', $this->styleClasses(...)),
@@ -1819,7 +1841,6 @@ final class RenderContextExtension extends AbstractExtension
         $this->emittedBlockScripts = [];
         $this->motionNeeded = false;
         $this->markdownMemo = [];
-        $this->fontSnapshotMemo = null;
         $this->setAssetContext(null, null);
         // Defaults-off here (not assignment-per-path like annotation) so render
         // paths unaware of the surface split — e.g. pack fragment renderers —
@@ -1955,7 +1976,6 @@ final class RenderContextExtension extends AbstractExtension
 
     /** @var array<string,array{html:string,toc:list<array{id:string,text:string,level:int}>}> */
     private array $markdownMemo = [];
-    private ?\Thallo\Contracts\Fonts\FontLibrarySnapshotView $fontSnapshotMemo = null;
 
     /** @return array{html:string,toc:list<array{id:string,text:string,level:int}>} */
     private function renderedMarkdown(Environment $env, mixed $source): array
