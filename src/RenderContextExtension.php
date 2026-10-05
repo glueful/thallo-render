@@ -106,6 +106,8 @@ final class RenderContextExtension extends AbstractExtension
      * controller ASSIGNS it before every render; never on for live renders.
      */
     private bool $annotateBlocks = false;
+    /** Whether this render has asked for the fonts stylesheet (see themeColorsStyle()). */
+    private bool $fontsLinked = false;
 
     /**
      * Rendering a loop's second or later card: the card repeats the first card's design for another
@@ -305,6 +307,7 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function fontsStylesheetUrl(): ?string
     {
+        $this->fontsLinked = true;
         $snapshot = $this->fontSnapshot();
         if ($snapshot === null || $this->fontsArtifacts === null) {
             return null;
@@ -908,7 +911,16 @@ final class RenderContextExtension extends AbstractExtension
             $neutral,
             ...array_values($this->effectiveFontRoles()),
         );
-        return new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8');
+        $html = $css === '' ? '' : "<style>{$css}</style>";
+        // A theme whose own layout predates the font library calls this but never asks for the fonts
+        // stylesheet: link it here, so Custom's families and block typefaces still have their faces.
+        if (!$this->fontsLinked) {
+            $url = $this->fontsStylesheetUrl();
+            if ($url !== null) {
+                $html = '<link rel="stylesheet" href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">' . $html;
+            }
+        }
+        return new \Twig\Markup($html, 'UTF-8');
     }
 
     /** The typeface pairing this render uses: a preview's when it names one, else the saved one. */
@@ -1874,6 +1886,7 @@ final class RenderContextExtension extends AbstractExtension
      */
     public function resetPerRenderState(): void
     {
+        $this->fontsLinked = false;
         $this->cardCopy = false;
         $this->cardPath = '';
         $this->resetBlockDepth();
