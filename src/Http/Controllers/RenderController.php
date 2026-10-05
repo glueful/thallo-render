@@ -1311,6 +1311,12 @@ final class RenderController
             $context['entry'] = $entry;
         }
         $context += $extra;
+        // A stage names what its head was rendered with (block typeface plan Task 11), with or
+        // without a working copy yet, so the admin can tell when a change made elsewhere needs a
+        // reload. Never on a live page.
+        if ($this->annotationScope !== 'none') {
+            $context['appearance_fingerprint'] = $this->extension->appearanceFingerprint();
+        }
         // Every render carries a presentation context (spec §5a): entry-less
         // pages (listings, terms, errors) compose with no override.
         $context['presentation'] ??= $this->presentationContext(null, null);

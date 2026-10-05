@@ -49,6 +49,7 @@ use Thallo\Contracts\Delivery\SeoHeadResolver;
 use Thallo\Contracts\Delivery\StorefrontLinkResolver;
 use Thallo\Contracts\Delivery\StorefrontWishlistResolver;
 use Thallo\Render\Http\Controllers\RenderController;
+use Thallo\Render\Http\Controllers\RenderAdminController;
 use Thallo\Render\Http\Controllers\StyleSchemaController;
 use Thallo\Render\Http\Controllers\RuntimeAssetController;
 use Thallo\Render\Http\Controllers\ThemeScreenshotController;
@@ -303,6 +304,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 'shared' => true,
                 'factory' => [self::class, 'makeStyleSchemaController'],
             ],
+            RenderAdminController::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeRenderAdminController'],
+            ],
         ];
     }
 
@@ -322,6 +327,14 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
     public static function makeStyleSchemaController(ContainerInterface $container): StyleSchemaController
     {
         return new StyleSchemaController($container->get(ThemeLocator::class));
+    }
+
+    public static function makeRenderAdminController(ContainerInterface $container): RenderAdminController
+    {
+        return new RenderAdminController(
+            $container->get(ThemeAppearanceSource::class),
+            $container->get(\Thallo\Render\Style\RequestFontSnapshot::class),
+        );
     }
 
     public static function makeTemplatesAdminController(ContainerInterface $container): TemplatesAdminController
@@ -895,6 +908,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
 
         if ($registry->isEnabled('thallo.render')) {
             $this->loadRoutesFrom(__DIR__ . '/../routes/public-routes.php');
+            // What open stages ask outside a render: on whenever the renderer is, whatever
+            // render.db_templates says (block typeface plan Task 11).
+            $this->loadRoutesFrom(__DIR__ . '/../routes/stage-routes.php');
 
             // Theme assets are served DYNAMICALLY by RenderController::themeAsset
             // (theme-setting spec §3) — the old boot-time static mount froze the

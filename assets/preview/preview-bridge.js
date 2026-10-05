@@ -2009,7 +2009,13 @@
     post('blocks-index', { ids: idsIndex() })
     // What the stage shows: a layout stage's placeholder page (its sample gone) is named in the frame,
     // outside every block — it comes and goes only with the shell, which reloads the stage whole.
-    post('stage-state', { placeholder: !!document.querySelector('[data-thallo-placeholder]') })
+    // And what its head was rendered with (block typeface plan Task 11): the parent reloads the stage
+    // when the theme, the appearance or the fonts change elsewhere.
+    var appearance = document.querySelector('main[data-thallo-appearance-fingerprint]')
+    post('stage-state', {
+      placeholder: !!document.querySelector('[data-thallo-placeholder]'),
+      appearance_fingerprint: appearance ? appearance.getAttribute('data-thallo-appearance-fingerprint') : null,
+    })
   }
 
   window.addEventListener('message', function (event) {

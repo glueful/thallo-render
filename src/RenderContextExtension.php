@@ -324,6 +324,15 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
+     * What this render's head depends on — the theme, the saved appearance, the fonts stylesheet
+     * (block typeface plan Task 11): a stage compares it with what the admin last rendered with.
+     */
+    public function appearanceFingerprint(): string
+    {
+        return $this->appearance?->appearanceFingerprint() ?? '';
+    }
+
+    /**
      * The cascade layers for a block's ordered `settings.classes`, from the request's snapshot.
      *
      * @param mixed $ids

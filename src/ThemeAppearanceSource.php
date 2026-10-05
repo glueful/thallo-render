@@ -119,6 +119,31 @@ final class ThemeAppearanceSource
      */
     public function fingerprint(): string
     {
+        return implode('-', $this->segments(true));
+    }
+
+    /**
+     * What a stage's head depends on (block typeface plan Task 11): the fingerprint without the style
+     * class generation, which has its own carrier (`style_generation`) and is re-resolved in place —
+     * a class edit never needs a stage reload.
+     */
+    public function appearanceFingerprint(): string
+    {
+        return implode('-', $this->segments(false));
+    }
+
+    /**
+     * Drops what this instance memoised, for a caller that must read the stored appearance now —
+     * a freshness check in a worker that outlives one request.
+     */
+    public function forget(): void
+    {
+        $this->accentMemo = $this->neutralMemo = $this->radiusMemo = $this->fontMemo = $this->backgroundMemo = null;
+    }
+
+    /** @return list<string> */
+    private function segments(bool $withStyleGeneration): array
+    {
         $segments = [$this->accent(), $this->neutral(), $this->radius(), $this->font(), $this->background()];
         // Custom's families re-key every cached page; with none, the fingerprint it always had.
         $families = $this->fontFamilies();
@@ -131,7 +156,7 @@ final class ThemeAppearanceSource
         if ($this->settingsArtifactHash !== null) {
             $segments[] = 's' . substr((string) ($this->settingsArtifactHash)(), 0, 8);
         }
-        if ($this->styleGeneration !== null) {
+        if ($withStyleGeneration && $this->styleGeneration !== null) {
             $segments[] = 'g' . (int) ($this->styleGeneration)();
         }
         // A library change re-keys every cached page; with no current family, the fingerprint it had.
@@ -139,7 +164,7 @@ final class ThemeAppearanceSource
         if ($fonts !== '') {
             $segments[] = 'l' . substr($fonts, 0, 8);
         }
-        return implode('-', $segments);
+        return $segments;
     }
 
     /** @param callable(string):?string $normalize */
