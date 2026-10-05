@@ -18,6 +18,8 @@ final class FontsArtifacts
 {
     public const RETAIN_NEWEST = 3;
     public const RETAIN_SECONDS = 86400;
+    /** How long a published stylesheet goes untouched before a request refreshes it. */
+    public const REFRESH_SECONDS = 3600;
 
     /** @var array<string, array{hash: string, css: string}> scope:hash => artifact */
     private array $memo = [];
@@ -75,8 +77,20 @@ final class FontsArtifacts
             throw new \RuntimeException("cannot create the fonts artifact store at {$dir}");
         }
         $file = $dir . '/' . self::fileName($hash);
-        if (!is_file($file) && @file_put_contents($file, $css) === false) {
-            throw new \RuntimeException("cannot write the fonts stylesheet {$file}");
+        clearstatcache(true, $file);
+        // Refreshed within the hour: nothing to do — retention keeps anything younger than a day, so
+        // a request need not touch and prune again (final review).
+        if (is_file($file) && (filemtime($file) ?: 0) > time() - self::REFRESH_SECONDS) {
+            return;
+        }
+        if (!is_file($file)) {
+            // Whole or not at all: a concurrent reader never sees a half-written file, which would
+            // then be served as immutable.
+            $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
+            if (@file_put_contents($tmp, $css) === false || !@rename($tmp, $file)) {
+                @unlink($tmp);
+                throw new \RuntimeException("cannot write the fonts stylesheet {$file}");
+            }
         }
         @touch($file);
         $this->prune($dir);

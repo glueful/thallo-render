@@ -920,6 +920,12 @@ final class RenderController
                 $compiled !== null => $this->compiledArtifacts?->read($compiled),
                 default => $this->fontsArtifacts?->read((string) $fonts),
             };
+            if ($css === null && $fonts !== null && $this->fontsArtifacts !== null) {
+                // Not on this node yet (another server rendered the page, or the cache was cleared):
+                // the current library's stylesheet is published on demand; any other hash stays 404.
+                $this->extension->fontsStylesheetUrl();
+                $css = $this->fontsArtifacts->read($fonts);
+            }
             return $css === null
                 ? ApiResponse::error('Not Found', 404)
                 : new Response($css, 200, [
