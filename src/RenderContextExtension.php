@@ -541,6 +541,12 @@ final class RenderContextExtension extends AbstractExtension
             $this->classRefsFor($frame['settings']['classes'] ?? null),
             $this->fontSnapshot(),
         );
+        // On the stage only, the element names itself, so the preview bridge can read what a target
+        // or part renders in (block typeface plan Task 10). A public page never carries it.
+        if ($this->annotateBlocks) {
+            $classes[] = (in_array($target, $targets->names(), true) ? 'thallo-stage-target--' : 'thallo-stage-part--')
+                . $target;
+        }
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
     }
 

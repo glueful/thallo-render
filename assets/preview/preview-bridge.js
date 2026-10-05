@@ -87,6 +87,34 @@
     return document.querySelector('[data-thallo-block="' + cssEscape(id) + '"]')
   }
 
+  // ── Computed typography (block typeface plan Task 10) ────────────────────────
+  // What a block's target or part renders in, for the inspector's faces line and its not-supplied
+  // notice: the first element in the block's OWN wrapper carrying the target's stage marker — a
+  // nested block's same-named target belongs to that block. No element (an optional target the
+  // block does not render) → no reply; the parent times out to "unknown".
+  function onTypographyRequest(data) {
+    var w = findBlock(data.id)
+    if (!w || !/^[a-z][a-z0-9_-]*$/.test(data.target)) return
+    var els = w.querySelectorAll(
+      '.thallo-stage-target--' + data.target + ', .thallo-stage-part--' + data.target
+    )
+    for (var i = 0; i < els.length; i++) {
+      if (wrapperFor(els[i]) !== w) continue
+      var cs = window.getComputedStyle(els[i])
+      var style = cs.fontStyle.indexOf('oblique') === 0
+        ? 'oblique'
+        : cs.fontStyle === 'italic' ? 'italic' : 'normal'
+      post('typography-state', {
+        id: data.id,
+        target: data.target,
+        seq: data.seq,
+        weight: parseInt(cs.fontWeight, 10) || 400,
+        style: style,
+      })
+      return
+    }
+  }
+
   // ── Motion replay (the Style tab's Play) ────────────────────────────────────
   // The canvas never runs entrances or Ken Burns on its own: a block that hid until scrolled to
   // could not be edited, and a picture that drifts is a moving target. Play shows one block's
@@ -2036,6 +2064,12 @@
     if (data.type === 'thallo:grid-fill-state') onGridFillState(data)
     if (data.type === 'thallo:fragments') onFragments(data)
     if (data.type === 'thallo:motion-play' && typeof data.id === 'string') playMotion(data.id)
+    if (
+      data.type === 'thallo:typography-request' && typeof data.id === 'string'
+      && typeof data.target === 'string' && typeof data.seq === 'number'
+    ) {
+      onTypographyRequest(data)
+    }
     if (data.type === 'thallo:mirror-move') mirrorMove(data.id, data.beforeId, data.afterId)
     if (data.type === 'thallo:mirror-remove') mirrorRemove(data.id)
     if (data.type === 'thallo:mirror-duplicate') mirrorDuplicate(data.sourceId, data.idMap)
