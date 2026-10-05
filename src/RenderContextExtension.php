@@ -891,7 +891,7 @@ final class RenderContextExtension extends AbstractExtension
             ThemeDesign::normalizeBackground($design['background'] ?? '')
                 ?? $this->appearance?->background() ?? ThemeDesign::DEFAULT_BACKGROUND,
             $neutral,
-            $this->effectiveFontFaces(),
+            ...array_values($this->effectiveFontRoles()),
         );
         return new \Twig\Markup($css === '' ? '' : "<style>{$css}</style>", 'UTF-8');
     }
@@ -904,32 +904,58 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
-     * The site's own faces as the URLs the media library serves them at — a preview's uuids when
-     * it names any, else the saved ones. A face the library no longer has is simply not used; a
-     * setting never reaches the stylesheet as anything but a looked-up URL.
+     * Custom's Text and Headings families for this render: a preview's when it names one (`none`
+     * takes a saved one off), else the saved ones.
      *
-     * @return array{body?: string, display?: string}
+     * @return array{text?: string, headings?: string}
      */
-    private function effectiveFontFaces(): array
+    private function effectiveFontFamilies(): array
     {
-        $uuids = $this->appearance?->fontFaces() ?? [];
-        foreach (['body' => 'font_body', 'display' => 'font_display'] as $role => $key) {
+        $families = $this->appearance?->fontFamilies() ?? [];
+        foreach (['text' => 'font_text_family', 'headings' => 'font_headings_family'] as $role => $key) {
             $previewed = $this->appearanceDesignOverride[$key] ?? null;
             if (is_string($previewed)) {
-                unset($uuids[$role]);
-                if (ThemeDesign::normalizeFace($previewed) !== null) {
-                    $uuids[$role] = $previewed;
+                unset($families[$role]);
+                if (ThemeDesign::normalizeFamily($previewed) !== null) {
+                    $families[$role] = $previewed;
                 }
             }
         }
-        $faces = [];
-        foreach ($uuids as $role => $uuid) {
-            $url = $this->mediaUrls?->url($uuid);
-            if (is_string($url) && $url !== '') {
-                $faces[$role] = $url;
+        return $families;
+    }
+
+    /**
+     * Custom's roles resolved through the request's font library snapshot (block typeface spec
+     * §2.8): a built-in to its named stack and the browser's synthesis; a current uploaded family to
+     * its generated family and fallback stack, synthesis `style`; Theme, a removed or an unknown
+     * family to nothing (the role falls back by the Text/Headings rules).
+     *
+     * @return array{text: array{stack: string, synthesis: string}|null,
+     *     headings: array{stack: string, synthesis: string}|null}
+     */
+    private function effectiveFontRoles(): array
+    {
+        $snapshot = $this->fontSnapshot();
+        $resolve = static function (?string $id) use ($snapshot): ?array {
+            if ($id === null || $id === 'theme') {
+                return null;
             }
-        }
-        return $faces;
+            $named = \Thallo\Contracts\Style\FontStacks::named($id);
+            if ($named !== null) {
+                return ['stack' => $named, 'synthesis' => 'weight style'];
+            }
+            $family = $snapshot?->resolution($id) === 'uploaded' ? $snapshot->family($id) : null;
+            if ($family === null) {
+                return null;
+            }
+            return [
+                'stack' => '"thallo-font-' . $family->id . '",'
+                    . \Thallo\Contracts\Style\FontStacks::forFallback($family->fallback),
+                'synthesis' => 'style',
+            ];
+        };
+        $families = $this->effectiveFontFamilies();
+        return ['text' => $resolve($families['text'] ?? null), 'headings' => $resolve($families['headings'] ?? null)];
     }
 
     /**
@@ -2146,7 +2172,7 @@ final class RenderContextExtension extends AbstractExtension
 
         $html = "<style>\n" . $css . "\n</style>";
         // A site whose text is set in another face entirely would preload this one for nothing.
-        if (ThemeDesign::usesThemeFace($this->effectiveFont(), $this->effectiveFontFaces())) {
+        if (ThemeDesign::usesThemeFace($this->effectiveFont(), $this->effectiveFontRoles()['text'])) {
             $html = '<link rel="preload" as="font" type="font/woff2" href="'
                 . htmlspecialchars($romanUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
                 . '" crossorigin>' . "\n" . $html;

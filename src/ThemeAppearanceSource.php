@@ -87,20 +87,20 @@ final class ThemeAppearanceSource
     }
 
     /**
-     * The site's own faces as media library uuids; a value that is not one is not a face.
+     * Custom's Text and Headings as font library IDs; a value that is not an ID is no family.
      *
-     * @return array{body?: string, display?: string}
+     * @return array{text?: string, headings?: string}
      */
-    public function fontFaces(): array
+    public function fontFamilies(): array
     {
-        $faces = [];
-        foreach (['body', 'display'] as $role) {
-            $uuid = ($this->settings?->fontFaces() ?? [])[$role] ?? null;
-            if (is_string($uuid) && ThemeDesign::normalizeFace($uuid) !== null) {
-                $faces[$role] = $uuid;
+        $families = [];
+        foreach (['text', 'headings'] as $role) {
+            $id = ($this->settings?->fontFamilies() ?? [])[$role] ?? null;
+            if (is_string($id) && ThemeDesign::normalizeFamily($id) !== null) {
+                $families[$role] = $id;
             }
         }
-        return $faces;
+        return $families;
     }
 
     public function background(): string
@@ -120,9 +120,10 @@ final class ThemeAppearanceSource
     public function fingerprint(): string
     {
         $segments = [$this->accent(), $this->neutral(), $this->radius(), $this->font(), $this->background()];
-        // The site's own faces re-key every cached page; with none, the fingerprint it always had.
-        if ($this->fontFaces() !== []) {
-            $segments[] = 'f' . implode('.', $this->fontFaces());
+        // Custom's families re-key every cached page; with none, the fingerprint it always had.
+        $families = $this->fontFamilies();
+        if ($families !== []) {
+            $segments[] = 'f' . ($families['text'] ?? '') . '.' . ($families['headings'] ?? '');
         }
         if ($this->themeArtifactHash !== null) {
             $segments[] = 't' . substr((string) ($this->themeArtifactHash)(), 0, 8);
