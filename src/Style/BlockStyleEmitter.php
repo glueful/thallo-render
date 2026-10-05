@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Style;
 
+use Thallo\Contracts\Fonts\FontLibrarySnapshotView;
 use Thallo\Contracts\Style\CascadeResolver;
+use Thallo\Contracts\Style\FontStacks;
 use Thallo\Contracts\Style\StyleSchema;
 use Thallo\Contracts\Style\StyleTargets;
 
@@ -24,6 +26,8 @@ final class BlockStyleEmitter
     /**
      * @param array<string,mixed> $settings the block's `settings`
      * @param list<array{id: string, style: array<string,mixed>}> $classDefinitions ordered style classes
+     * @param FontLibrarySnapshotView|null $fonts the render's font library snapshot: how a winning
+     *        typeface ID resolves (block typeface spec §3.3); without one, only built-ins resolve
      * @return list<string>
      */
     public function classesFor(
@@ -31,6 +35,7 @@ final class BlockStyleEmitter
         StyleTargets $targets,
         string $target,
         array $classDefinitions = [],
+        ?FontLibrarySnapshotView $fonts = null,
     ): array {
         $classes = [];
         if ($targets->isPart($target)) {
@@ -64,9 +69,12 @@ final class BlockStyleEmitter
                 if (!$resolution->exact && !($resolvedEmission && $resolution->state !== 'theme-default')) {
                     continue;
                 }
-                $classes[] = $resolution->state === 'reset'
-                    ? ClassNames::reset($path, $breakpoint)
-                    : ClassNames::for($path, (string) ($resolution->value['value'] ?? ''), $breakpoint);
+                $value = (string) ($resolution->value['value'] ?? '');
+                $classes[] = match (true) {
+                    $resolution->state === 'reset' => ClassNames::reset($path, $breakpoint),
+                    $path === 'typography.family' => self::fontClass($value, $fonts),
+                    default => ClassNames::for($path, $value, $breakpoint),
+                };
             }
             // A container that declares no track count still needs a track class at every
             // breakpoint: a span pairs with it, and `auto` is the default track state (one track).
@@ -90,6 +98,18 @@ final class BlockStyleEmitter
             }
         }
         return $classes;
+    }
+
+    /**
+     * The winning typeface's utility: a built-in or a current library family its own; an ID the
+     * library does not hold as current — removed, purged, another workspace's — `t-font-inherit`,
+     * so the target takes its parent's family and synthesis while the document keeps the ID.
+     */
+    private static function fontClass(string $id, ?FontLibrarySnapshotView $fonts): string
+    {
+        $resolution = $fonts?->resolution($id)
+            ?? ($id === 'theme' || FontStacks::named($id) !== null ? 'builtin' : 'missing');
+        return ClassNames::forFont($resolution === 'missing' ? 'inherit' : $id);
     }
 
     /** Which properties are emitted at every breakpoint they resolve (spec §3.3). */

@@ -278,8 +278,22 @@ final class RenderContextExtension extends AbstractExtension
          * @var (\Closure(): array<string, string>)|null
          */
         private readonly ?\Closure $contributedBlockScripts = null,
+        /**
+         * Soft-bound (block typeface spec §3.3): the workspace's font library. Null → only the
+         * built-in typefaces resolve; any other ID renders as `inherit`.
+         */
+        private readonly ?\Thallo\Contracts\Fonts\FontLibraryReader $fontLibrary = null,
     ) {
         $this->locale = $defaultLocale;
+    }
+
+    /**
+     * The font library as this render sees it: one snapshot, taken on first use and kept until
+     * resetPerRenderState(), so every typeface decision in a page reads the same library.
+     */
+    public function fontSnapshot(): ?\Thallo\Contracts\Fonts\FontLibrarySnapshotView
+    {
+        return $this->fontSnapshotMemo ??= $this->fontLibrary?->snapshot();
     }
 
     /** The generation of the style class snapshot this request renders from (spec §4.3). */
@@ -503,6 +517,7 @@ final class RenderContextExtension extends AbstractExtension
             $targets,
             $target,
             $this->classRefsFor($frame['settings']['classes'] ?? null),
+            $this->fontSnapshot(),
         );
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
     }
@@ -1166,7 +1181,7 @@ final class RenderContextExtension extends AbstractExtension
         if (!is_array($style) || $style === []) {
             return '';
         }
-        $classes = $this->styleEmitter->classesFor(['style' => $style], $targets, $target);
+        $classes = $this->styleEmitter->classesFor(['style' => $style], $targets, $target, [], $this->fontSnapshot());
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
     }
 
@@ -1804,6 +1819,7 @@ final class RenderContextExtension extends AbstractExtension
         $this->emittedBlockScripts = [];
         $this->motionNeeded = false;
         $this->markdownMemo = [];
+        $this->fontSnapshotMemo = null;
         $this->setAssetContext(null, null);
         // Defaults-off here (not assignment-per-path like annotation) so render
         // paths unaware of the surface split — e.g. pack fragment renderers —
@@ -1939,6 +1955,7 @@ final class RenderContextExtension extends AbstractExtension
 
     /** @var array<string,array{html:string,toc:list<array{id:string,text:string,level:int}>}> */
     private array $markdownMemo = [];
+    private ?\Thallo\Contracts\Fonts\FontLibrarySnapshotView $fontSnapshotMemo = null;
 
     /** @return array{html:string,toc:list<array{id:string,text:string,level:int}>} */
     private function renderedMarkdown(Environment $env, mixed $source): array

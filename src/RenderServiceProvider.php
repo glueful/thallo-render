@@ -752,6 +752,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 : null,
             contributedBlockScripts: static fn (): array => $container
                 ->get(\Thallo\Render\Contribution\RenderContributionRegistry::class)->frozenBlockScripts(),
+            // style_classes() typefaces (block typeface spec §3.3): soft-bound; null = only the
+            // built-ins resolve and any other ID renders as `inherit`.
+            fontLibrary: $container->has(\Thallo\Contracts\Fonts\FontLibraryReader::class)
+                ? $container->get(\Thallo\Contracts\Fonts\FontLibraryReader::class)
+                : null,
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).
             mediaVariants: $container->has(MediaVariantUrlResolver::class)
