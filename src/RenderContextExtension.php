@@ -2085,13 +2085,13 @@ final class RenderContextExtension extends AbstractExtension
      * quotes, backslashes, control chars, and `<` so nothing can form `</style>`). A
      * missing roman emits nothing — a theme without the files (custom theme inheriting the
      * default layout) falls through to the system stack. Roman only is preloaded.
+     *
+     * The faces are always declared, so any block may choose the Theme typeface (block typeface
+     * spec §2.2); an undeclared use costs nothing, since a browser downloads a face only when text
+     * uses it. Only the preload depends on the site-wide text being set in this face.
      */
     public function fontFacesStyle(string $family, string $romanRel, ?string $italicRel = null): Markup
     {
-        // A site whose text is set in another face entirely would download this one for nothing.
-        if (!ThemeDesign::usesThemeFace($this->effectiveFont(), $this->effectiveFontFaces())) {
-            return new Markup('', 'UTF-8');
-        }
         $romanUrl = $this->assetUrlIfExists($romanRel);
         if ($romanUrl === null) {
             return new Markup('', 'UTF-8');
@@ -2107,9 +2107,13 @@ final class RenderContextExtension extends AbstractExtension
                 . 'font-weight: 300 900; font-style: italic; font-display: swap; }';
         }
 
-        $html = '<link rel="preload" as="font" type="font/woff2" href="'
-            . htmlspecialchars($romanUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-            . '" crossorigin>' . "\n<style>\n" . $css . "\n</style>";
+        $html = "<style>\n" . $css . "\n</style>";
+        // A site whose text is set in another face entirely would preload this one for nothing.
+        if (ThemeDesign::usesThemeFace($this->effectiveFont(), $this->effectiveFontFaces())) {
+            $html = '<link rel="preload" as="font" type="font/woff2" href="'
+                . htmlspecialchars($romanUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                . '" crossorigin>' . "\n" . $html;
+        }
 
         return new Markup($html, 'UTF-8');
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Style;
 
+use Thallo\Contracts\Style\FontStacks;
 use Thallo\Contracts\Style\Vocabulary;
 use Thallo\Render\ThemeConfigError;
 
@@ -19,11 +20,14 @@ final class ThemeVocabulary
     /**
      * @param array<string,string> $values token => CSS value, every baseline name present
      * @param list<string> $stylesheets theme-relative paths, manifest order
+     * @param array{family: string, stack: string, files: list<array{src: string, weight: string,
+     *     style: string}>}|null $face the theme's declared face, when it declares a usable one
      */
     private function __construct(
         public readonly string $theme,
         private readonly array $values,
         private readonly array $stylesheets,
+        private readonly ?array $face = null,
     ) {
     }
 
@@ -81,7 +85,59 @@ final class ThemeVocabulary
             }
         }
 
-        return new self($name, $values, array_values($stylesheets));
+        return new self($name, $values, array_values($stylesheets), self::parseFace($json['face'] ?? null));
+    }
+
+    /**
+     * The optional `face` (block typeface spec §2.2): the theme's own typeface — its family name, the
+     * stack Theme resolves to, and its files (the admin's specimen). Metadata, never an error: anything
+     * unusable leaves the theme without a face (Theme is then the system stack), and an unusable file
+     * entry is dropped.
+     *
+     * @return array{family: string, stack: string, files: list<array{src: string, weight: string,
+     *     style: string}>}|null
+     */
+    private static function parseFace(mixed $face): ?array
+    {
+        if (!is_array($face)) {
+            return null;
+        }
+        $family = $face['family'] ?? null;
+        $stack = $face['stack'] ?? null;
+        $cssSafe = static fn (mixed $v): bool => is_string($v) && trim($v) !== ''
+            && preg_match('/[;{}<>\\\\]/', $v) !== 1;
+        if (!$cssSafe($family) || str_contains((string) $family, '"') || !$cssSafe($stack)) {
+            return null;
+        }
+        $files = [];
+        foreach (is_array($face['files'] ?? null) ? $face['files'] : [] as $file) {
+            $src = is_array($file) ? ($file['src'] ?? null) : null;
+            $weight = is_array($file) ? ($file['weight'] ?? null) : null;
+            $style = is_array($file) ? ($file['style'] ?? null) : null;
+            $usable = is_string($src) && preg_match('#\A[A-Za-z0-9._/-]+\.woff2\z#', $src) === 1
+                && !str_contains($src, '..') && !str_starts_with($src, '/')
+                && is_string($weight) && preg_match('/\A\d{1,4}( \d{1,4})?\z/', $weight) === 1
+                && in_array($style, ['normal', 'italic'], true);
+            if ($usable) {
+                $files[] = ['src' => $src, 'weight' => $weight, 'style' => $style];
+            }
+        }
+        return ['family' => trim((string) $family), 'stack' => trim((string) $stack), 'files' => $files];
+    }
+
+    /**
+     * @return array{family: string, stack: string, files: list<array{src: string, weight: string,
+     *     style: string}>}|null
+     */
+    public function face(): ?array
+    {
+        return $this->face;
+    }
+
+    /** What the Theme typeface resolves to: the declared face's stack, or the system stack. */
+    public function themeFaceStack(): string
+    {
+        return $this->face['stack'] ?? FontStacks::SYSTEM;
     }
 
     /** The CSS value for a baseline token. */

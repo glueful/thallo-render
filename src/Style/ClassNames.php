@@ -93,6 +93,12 @@ final class ClassNames
         return $breakpoint === 'base' ? $class : $breakpoint . ':' . $class;
     }
 
+    /** A typeface's utility: `t-font-serif`, `t-font-<library id>` (never a display name). */
+    public static function forFont(string $id): string
+    {
+        return 't-font-' . $id;
+    }
+
     public static function reset(string $property, string $breakpoint = 'base'): string
     {
         return self::for($property, 'reset', $breakpoint);
