@@ -1396,9 +1396,11 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
   margin: 0 0 var(--space-4); text-align: center;
   font-size: 1.125rem; font-weight: 600; color: var(--ink);
 }
+/* No margin of its own above the logos: the title's bottom margin spaces them from it, and the
+   block's Spacing settings decide the rest — an untitled strip starts at its own top edge. */
 .thallo-block-logos__track {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-  gap: var(--space-4) var(--space-6); margin-top: var(--space-5);
+  gap: var(--space-4) var(--space-6);
 }
 .thallo-block-logos__item { flex: 0 0 auto; }
 .thallo-block-logos__image {
