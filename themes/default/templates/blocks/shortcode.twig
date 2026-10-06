@@ -15,4 +15,8 @@
     'style': {'classes': style_classes('content')},
   } only -%}
 </div>
+{% elseif is_canvas() %}
+{#- No name chosen yet: nothing on the site, but on the stage the empty root, which the stage marks
+    "Empty shortcode" so the block just added can be seen and selected to choose its name. -#}
+<div class="thallo-block thallo-block-shortcode{{ style_classes('root') }}"{{ style_attrs('root') }}></div>
 {% endif %}
