@@ -31,7 +31,8 @@ final class StyleCompiler
     // 15: color.black, a literal #000000 like white — its token and its colour utilities.
     // 16: typography.letter_spacing, typography.transform and typography.decoration.
     // 17: logos.height.
-    public const VERSION = 17;
+    // 18: logos.max_width.
+    public const VERSION = 18;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -115,6 +116,9 @@ final class StyleCompiler
         ]],
         // Height alone: the width follows each logo's own proportions. `md` is the theme's 2.5rem.
         'logos.height' => ['height' => ['sm' => '1.75rem', 'md' => '2.5rem', 'lg' => '3.5rem', 'xl' => '5rem']],
+        // A cap, not a width: a logo narrower than it is untouched, a wider one scales down whole
+        // inside its box (the theme draws logos with `object-fit: contain`). Unset, nothing caps it.
+        'logos.max_width' => ['max-width' => ['sm' => '6rem', 'md' => '8rem', 'lg' => '10rem', 'xl' => '12rem']],
         'border.width' => ['border-width' => ['none' => '0', 'thin' => '1px', 'thick' => '2px']],
         'border.style' => ['border-style' => ['solid' => 'solid', 'dashed' => 'dashed']],
         // Layout (container-layout spec §3.2). `layout.columns`, `layout.min_height`,
