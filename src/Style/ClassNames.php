@@ -66,6 +66,9 @@ final class ClassNames
         'typography.line_height' => 'leading',
         // The typeface (block typeface spec §3.3): `t-font-serif`, `t-font-<id>`, `t-font-reset`.
         'typography.family' => 'font',
+        'typography.letter_spacing' => 'tracking',
+        'typography.transform' => 'case',
+        'typography.decoration' => 'decor',
         'motion.entrance' => 'enter',
         'motion.duration' => 'enterdur',
         'motion.delay' => 'enterdelay',

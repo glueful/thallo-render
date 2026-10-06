@@ -29,7 +29,8 @@ final class StyleCompiler
     // 13: typography.family's reset (t-font-reset: family and synthesis back to the context's).
     // 14: the built-in typefaces, Theme from the theme's declared face, and t-font-inherit.
     // 15: color.black, a literal #000000 like white — its token and its colour utilities.
-    public const VERSION = 15;
+    // 16: typography.letter_spacing, typography.transform and typography.decoration.
+    public const VERSION = 16;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -98,6 +99,18 @@ final class StyleCompiler
         // Unitless: a line's height follows its text's size — the Size setting beside it.
         'typography.line_height' => ['line-height' => [
             'tight' => '1.1', 'snug' => '1.25', 'normal' => '1.5', 'relaxed' => '1.65', 'loose' => '1.9',
+        ]],
+        'typography.letter_spacing' => ['letter-spacing' => [
+            'tight' => '-0.025em', 'normal' => 'normal', 'wide' => '0.05em', 'wider' => '0.1em',
+        ]],
+        'typography.transform' => ['text-transform' => [
+            'none' => 'none', 'uppercase' => 'uppercase', 'lowercase' => 'lowercase', 'capitalize' => 'capitalize',
+        ]],
+        // The longhand only: `text-decoration` would also reset the theme's decoration colour,
+        // thickness and style. `none` takes away a line the element itself is given; one drawn by an
+        // ancestor still shows (CSS decoration propagates to descendants).
+        'typography.decoration' => ['text-decoration-line' => [
+            'none' => 'none', 'underline' => 'underline', 'line-through' => 'line-through',
         ]],
         'border.width' => ['border-width' => ['none' => '0', 'thin' => '1px', 'thick' => '2px']],
         'border.style' => ['border-style' => ['solid' => 'solid', 'dashed' => 'dashed']],
