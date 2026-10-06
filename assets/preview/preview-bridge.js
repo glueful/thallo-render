@@ -1536,15 +1536,17 @@
     for (var i = 0; i < wrappers.length; i++) {
       var w = wrappers[i]
       var host = firstVisualChild(w)
+      // Judge the block as its template drew it: the stub this check paints gives an empty host a
+      // height of its own, which measured as-is would unmark it on the next pass (and re-mark it
+      // on the one after). Its marks come off first.
+      w.removeAttribute('data-thallo-block-empty')
+      if (host) host.removeAttribute('data-thallo-empty-label')
       var empty = !!host && (host.textContent || '').trim() === ''
         && !host.querySelector('img,svg,video,audio,iframe,picture,canvas,input,textarea,select,button,[data-thallo-block],[data-thallo-slot]')
         && paintsNothing(host)
       if (empty) {
         w.setAttribute('data-thallo-block-empty', '')
         host.setAttribute('data-thallo-empty-label', 'Empty ' + blockKindOf(host))
-      } else {
-        w.removeAttribute('data-thallo-block-empty')
-        if (host) host.removeAttribute('data-thallo-empty-label')
       }
     }
   }
