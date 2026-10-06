@@ -3,7 +3,8 @@
    root classes built in a {% set %} up top; elements carry __title/__track/__item/__image.
    Fields (all optional): title, images (list of blob uuids resolved via media()),
    grayscale (bool → desaturate + dim), scroll (bool → CSS marquee row; false →
-   centered wrapping flex row). #}
+   centered wrapping flex row).
+   Style targets: `track` (the row of logos: the gaps) and `image` (every logo: the logo size). #}
 {% set scroll = data.scroll|default(false) %}
 {% set images = data.images|default([]) %}
 {% set rootClass = [
@@ -16,12 +17,12 @@
     <h2 class="thallo-block-logos__title">{{ data.title|editable_text('title') }}</h2>
   {% endif %}
   {% if images is not empty %}
-    <div class="thallo-block-logos__track">
+    <div class="thallo-block-logos__track{{ style_classes('track') }}"{{ style_attrs('track') }}>
       {% for uuid in images %}
         {% set src = media(uuid) %}
         {% if src %}{# skip nulls: private / unresolvable blobs #}
           <div class="thallo-block-logos__item">
-            <img class="thallo-block-logos__image" src="{{ src }}" alt="" loading="lazy" decoding="async">
+            <img class="thallo-block-logos__image{{ style_classes('image') }}"{{ style_attrs('image') }} src="{{ src }}" alt="" loading="lazy" decoding="async">
           </div>
         {% endif %}
       {% endfor %}
@@ -31,7 +32,7 @@
           {% set src = media(uuid) %}
           {% if src %}
             <div class="thallo-block-logos__item" aria-hidden="true">
-              <img class="thallo-block-logos__image" src="{{ src }}" alt="" loading="lazy" decoding="async">
+              <img class="thallo-block-logos__image{{ style_classes('image') }}"{{ style_attrs('image') }} src="{{ src }}" alt="" loading="lazy" decoding="async">
             </div>
           {% endif %}
         {% endfor %}
