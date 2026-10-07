@@ -963,8 +963,11 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 /* social_links — a row of brand glyphs */
 .thallo-block-social_links { display: flex; gap: var(--space-3); align-items: center; }
 .thallo-block-social_links .thallo-block-social_link { margin-block: 0; }
-.thallo-block-social_link__link { color: var(--muted); font-size: 1.25rem; display: inline-flex; }
-.thallo-block-social_link__link:hover { color: var(--ink); }
+/* The colour sits on the block and the link inherits it, so the block's Text colour reaches the
+   icon; the link's own (or the row's) Icon colours land on the link and win. */
+.thallo-block-social_link { color: var(--muted); }
+.thallo-block-social_link:has(> .thallo-block-social_link__link:hover) { color: var(--ink); }
+.thallo-block-social_link__link { color: inherit; font-size: 1.25rem; display: inline-flex; }
 
 /* video / audio */
 .thallo-block-video { max-width: var(--container); margin-inline: auto; padding-inline: var(--space-4); }

@@ -54,7 +54,7 @@
         "blocks/rich_text.twig": "850282e71705a756ecaa189546832cc224703bb165e70bd54135dba8b41783fb",
         "blocks/separator.twig": "419ab0627ef0f5fe3a846e7ea0616d9e66cc5f9cde9d73595c9d9dd9bd6d0371",
         "blocks/shortcode.twig": "49d08ba0e5e5d1d5c782a43e8cdd868640470a90db20e123e7b3c29388b03588",
-        "blocks/social_link.twig": "09e708d534604bcf18940d67fbc65f4c968c1032a65db918d8ae3f602f856dc2",
+        "blocks/social_link.twig": "c03a584e2116d2a66d0c52de3ae358465136b7ef98ee23bc5412ca343fc019f3",
         "blocks/social_links.twig": "148965b13f47e897e5772c80a331f7c20834de5f322aa8dedd8668713b7b784a",
         "blocks/spacer.twig": "33ab9aca012f92b08857fb6ecdf12eea2f0ad877c474dd7ef5a27f55b7e40c3a",
         "blocks/stepper.twig": "8acb88d8306eb95f8f380abd43c29c0c5669138279598efb546a592d4817fda5",

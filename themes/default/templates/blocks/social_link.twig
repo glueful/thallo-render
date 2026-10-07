@@ -1,10 +1,11 @@
 {# social_link — a single social icon link. Fields: icon (brand glyph), url, label.
    safe_url scheme-allowlists before the href, so unsafe URLs emit no link at all.
    Authored in the theme's BEM convention (see navigation.twig / separator.twig);
-   styled by .thallo-block-social_link__link in assets/blocks.css, and by the Social links
-   block's Icon section (its `icon` part), read from the parent. #}
+   styled by .thallo-block-social_link__link in assets/blocks.css, by the Social links block's
+   Icon section (its `icon` part, read from the parent), and by this link's own Icon section,
+   which wins wherever both set something. #}
 {% set url = data.url|default('')|safe_url %}
 {% set name = data.label|default(data.icon|default('')|replace({'brand:': ''})) %}
 <div class="thallo-block thallo-block-social_link{{ style_classes('root') }}"{{ style_attrs('root') }}>
-  {% if url %}<a class="thallo-block-social_link__link{{ parent_style_classes('icon') }}" href="{{ url }}" aria-label="{{ name }}">{{ icon(data.icon|default('')) ?? name }}</a>{% endif %}
+  {% if url %}<a class="thallo-block-social_link__link{{ parent_style_classes('icon', 'icon') }}{{ style_classes('icon') }}" href="{{ url }}" aria-label="{{ name }}">{{ icon(data.icon|default('')) ?? name }}</a>{% endif %}
 </div>

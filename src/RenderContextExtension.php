@@ -569,7 +569,7 @@ final class RenderContextExtension extends AbstractExtension
      * parent declares no such part — a child may sit elsewhere. No stage marker: the stage reads a
      * part only inside its own block's wrapper, never a nested block's.
      */
-    public function parentStyleClasses(string $part): string
+    public function parentStyleClasses(string $part, ?string $ownPart = null): string
     {
         if (count($this->blockFrames) < 2 || $this->styleRegistry === null) {
             return '';
@@ -579,14 +579,46 @@ final class RenderContextExtension extends AbstractExtension
         if ($targets === null || !$targets->isPart($part)) {
             return '';
         }
+        $settings = $frame['settings'];
+        // What the child sets in its own part, it decides: the parent's value for it is left out.
+        $own = $ownPart === null
+            ? null
+            : ($this->blockFrames[count($this->blockFrames) - 1]['settings']['parts'][$ownPart] ?? null);
+        if (is_array($own) && is_array($settings['parts'][$part] ?? null)) {
+            $settings['parts'][$part] = self::withoutValuesSetIn($settings['parts'][$part], $own);
+        }
         $classes = $this->styleEmitter->classesFor(
-            $frame['settings'],
+            $settings,
             $targets,
             $part,
             $this->classRefsFor($frame['settings']['classes'] ?? null),
             $this->fontSnapshot(),
         );
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
+    }
+
+    /**
+     * `$values` without every value `$set` also sets. A value is a leaf (`type`) or a responsive
+     * value (`base`): setting it drops the whole value, so a child's Size replaces the parent's at
+     * every width; a child that sets only some widths replaces only those.
+     *
+     * @param array<string,mixed> $values
+     * @param array<string,mixed> $set
+     * @return array<string,mixed>
+     */
+    private static function withoutValuesSetIn(array $values, array $set): array
+    {
+        foreach ($set as $key => $value) {
+            if (!array_key_exists($key, $values)) {
+                continue;
+            }
+            if (!is_array($value) || isset($value['type']) || isset($value['base']) || !is_array($values[$key])) {
+                unset($values[$key]);
+                continue;
+            }
+            $values[$key] = self::withoutValuesSetIn($values[$key], $value);
+        }
+        return $values;
     }
 
     /**
