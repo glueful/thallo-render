@@ -115,6 +115,53 @@
     }
   }
 
+  // ── Forced hover (hover state spec §6.3) ────────────────────────────────────
+  // While the inspector's Hover is on, every element the block owns for the forced targets or part
+  // shows its hover look: the theme's hover rules and the utilities match [data-thallo-hover]. Every
+  // match, not the first (a Links block's links are many). The parent says whose elements: `own` —
+  // the block's own, never a nested block's — or `children` — a part drawn by the block's direct
+  // child blocks (the Social links' Icon). Remembered, so an in-place swap re-applies it; a reload
+  // forgets it and the parent sends it again.
+  var HOVER_NAME = /^[a-z][a-z0-9_-]*$/
+  var forcedHover = null
+  function forcedElements(f) {
+    var w = findBlock(f.id)
+    if (!w) return []
+    var selectors = f.part
+      ? ['.thallo-stage-part--' + f.part]
+      : f.targets.map(function (t) { return '.thallo-stage-target--' + t })
+    if (selectors.length === 0) return []
+    var els = w.querySelectorAll(selectors.join(', '))
+    var out = []
+    for (var i = 0; i < els.length; i++) {
+      var owner = wrapperFor(els[i])
+      var mine = f.scope === 'own'
+        ? owner === w
+        : owner !== null && owner !== w && wrapperFor(owner.parentElement) === w
+      if (mine) out.push(els[i])
+    }
+    return out
+  }
+  function applyForcedHover() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-thallo-hover]'), function (el) {
+      el.removeAttribute('data-thallo-hover')
+    })
+    if (forcedHover) {
+      forcedElements(forcedHover).forEach(function (el) { el.setAttribute('data-thallo-hover', '') })
+    }
+  }
+  function onForceHover(data) {
+    var targets = Array.isArray(data.targets)
+      ? data.targets.filter(function (t) { return typeof t === 'string' && HOVER_NAME.test(t) })
+      : []
+    var part = typeof data.part === 'string' && HOVER_NAME.test(data.part) ? data.part : null
+    var valid = typeof data.id === 'string' && data.id !== ''
+      && (data.scope === 'own' || data.scope === 'children')
+      && (part !== null || targets.length > 0)
+    forcedHover = valid ? { id: data.id, targets: targets, part: part, scope: data.scope } : null
+    applyForcedHover()
+  }
+
   // ── Motion replay (the Style tab's Play) ────────────────────────────────────
   // The canvas never runs entrances or Ken Burns on its own: a block that hid until scrolled to
   // could not be edited, and a picture that drifts is a moving target. Play shows one block's
@@ -1276,6 +1323,7 @@
     }
     advanceDisplayed(fetched)
     markEmptySlots()
+    applyForcedHover() // the swapped DOM is new: the force goes back on (hover state spec §6.3)
     post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',
@@ -1352,6 +1400,7 @@
     if (typeof data.style_generation === 'number') next.style_generation = data.style_generation
     advanceDisplayed(next)
     markEmptySlots()
+    applyForcedHover() // the swapped DOM is new: the force goes back on (hover state spec §6.3)
     post('stage-refreshed', withRevision({
       refresh_id: refreshId,
       mode: 'patched',
@@ -2072,6 +2121,7 @@
     if (data.type === 'thallo:grid-fill-state') onGridFillState(data)
     if (data.type === 'thallo:fragments') onFragments(data)
     if (data.type === 'thallo:motion-play' && typeof data.id === 'string') playMotion(data.id)
+    if (data.type === 'thallo:force-hover') onForceHover(data)
     if (
       data.type === 'thallo:typography-request' && typeof data.id === 'string'
       && typeof data.target === 'string' && typeof data.seq === 'number'
