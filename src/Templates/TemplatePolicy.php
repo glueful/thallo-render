@@ -84,7 +84,9 @@ final class TemplatePolicy
     //         scope can be searched now — search block spec §3.1).
     // bumped: fonts_stylesheet_url joined the function allowlist (block typeface spec §3.4 — the
     //         workspace's fonts stylesheet is linked after the compiled style artifact).
-    public const CACHE_VERSION = 31;
+    // bumped: parent_style_classes joined the function allowlist (a Social link draws its parent
+    //         Social links block's Icon section — a part declared `children: true`).
+    public const CACHE_VERSION = 32;
 
     public const TAGS = ['if', 'for', 'set', 'block', 'extends', 'include', 'verbatim', 'macro', 'import'];
 
