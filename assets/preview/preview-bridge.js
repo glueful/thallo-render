@@ -1196,6 +1196,9 @@
     Array.prototype.forEach.call(root.querySelectorAll('[data-thallo-empty-label]'), function (el) {
       el.removeAttribute('data-thallo-empty-label')
     })
+    Array.prototype.forEach.call(root.querySelectorAll('[data-thallo-hover]'), function (el) {
+      el.removeAttribute('data-thallo-hover') // the forced hover preview is stage state, never content
+    })
     var classes = [
       'thallo-canvas-anchor', 'thallo-canvas-selected', 'thallo-canvas-hover',
       'thallo-canvas-selected-target', 'thallo-canvas-hover-target', 'thallo-canvas-dragging'
