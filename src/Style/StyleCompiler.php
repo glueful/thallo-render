@@ -35,7 +35,8 @@ final class StyleCompiler
     // 19: typography.style, and the footer divider (footer.divider_color, _width, _style).
     // 20: opacity, and the hover state (hover.colors.*, hover.opacity).
     // 21: a Feature's marker colour, background and size, and feature.gap.
-    public const VERSION = 21;
+    // 22: typography.line_height `relaxed` 1.65 → 1.75 (1.65 is the theme's body line height).
+    public const VERSION = 22;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -101,9 +102,10 @@ final class StyleCompiler
             'font-weight' => ['regular' => '400', 'medium' => '500', 'semibold' => '600', 'bold' => '700'],
         ],
         'visibility' => ['display' => ['visible' => 'revert-layer', 'hidden' => 'none']],
-        // Unitless: a line's height follows its text's size — the Size setting beside it.
+        // Unitless: a line's height follows its text's size — the Size setting beside it. None is the
+        // default theme's body line height (1.65): Relaxed was, and changed nothing on body text.
         'typography.line_height' => ['line-height' => [
-            'tight' => '1.1', 'snug' => '1.25', 'normal' => '1.5', 'relaxed' => '1.65', 'loose' => '1.9',
+            'tight' => '1.1', 'snug' => '1.25', 'normal' => '1.5', 'relaxed' => '1.75', 'loose' => '1.9',
         ]],
         'typography.letter_spacing' => ['letter-spacing' => [
             'tight' => '-0.025em', 'normal' => 'normal', 'wide' => '0.05em', 'wider' => '0.1em',
