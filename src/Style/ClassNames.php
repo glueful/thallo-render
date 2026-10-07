@@ -81,6 +81,12 @@ final class ClassNames
         'motion.repeat' => 'enterrepeat',
         'motion.stagger' => 'stagger',
         'motion.ken_burns' => 'kenburns',
+        // The element's opacity, and the hover state (hover state spec §4.1): `t-hover-bg-accent`.
+        'opacity' => 'opacity',
+        'hover.colors.text' => 'hover-fg',
+        'hover.colors.surface' => 'hover-bg',
+        'hover.colors.border' => 'hover-bc',
+        'hover.opacity' => 'hover-opacity',
     ];
 
     /**
