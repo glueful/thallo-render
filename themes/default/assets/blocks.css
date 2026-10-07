@@ -638,7 +638,12 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  /* Every property a hover value can change fades, as well as the theme's own lift and shadow. */
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease,
+    transform 0.15s ease, box-shadow 0.15s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .thallo-block-button__link { transition: none; }
 }
 /* Hover rules come in three branches (hover state spec §4.3): the pointer, only where the primary
    input can hover (so a tap on a phone leaves nothing); keyboard focus where the rule had it; and
@@ -1099,7 +1104,7 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
   color: var(--ink);
   text-decoration: none;
   font-weight: 500;
-  transition: background-color .15s ease, border-color .15s ease;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, opacity .15s ease;
 }
 @media (hover: hover) {
   .thallo-block-file__link:hover { background: var(--surface); }
