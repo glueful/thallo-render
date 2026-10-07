@@ -92,6 +92,8 @@ final class ClassNames
         'marker.background' => 'mbg',
         'marker.size' => 'msize',
         'feature.gap' => 'fgap',
+        // Where a Feature's marker sits against its text (settings version 17).
+        'feature.align' => 'falign',
     ];
 
     /**

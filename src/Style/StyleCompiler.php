@@ -36,7 +36,8 @@ final class StyleCompiler
     // 20: opacity, and the hover state (hover.colors.*, hover.opacity).
     // 21: a Feature's marker colour, background and size, and feature.gap.
     // 22: typography.line_height `relaxed` 1.65 → 1.75 (1.65 is the theme's body line height).
-    public const VERSION = 22;
+    // 23: feature.align.
+    public const VERSION = 23;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -162,6 +163,10 @@ final class StyleCompiler
         'layout.shrink' => ['flex-shrink' => ['0' => '0', '1' => '1']],
         'layout.align_self' => ['align-self' => [
             'start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end', 'stretch' => 'stretch',
+        ]],
+        // Where a Feature's marker sits against its text, on the block's own flex row or column.
+        'feature.align' => ['align-items' => [
+            'start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end',
         ]],
     ];
 
