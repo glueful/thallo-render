@@ -1,0 +1,237 @@
+{
+  "name": "the hover state and opacity resolve like any non-responsive property (hover state spec \u00a73.1)",
+  "cases": [
+    {
+      "name": "a class's hover background applies when the block is silent",
+      "property": "hover.colors.surface",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "hover": {
+              "colors": {
+                "surface": {
+                  "type": "token",
+                  "value": "color.accent"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {},
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "color.accent"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "the block's hover background beats the class's",
+      "property": "hover.colors.surface",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "hover": {
+              "colors": {
+                "surface": {
+                  "type": "token",
+                  "value": "color.accent"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "hover": {
+          "colors": {
+            "surface": {
+              "type": "token",
+              "value": "color.black"
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "color.black"
+          },
+          "source": "instance",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "a hover reset clears the class's hover value",
+      "property": "hover.colors.surface",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "hover": {
+              "colors": {
+                "surface": {
+                  "type": "token",
+                  "value": "color.accent"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "hover": {
+          "colors": {
+            "surface": {
+              "type": "reset"
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "instance",
+          "state": "reset"
+        }
+      }
+    },
+    {
+      "name": "a hover reset leaves the resting value alone",
+      "property": "colors.surface",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "colors": {
+              "surface": {
+                "type": "token",
+                "value": "color.surface"
+              }
+            },
+            "hover": {
+              "colors": {
+                "surface": {
+                  "type": "token",
+                  "value": "color.accent"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "hover": {
+          "colors": {
+            "surface": {
+              "type": "reset"
+            }
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "token",
+            "value": "color.surface"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "a resting value alone gives no hover value",
+      "property": "hover.colors.text",
+      "classes": [],
+      "instance": {
+        "colors": {
+          "text": {
+            "type": "token",
+            "value": "color.accent"
+          }
+        }
+      },
+      "expect": {
+        "base": {
+          "value": null,
+          "source": "theme-default",
+          "state": "theme-default"
+        }
+      }
+    },
+    {
+      "name": "opacity: the block's beats the class's",
+      "property": "opacity",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "opacity": {
+              "type": "choice",
+              "value": "50"
+            }
+          }
+        }
+      ],
+      "instance": {
+        "opacity": {
+          "type": "choice",
+          "value": "80"
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "choice",
+            "value": "80"
+          },
+          "source": "instance",
+          "state": "explicit"
+        }
+      }
+    },
+    {
+      "name": "hover opacity from a class",
+      "property": "hover.opacity",
+      "classes": [
+        {
+          "id": "c1",
+          "style": {
+            "hover": {
+              "opacity": {
+                "type": "choice",
+                "value": "100"
+              }
+            }
+          }
+        }
+      ],
+      "instance": {
+        "opacity": {
+          "type": "choice",
+          "value": "60"
+        }
+      },
+      "expect": {
+        "base": {
+          "value": {
+            "type": "choice",
+            "value": "100"
+          },
+          "source": "class:c1",
+          "state": "explicit"
+        }
+      }
+    }
+  ]
+}
