@@ -34,7 +34,8 @@ final class StyleCompiler
     // 18: logos.max_width.
     // 19: typography.style, and the footer divider (footer.divider_color, _width, _style).
     // 20: opacity, and the hover state (hover.colors.*, hover.opacity).
-    public const VERSION = 20;
+    // 21: a Feature's marker colour, background and size, and feature.gap.
+    public const VERSION = 21;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -183,6 +184,12 @@ final class StyleCompiler
         // since they land on the marker while `radius` and `shadow` land on the card.
         'marker.shadow' => 'box-shadow',
         'marker.radius' => 'border-radius',
+        // Its colour (the icon's, or the number's), its fill, and its size (the icon is 1em).
+        'marker.color' => 'color',
+        'marker.background' => 'background',
+        'marker.size' => 'font-size',
+        // The space between a Feature's marker and its text, beside or above it.
+        'feature.gap' => 'gap',
         // A tab strip's corners, likewise: the bar's and the tab's, beside the panels area's.
         'tabs.bar_radius' => 'border-radius',
         'tabs.tab_radius' => 'border-radius',

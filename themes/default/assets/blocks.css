@@ -466,7 +466,9 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-feature__marker--bg-surface-2 { background: var(--surface-2); }
 .thallo-block-feature__marker--bg-accent { background: var(--accent); }
 .thallo-block-feature__marker--bg-text { background: var(--ink); }
-.thallo-block-feature__marker--icon[class*="--bg-"] { padding: var(--space-2); border-radius: var(--radius-md); }
+/* An icon on a background is a chip, whether the background is the Marker field's or the Style tab's
+   (t-mbg-*); the Style tab's Marker corners, when set, win over this radius. */
+.thallo-block-feature__marker--icon:is([class*="--bg-"], [class*="t-mbg-"]) { padding: var(--space-2); border-radius: var(--radius-md); }
 .thallo-block-feature__marker--fg-accent { color: var(--accent); }
 .thallo-block-feature__marker--fg-text { color: var(--ink); }
 .thallo-block-feature__marker--fg-muted { color: var(--muted); }
@@ -485,10 +487,9 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-feature__title a:hover { color: var(--accent); }
 .thallo-block-feature__description { margin: var(--space-2) 0 0; color: var(--muted); font-size: 0.95rem; text-wrap: pretty; }
 /* vertical: the marker above the text */
-.thallo-block-feature--vertical { flex-direction: column; }
+.thallo-block-feature--vertical { flex-direction: column; gap: calc(var(--space-3) * 2); }
 .thallo-block-feature--vertical .thallo-block-feature__body { flex: none; width: 100%; }
 .thallo-block-feature--vertical .thallo-block-feature__title { font-size: 1.25rem; }
-.thallo-block-feature--vertical .thallo-block-feature__marker { margin-bottom: var(--space-3); }
 /* cards (the card block's variant names): padded, rounded, filling their grid cell */
 .thallo-block-feature--outline,
 .thallo-block-feature--soft,
