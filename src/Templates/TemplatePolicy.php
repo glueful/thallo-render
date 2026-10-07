@@ -103,6 +103,7 @@ final class TemplatePolicy
         'shop_wishlist_scope', 'shop_wishlist_url', 'search_scope_state', 'layers_stylesheet_url',
         'theme_stylesheet_url',
         'settings_stylesheet_url', 'fonts_stylesheet_url', 'style_classes', 'style_attrs', 'token_class', 'slot_attrs',
+        'parent_style_classes',
         'is_canvas',
         'canvas_scope', 'region_stage', 'region_slot_attrs',
         'shop_product_url', 'shop_block_product_label', 'shop_category_url', 'shop_index_url',

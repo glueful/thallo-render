@@ -447,6 +447,7 @@ final class RenderContextExtension extends AbstractExtension
             // Style targets (visual builder spec §2.5): a block template styles its declared
             // targets through these; nothing else turns a setting into markup.
             new TwigFunction('style_classes', $this->styleClasses(...)),
+            new TwigFunction('parent_style_classes', $this->parentStyleClasses(...)),
             new TwigFunction('style_attrs', $this->styleAttrs(...), ['is_safe' => ['html']]),
             new TwigFunction('token_class', $this->tokenClass(...)),
             // Slot geometry (visual builder spec §5.4): the element a template renders a blocks
@@ -559,6 +560,32 @@ final class RenderContextExtension extends AbstractExtension
             $classes[] = (in_array($target, $targets->names(), true) ? 'thallo-stage-target--' : 'thallo-stage-part--')
                 . $target;
         }
+        return $classes === [] ? '' : ' ' . implode(' ', $classes);
+    }
+
+    /**
+     * The classes of a part the PARENT block declares, for a child that draws it: a Social links
+     * block's `icon` part styles every Social link's link. Nothing when there is no parent, or the
+     * parent declares no such part — a child may sit elsewhere. No stage marker: the stage reads a
+     * part only inside its own block's wrapper, never a nested block's.
+     */
+    public function parentStyleClasses(string $part): string
+    {
+        if (count($this->blockFrames) < 2 || $this->styleRegistry === null) {
+            return '';
+        }
+        $frame = $this->blockFrames[count($this->blockFrames) - 2];
+        $targets = $this->styleRegistry->targetsFor($frame['type']);
+        if ($targets === null || !$targets->isPart($part)) {
+            return '';
+        }
+        $classes = $this->styleEmitter->classesFor(
+            $frame['settings'],
+            $targets,
+            $part,
+            $this->classRefsFor($frame['settings']['classes'] ?? null),
+            $this->fontSnapshot(),
+        );
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
     }
 

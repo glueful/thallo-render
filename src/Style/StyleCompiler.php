@@ -32,7 +32,8 @@ final class StyleCompiler
     // 16: typography.letter_spacing, typography.transform and typography.decoration.
     // 17: logos.height.
     // 18: logos.max_width.
-    public const VERSION = 18;
+    // 19: typography.style, and the footer divider (footer.divider_color, _width, _style).
+    public const VERSION = 19;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -119,6 +120,14 @@ final class StyleCompiler
         // A cap, not a width: a logo narrower than it is untouched, a wider one scales down whole
         // inside its box (the theme draws logos with `object-fit: contain`). Unset, nothing caps it.
         'logos.max_width' => ['max-width' => ['sm' => '6rem', 'md' => '8rem', 'lg' => '10rem', 'xl' => '12rem']],
+        'typography.style' => ['font-style' => ['normal' => 'normal', 'italic' => 'italic']],
+        // The divider is the top section's bottom edge alone, never a box around the section.
+        'footer.divider_width' => ['border-bottom-width' => [
+            'none' => '0', 'thin' => '1px', 'medium' => '2px', 'thick' => '4px',
+        ]],
+        'footer.divider_style' => ['border-bottom-style' => [
+            'solid' => 'solid', 'dashed' => 'dashed', 'dotted' => 'dotted',
+        ]],
         'border.width' => ['border-width' => ['none' => '0', 'thin' => '1px', 'thick' => '2px']],
         'border.style' => ['border-style' => ['solid' => 'solid', 'dashed' => 'dashed']],
         // Layout (container-layout spec §3.2). `layout.columns`, `layout.min_height`,
@@ -183,6 +192,7 @@ final class StyleCompiler
         'colors.surface' => 'background',
         'colors.text' => 'color',
         'colors.border' => 'border-color',
+        'footer.divider_color' => 'border-bottom-color',
         'layout.gap.column' => 'column-gap',
         'layout.gap.row' => 'row-gap',
         'layout.gutter' => 'padding-inline',

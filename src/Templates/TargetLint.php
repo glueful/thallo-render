@@ -58,9 +58,10 @@ final class TargetLint
                 ];
             }
         }
-        // A part (a links block's links) is styled the same way, on each element it names.
+        // A part (a links block's links) is styled the same way, on each element it names — unless
+        // the block's children draw it (parent_style_classes() in THEIR templates).
         foreach ($targets->parts() as $name) {
-            if (!isset($used[$name])) {
+            if (!isset($used[$name]) && !$targets->drawnByChildren($name)) {
                 $violations[] = [
                     'line' => 1,
                     'message' => sprintf(
