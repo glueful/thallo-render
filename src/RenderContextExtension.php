@@ -811,6 +811,9 @@ final class RenderContextExtension extends AbstractExtension
             return null;
         }
         $view = $this->productGrid->grid($data);
+        if ($view === null) {
+            return null;
+        }
         $this->addStorageTag($view->storageTag);
         $this->observeGuard($view->guardKey, $view->guardValue);
         return ['cards' => $view->cards, 'view_all_url' => $view->viewAllUrl];
