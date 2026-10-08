@@ -798,12 +798,12 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
-     * A Product grid's cards and View-all link (product grid spec §3.1), recording its cache
+     * A Product grid's cards (product grid spec §3.1), recording its cache
      * hints: the workspace's catalog storage tag and the catalog generation as a guard — even when
      * nothing matches, so the first matching product purges the page (§3.2).
      *
      * @param array<string,mixed> $data
-     * @return array{cards: list<array<string,mixed>>, view_all_url: ?string}|null
+     * @return array{cards: list<array<string,mixed>>}|null
      */
     public function productGridView(array $data): ?array
     {
@@ -816,7 +816,7 @@ final class RenderContextExtension extends AbstractExtension
         }
         $this->addStorageTag($view->storageTag);
         $this->observeGuard($view->guardKey, $view->guardValue);
-        return ['cards' => $view->cards, 'view_all_url' => $view->viewAllUrl];
+        return ['cards' => $view->cards];
     }
 
     public function shopProductUrl(?string $slug): ?string
