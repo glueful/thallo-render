@@ -801,6 +801,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             blockPreview: $container->has(\Thallo\Contracts\Delivery\StorefrontBlockPreview::class)
                 ? $container->get(\Thallo\Contracts\Delivery\StorefrontBlockPreview::class)
                 : null,
+            // product_grid() (product grid spec §3.1): soft-bound like the block preview above.
+            productGrid: $container->has(\Thallo\Contracts\Delivery\StorefrontProductGrid::class)
+                ? $container->get(\Thallo\Contracts\Delivery\StorefrontProductGrid::class)
+                : null,
             // search_scope_state() (search block spec §3.1): soft-bound; null = every scope reads
             // unavailable and a Search block renders nothing.
             searchScopes: $container->has(\Thallo\Contracts\Search\SearchScopeStatus::class)
