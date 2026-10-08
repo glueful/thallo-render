@@ -45,6 +45,7 @@ use Thallo\Render\Style\BlockStyleEmitter;
 use Thallo\Render\Style\ClassNames;
 use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
+use Thallo\Render\Cache\RenderCacheHints;
 
 /**
  * The theme-facing template functions. The extension is the per-render context object:
@@ -68,6 +69,14 @@ final class RenderContextExtension extends AbstractExtension
 
     /** @var array<string,string> render-scoped surrogate tags (see resetTags/drainTags) */
     private array $collectedTags = [];
+
+    /** @var array<string,string> render-scoped private storage tags (product grid spec §3.2) */
+    private array $storageTags = [];
+
+    /** @var array<string,string> render-scoped cache guards: cache key => the first value observed */
+    private array $guards = [];
+
+    private bool $uncacheable = false;
 
     /** Render-scoped asset-context override (font spec §3): [base, assetsDir]. */
     private ?string $assetBase = null;
@@ -2152,6 +2161,43 @@ final class RenderContextExtension extends AbstractExtension
     public function resetTags(): void
     {
         $this->collectedTags = [];
+        $this->storageTags = [];
+        $this->guards = [];
+        $this->uncacheable = false;
+    }
+
+    /** A tag the page caches store on the entry but never put in the public Cache-Tag header. */
+    public function addStorageTag(string $tag): void
+    {
+        $this->storageTags[$tag] = $tag;
+    }
+
+    /**
+     * Record that this render read `$key` as `$value` (product grid spec §3.2). Null (unreadable)
+     * marks the render uncacheable; a second observation of the same key that disagrees with the
+     * first does too — the first is never replaced (two grids straddling a catalog change).
+     */
+    public function observeGuard(string $key, ?string $value): void
+    {
+        if ($value === null) {
+            $this->uncacheable = true;
+            return;
+        }
+        if (isset($this->guards[$key]) && $this->guards[$key] !== $value) {
+            $this->uncacheable = true;
+            return;
+        }
+        $this->guards[$key] ??= $value;
+    }
+
+    /** The render's cache hints, drained (and cleared). */
+    public function drainCacheHints(): RenderCacheHints
+    {
+        $hints = new RenderCacheHints(array_values($this->storageTags), $this->guards, $this->uncacheable);
+        $this->storageTags = [];
+        $this->guards = [];
+        $this->uncacheable = false;
+        return $hints;
     }
 
     /**

@@ -10,6 +10,8 @@ use Glueful\Routing\RouteMiddleware;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Thallo\Tenancy\Cache\TenantCacheSegment;
+use Thallo\Render\Cache\RenderCacheGuards;
+use Thallo\Render\Cache\RenderCacheHints;
 
 /**
  * Full-page cache for the rendered site (render caching spec §2–§3, §5).
@@ -61,7 +63,12 @@ final class RenderPageCache implements RouteMiddleware
         $key = $this->key($request->getPathInfo());
         $hit = $this->cache->get($key);
         if (is_array($hit)) {
-            return $this->respond($request, $hit);
+            // A guarded entry is served only while every guard still holds — checked before any
+            // 304 decision, so a stale ETag is never confirmed (product grid spec §3.2).
+            if (RenderCacheGuards::hold($this->cache, $hit['guards'] ?? [])) {
+                return $this->respond($request, $hit);
+            }
+            $this->cache->delete($key);
         }
 
         $response = $next($request);
@@ -79,9 +86,16 @@ final class RenderPageCache implements RouteMiddleware
         $cacheTag = (string) $response->headers->get('Cache-Tag', '');
 
         if ($status === 200) {
-            $entry = $this->entry($body, 200, $contentType, $cacheTag);
-            $this->cache->set($key, $entry, $this->ttl);
-            $this->cache->addTags($key, [...$this->surrogateTags($cacheTag), 'thallo:render:page']);
+            $hints = RenderCacheHints::fromRequest($request);
+            $entry = $this->entry($body, 200, $contentType, $cacheTag, $hints->guards);
+            // Stored only while the render may be cached and every guard it read still holds.
+            if (!$hints->uncacheable && RenderCacheGuards::hold($this->cache, $hints->guards)) {
+                $this->cache->set($key, $entry, $this->ttl);
+                $this->cache->addTags(
+                    $key,
+                    [...$this->surrogateTags($cacheTag), ...$hints->storageTags, 'thallo:render:page'],
+                );
+            }
             // Serve stored entries on the miss path too, so hit and miss responses
             // carry identical headers (ETag / Cache-Control).
             return $this->respond($request, $entry);
@@ -136,7 +150,10 @@ final class RenderPageCache implements RouteMiddleware
         return $trimmed === '' ? '/' : $trimmed;
     }
 
-    /** @param array{body: string, status: int, contentType: string, cacheTag: string, etag: string} $entry */
+    /**
+     * @param array{body: string, status: int, contentType: string, cacheTag: string, etag: string,
+     *     guards?: array<string,string>} $entry
+     */
     private function respond(Request $request, array $entry): Response
     {
         $headers = [
@@ -153,8 +170,12 @@ final class RenderPageCache implements RouteMiddleware
         return new Response($entry['body'], $entry['status'], $headers);
     }
 
-    /** @return array{body: string, status: int, contentType: string, cacheTag: string, etag: string} */
-    private function entry(string $body, int $status, string $contentType, string $cacheTag): array
+    /**
+     * @param array<string,string> $guards the render's cache guards, stored with the entry
+     * @return array{body: string, status: int, contentType: string, cacheTag: string, etag: string,
+     *     guards: array<string,string>}
+     */
+    private function entry(string $body, int $status, string $contentType, string $cacheTag, array $guards = []): array
     {
         return [
             'body' => $body,
@@ -162,6 +183,7 @@ final class RenderPageCache implements RouteMiddleware
             'contentType' => $contentType,
             'cacheTag' => $cacheTag,
             'etag' => '"' . sha1($body) . '"',
+            'guards' => $guards,
         ];
     }
 

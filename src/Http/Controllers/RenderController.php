@@ -40,6 +40,7 @@ use Thallo\Render\Style\PageStyle;
 use Thallo\Render\Style\ThemeStylesheetArtifact;
 use Thallo\Render\Style\CompiledStyleArtifacts;
 use Thallo\Render\Style\ThemeStylesheetArtifacts;
+use Thallo\Render\Cache\RenderCacheHints;
 
 use function config;
 
@@ -202,7 +203,26 @@ final class RenderController
     /** The address this request came in on (`https://example.com`), for links back into the admin. */
     private ?string $origin = null;
 
+    /**
+     * The homepage, with the render's cache hints carried on the request for the page cache
+     * (product grid spec §3.2): render() has no request, so the action that owns it hands them on.
+     */
     public function home(Request $request): Response
+    {
+        $response = $this->homeResponse($request);
+        $request->attributes->set(RenderCacheHints::ATTRIBUTE, $this->extension->drainCacheHints());
+        return $response;
+    }
+
+    /** A routed page, with the render's cache hints carried on the request (see {@see self::home()}). */
+    public function page(Request $request, string $path): Response
+    {
+        $response = $this->pageResponse($request, $path);
+        $request->attributes->set(RenderCacheHints::ATTRIBUTE, $this->extension->drainCacheHints());
+        return $response;
+    }
+
+    private function homeResponse(Request $request): Response
     {
         $this->currentPath = RenderPageCache::normalizePath($request->getPathInfo());
         $this->origin = $request->getSchemeAndHttpHost();
@@ -258,7 +278,7 @@ final class RenderController
         return $session !== null ? $this->sessionChrome($response) : $response;
     }
 
-    public function page(Request $request, string $path): Response
+    private function pageResponse(Request $request, string $path): Response
     {
         $this->currentPath = RenderPageCache::normalizePath($request->getPathInfo());
         $this->origin = $request->getSchemeAndHttpHost();
