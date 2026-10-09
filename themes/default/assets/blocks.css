@@ -1215,6 +1215,13 @@ html[data-theme="dark"] .thallo-block-logo--has-dark .thallo-block-logo__image--
 .thallo-block-separator--size-md .thallo-block-separator__line { border-top-width: 3px; }
 .thallo-block-separator--size-lg .thallo-block-separator__line { border-top-width: 4px; }
 .thallo-block-separator--size-xl .thallo-block-separator__line { border-top-width: 5px; }
+/* Length: a medium or short line is an accent of a fixed length (each line, either side of a
+   label); align places it in the row. A full line fills the row, so align moves nothing. */
+.thallo-block-separator--length-medium .thallo-block-separator__line { flex: 0 0 8rem; }
+.thallo-block-separator--length-short .thallo-block-separator__line { flex: 0 0 3.5rem; }
+.thallo-block-separator--align-start { justify-content: flex-start; }
+.thallo-block-separator--align-center { justify-content: center; }
+.thallo-block-separator--align-end { justify-content: flex-end; }
 .thallo-block-separator__content {
   display: inline-flex; align-items: center; gap: var(--space-2);
   margin-inline: var(--space-3); white-space: nowrap;

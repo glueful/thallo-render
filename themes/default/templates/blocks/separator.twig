@@ -2,7 +2,9 @@
    (replaces the legacy `divider`). Authored in the theme's BEM/computed-class
    convention (see navigation.twig): class strings built in {% set %} maps up top,
    each guarded with ?? so an unknown stored enum degrades to the default modifier.
-   Fields (all optional): label, type (solid|dashed|dotted), size (xs|sm|md|lg|xl), icon.
+   Fields (all optional): label, type (solid|dashed|dotted), size (xs|sm|md|lg|xl), icon, length
+   (full|medium|short: the whole width, or an accent line) and align (start|center|end: where a
+   shorter line sits).
    Style targets: `line` (every line takes the border colour) and `label` (the label and its
    icon take the text style). #}
 {% set type = data.type|default('solid') %}
@@ -12,6 +14,8 @@
   'thallo-block thallo-block-separator',
   'thallo-block-separator--type-' ~ ({solid: 'solid', dashed: 'dashed', dotted: 'dotted'}[type] ?? 'solid'),
   'thallo-block-separator--size-' ~ ({xs: 'xs', sm: 'sm', md: 'md', lg: 'lg', xl: 'xl'}[size] ?? 'xs'),
+  'thallo-block-separator--length-' ~ ({full: 'full', medium: 'medium', short: 'short'}[data.length|default('full')] ?? 'full'),
+  'thallo-block-separator--align-' ~ ({start: 'start', center: 'center', end: 'end'}[data.align|default('center')] ?? 'center'),
   hasContent ? 'thallo-block-separator--labeled' : '',
 ]|join(' ')|trim %}
 <div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
