@@ -556,14 +556,23 @@ final class RenderContextExtension extends AbstractExtension
      * @throws RuntimeError for a target the block type does not declare (the lint refuses
      *         it at save; a declaration edited out from under a template still fails loudly)
      */
-    public function styleClasses(string $target): string
+    public function styleClasses(string $target, ?string $over = null): string
     {
         [$frame, $targets] = $this->styleFrame($target);
         if ($frame === null || $targets === null) {
             return '';
         }
+        $settings = $frame['settings'];
+        // A part drawn on the same element as another (`$over`: a Navigation's current page over its
+        // menu item) leaves out what that part sets — at rest and under the pointer — so it decides.
+        $own = $settings['parts'][$target] ?? null;
+        $above = $over === null ? null : ($settings['parts'][$over] ?? null);
+        $layered = $over !== null && $targets->isPart($target) && $targets->isPart($over);
+        if ($layered && is_array($own) && is_array($above)) {
+            $settings['parts'][$target] = self::withoutValuesSetIn($own, self::withHoverOf($above));
+        }
         $classes = $this->styleEmitter->classesFor(
-            $frame['settings'],
+            $settings,
             $targets,
             $target,
             $this->classRefsFor($frame['settings']['classes'] ?? null),
@@ -610,6 +619,36 @@ final class RenderContextExtension extends AbstractExtension
             $this->fontSnapshot(),
         );
         return $classes === [] ? '' : ' ' . implode(' ', $classes);
+    }
+
+    /**
+     * `$set` plus the hover version of every resting value it sets: a part that sets a colour or the
+     * opacity keeps it under the pointer, so another part's hover look for it is left out too.
+     *
+     * @param array<string,mixed> $set
+     * @return array<string,mixed>
+     */
+    private static function withHoverOf(array $set): array
+    {
+        foreach (StyleSchema::HOVER as $hover => $resting) {
+            $value = $set;
+            foreach (explode('.', $resting) as $key) {
+                $value = is_array($value) ? ($value[$key] ?? null) : null;
+            }
+            if ($value === null) {
+                continue;
+            }
+            $node = &$set;
+            foreach (explode('.', $hover) as $key) {
+                if (!isset($node[$key]) || !is_array($node[$key])) {
+                    $node[$key] = [];
+                }
+                $node = &$node[$key];
+            }
+            $node = true;
+            unset($node);
+        }
+        return $set;
     }
 
     /**
