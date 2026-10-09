@@ -330,7 +330,14 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
 
     public static function makeStyleSchemaController(ContainerInterface $container): StyleSchemaController
     {
-        return new StyleSchemaController($container->get(ThemeLocator::class));
+        return new StyleSchemaController(
+            $container->get(ThemeLocator::class),
+            $container->get(\Thallo\Render\Style\RequestPalette::class),
+            $container->get(ThemeAppearanceSource::class),
+            $container->has(\Thallo\Contracts\Style\PaletteStatusReader::class)
+                ? $container->get(\Thallo\Contracts\Style\PaletteStatusReader::class)
+                : null,
+        );
     }
 
     public static function makeRenderAdminController(ContainerInterface $container): RenderAdminController

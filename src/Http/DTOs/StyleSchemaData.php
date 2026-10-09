@@ -23,6 +23,8 @@ final class StyleSchemaData implements ResponseData
         /** @var list<string> The `settings.advanced` paths. */
         public readonly array $advanced,
         public readonly StyleVocabularyData $vocabulary,
+        /** The workspace's palette for the colour pickers (custom palette spec §5.2). */
+        public readonly StylePaletteData $palette,
     ) {
     }
 }

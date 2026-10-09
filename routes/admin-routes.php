@@ -49,9 +49,10 @@ $router->group(
         $router->get('/themes', [TemplatesAdminController::class, 'themes'])
             ->middleware('content_permission:content.manage');
 
-        // The style schema (visual builder spec §3.4): what the inspector's controls are made of.
+        // The style schema (visual builder spec §3.4): what the inspector's controls are made of. Any
+        // editor that picks styles reads it (custom palette spec §5.2) — the Typeface picker's rule.
         $router->get('/style-schema', [StyleSchemaController::class, 'show'])
-            ->middleware('content_permission:content.manage');
+            ->middleware('content_permission:content.edit,content.manage,templates.manage,styles.manage');
 
         // Clone-theme: scaffold themes/{name}/ from an existing theme. Same
         // operator trust tier as template editing.
