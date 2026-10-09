@@ -37,7 +37,8 @@ final class StyleCompiler
     // 21: a Feature's marker colour, background and size, and feature.gap.
     // 22: typography.line_height `relaxed` 1.65 → 1.75 (1.65 is the theme's body line height).
     // 23: feature.align.
-    public const VERSION = 23;
+    // 24: the six site-controlled brand colour tokens (custom palette spec §3.1).
+    public const VERSION = 24;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';

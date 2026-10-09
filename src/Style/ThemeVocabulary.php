@@ -28,7 +28,15 @@ final class ThemeVocabulary
         private readonly array $values,
         private readonly array $stylesheets,
         private readonly ?array $face = null,
+        /** @var list<string> site-controlled tokens the theme tried to map (custom palette spec §3.1) */
+        private readonly array $ignored = [],
     ) {
+    }
+
+    /** @return list<string> the site-controlled tokens this theme's manifest mapped, ignored */
+    public function ignored(): array
+    {
+        return $this->ignored;
     }
 
     /**
@@ -47,6 +55,9 @@ final class ThemeVocabulary
             );
         }
         $vocabulary += Vocabulary::LITERAL_DEFAULTS; // a theme's own mapping wins; the literal fills a gap
+        // The brand colours are the site's (custom palette spec §3.1): a theme's mapping is ignored.
+        $ignored = array_values(array_intersect(array_keys(Vocabulary::SITE_CONTROLLED), array_keys($vocabulary)));
+        $vocabulary = Vocabulary::SITE_CONTROLLED + $vocabulary;
         $missing = [];
         foreach (Vocabulary::all() as $token) {
             if (!array_key_exists($token, $vocabulary)) {
@@ -85,7 +96,7 @@ final class ThemeVocabulary
             }
         }
 
-        return new self($name, $values, array_values($stylesheets), self::parseFace($json['face'] ?? null));
+        return new self($name, $values, array_values($stylesheets), self::parseFace($json['face'] ?? null), $ignored);
     }
 
     /**
