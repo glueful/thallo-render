@@ -7,6 +7,7 @@ namespace Thallo\Render\Style;
 use Thallo\Contracts\Fonts\FontLibrarySnapshotView;
 use Thallo\Contracts\Style\CascadeResolver;
 use Thallo\Contracts\Style\FontStacks;
+use Thallo\Contracts\Style\Palette;
 use Thallo\Contracts\Style\StyleSchema;
 use Thallo\Contracts\Style\StyleTargets;
 
@@ -28,6 +29,8 @@ final class BlockStyleEmitter
      * @param list<array{id: string, style: array<string,mixed>}> $classDefinitions ordered style classes
      * @param FontLibrarySnapshotView|null $fonts the render's font library snapshot: how a winning
      *        typeface ID resolves (block typeface spec §3.3); without one, only built-ins resolve
+     * @param Palette|null $palette the render's palette: a colour naming an unconfigured brand slot
+     *        contributes nothing (custom palette spec §3.2); without one, nothing is filtered
      * @return list<string>
      */
     public function classesFor(
@@ -36,6 +39,7 @@ final class BlockStyleEmitter
         string $target,
         array $classDefinitions = [],
         ?FontLibrarySnapshotView $fonts = null,
+        ?Palette $palette = null,
     ): array {
         $classes = [];
         if ($targets->isPart($target)) {
@@ -56,6 +60,18 @@ final class BlockStyleEmitter
             $def = StyleSchema::property($path);
             if ($def === null) {
                 continue;
+            }
+            // An unavailable brand colour is taken out of every layer first (custom palette spec §3.2),
+            // so the next layer down shows through; by-value locals, so no other path sees it.
+            if ($palette !== null && $def->tokenDomain === 'color') {
+                $instance = PaletteAvailability::strip($instance, $path, $palette);
+                foreach ($classDefinitions as $i => $class) {
+                    $classDefinitions[$i]['style'] = PaletteAvailability::strip(
+                        (array) ($class['style'] ?? []),
+                        $path,
+                        $palette,
+                    );
+                }
             }
             $resolved = $this->resolver->resolve($path, $classDefinitions, $instance, $def);
             // Layout is emitted RESOLVED: a class at every breakpoint the property resolves to a

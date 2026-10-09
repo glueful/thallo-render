@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Thallo\Render\Style;
 
 use Thallo\Contracts\Style\PageStyleCapabilities;
+use Thallo\Contracts\Style\Palette;
 use Thallo\Contracts\Style\StyleTargets;
 
 /**
@@ -18,15 +19,18 @@ final class PageStyle
     /**
      * The utility classes for a page style, space-joined; '' when none is set.
      *
+     * A colour naming an unconfigured brand slot applies nothing (custom palette spec §3.2).
+     *
      * @param array<string,mixed>|null $style
      */
-    public static function classes(?array $style, ?BlockStyleEmitter $emitter = null): string
+    public static function classes(?array $style, ?BlockStyleEmitter $emitter = null, ?Palette $palette = null): string
     {
         if ($style === null || $style === []) {
             return '';
         }
         $targets = StyleTargets::fromDeclaration(StyleTargets::root('box', PageStyleCapabilities::PATHS));
-        $classes = ($emitter ?? new BlockStyleEmitter())->classesFor(['style' => $style], $targets, 'root');
+        $classes = ($emitter ?? new BlockStyleEmitter())
+            ->classesFor(['style' => $style], $targets, 'root', [], null, $palette);
         return implode(' ', $classes);
     }
 }

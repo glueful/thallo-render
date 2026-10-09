@@ -172,6 +172,10 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             ],
             // The font library as one request sees it, and each workspace's fonts stylesheets
             // (block typeface spec §3.4).
+            \Thallo\Render\Style\RequestPalette::class => [
+                'factory' => [self::class, 'makeRequestPalette'],
+                'shared' => true,
+            ],
             \Thallo\Render\Style\RequestFontSnapshot::class => [
                 'shared' => true,
                 'factory' => [self::class, 'makeRequestFontSnapshot'],
@@ -618,6 +622,18 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 $artifact = $container->get(\Thallo\Render\Style\FontsArtifacts::class)->forSnapshot($snapshot);
                 return $artifact['css'] === '' ? '' : $artifact['hash'];
             },
+            // The palette (custom palette spec §5.3), from the request's one reading of it.
+            static fn (): string => $container->get(\Thallo\Render\Style\RequestPalette::class)
+                ->current()->fingerprint(),
+        );
+    }
+
+    public static function makeRequestPalette(ContainerInterface $container): \Thallo\Render\Style\RequestPalette
+    {
+        return new \Thallo\Render\Style\RequestPalette(
+            $container->has(\Thallo\Contracts\Style\PaletteProvider::class)
+                ? $container->get(\Thallo\Contracts\Style\PaletteProvider::class)
+                : null,
         );
     }
 
@@ -818,9 +834,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // style_classes() typefaces and fonts_stylesheet_url() (block typeface spec §3.3–§3.4):
             // the request's library snapshot (no library bound = only the built-ins resolve).
             fontSnapshots: $container->get(\Thallo\Render\Style\RequestFontSnapshot::class),
-            palettes: $container->has(\Thallo\Contracts\Style\PaletteProvider::class)
-                ? $container->get(\Thallo\Contracts\Style\PaletteProvider::class)
-                : null,
+            paletteRequest: $container->get(\Thallo\Render\Style\RequestPalette::class),
             fontsArtifacts: $container->get(\Thallo\Render\Style\FontsArtifacts::class),
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).

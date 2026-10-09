@@ -666,7 +666,10 @@ final class RenderController
             'layout' => $layout,
             'presentation' => in_array($surface->key(), ['listing', 'archive'], true)
                 ? $this->presentationContext(null, null, $layout['settings'] ?? null)
-                : \Thallo\Render\Layouts\FramePresentation::fixed($layout['settings'] ?? null),
+                : \Thallo\Render\Layouts\FramePresentation::fixed(
+                    $layout['settings'] ?? null,
+                    $this->extension->palette(),
+                ),
             'preview_revision' => $revision,
         ] + $extra + $vars);
     }
@@ -1281,6 +1284,8 @@ final class RenderController
             'footer' => $footer === 'hidden' ? 'hidden' : 'default',
             'style_classes' => PageStyle::classes(
                 self::composedStyle($frame['style'] ?? null, $override['style'] ?? null),
+                null,
+                $this->extension->palette(),
             ),
         ];
     }

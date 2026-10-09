@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Layouts;
 
+use Thallo\Contracts\Style\Palette;
 use Thallo\Render\Style\PageStyle;
 
 /**
@@ -17,16 +18,21 @@ final class FramePresentation
 {
     /**
      * @param array<string,mixed>|null $frame the layout's Frame settings (width, header, footer)
+     * @param Palette|null $palette the render's palette: an unavailable brand colour applies nothing
      * @return array{show_title: bool, layout: string, header: string, footer: string, style_classes: string}
      */
-    public static function fixed(?array $frame): array
+    public static function fixed(?array $frame, ?Palette $palette = null): array
     {
         return [
             'show_title' => true,
             'layout' => ($frame['width'] ?? null) === 'full' ? 'full' : 'centered',
             'header' => ($frame['header'] ?? null) === 'hidden' ? 'hidden' : 'default',
             'footer' => ($frame['footer'] ?? null) === 'hidden' ? 'hidden' : 'default',
-            'style_classes' => PageStyle::classes(is_array($frame['style'] ?? null) ? $frame['style'] : null),
+            'style_classes' => PageStyle::classes(
+                is_array($frame['style'] ?? null) ? $frame['style'] : null,
+                null,
+                $palette,
+            ),
         ];
     }
 }
