@@ -1248,7 +1248,8 @@ final class RenderController
      * v1 note: settings come from the boot-active theme; themed preview
      * sessions inherit them.
      *
-     * `style_classes` is the page's own style frame (PageStyle) as utility classes for <main>.
+     * `style_classes` is the page's own style frame (PageStyle) as utility classes for <main>, over
+     * the layout's Frame styles.
      *
      * A type layout's Frame sits between the page and the theme (type layouts spec §6.4): the page's
      * own setting wins where it sets one; the layout's wins over the theme's.
@@ -1278,8 +1279,24 @@ final class RenderController
             'layout' => $layout === 'full' ? 'full' : 'centered',
             'header' => $header === 'hidden' ? 'hidden' : 'default',
             'footer' => $footer === 'hidden' ? 'hidden' : 'default',
-            'style_classes' => PageStyle::classes(is_array($override['style'] ?? null) ? $override['style'] : null),
+            'style_classes' => PageStyle::classes(
+                self::composedStyle($frame['style'] ?? null, $override['style'] ?? null),
+            ),
         ];
+    }
+
+    /**
+     * The layout's Frame styles under the page's own: each value the page sets wins, the frame's
+     * fill the rest. Null when neither sets any.
+     *
+     * @return array<string,mixed>|null
+     */
+    private static function composedStyle(mixed $frame, mixed $page): ?array
+    {
+        $frame = is_array($frame) ? $frame : [];
+        $page = is_array($page) ? $page : [];
+        $style = array_replace_recursive($frame, $page);
+        return $style === [] ? null : $style;
     }
 
     private function render(
