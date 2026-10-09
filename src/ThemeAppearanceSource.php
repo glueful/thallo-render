@@ -58,7 +58,8 @@ final class ThemeAppearanceSource
             return $this->neutralMemo;
         }
         $raw = $this->settings?->neutral() ?? ThemeColors::DEFAULT_NEUTRAL;
-        $ok = ThemeColors::normalizeNeutral($raw);
+        // `custom` (custom palette spec §2) is the palette's own neutral: themeColorsStyle() resolves it.
+        $ok = $raw === 'custom' ? 'custom' : ThemeColors::normalizeNeutral($raw);
         if ($ok === null) {
             $this->logger?->warning("[Thallo] Invalid theme neutral '{$raw}'; falling back to 'slate'.");
             $ok = ThemeColors::DEFAULT_NEUTRAL;

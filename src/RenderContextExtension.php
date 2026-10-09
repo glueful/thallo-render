@@ -302,6 +302,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?\Thallo\Render\Style\RequestFontSnapshot $fontSnapshots = null,
         /** The workspace's fonts stylesheets (spec §3.4): null → none is linked. */
         private readonly ?\Thallo\Render\Style\FontsArtifacts $fontsArtifacts = null,
+        /** Soft-bound (custom palette spec §2): the Custom neutral, dark base and brand colours. */
+        private readonly ?\Thallo\Contracts\Style\PaletteProvider $palettes = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -1030,21 +1032,25 @@ final class RenderContextExtension extends AbstractExtension
             ?? $this->appearance?->neutral()
             ?? ThemeColors::DEFAULT_NEUTRAL;
 
-        // Normalize (a preview override could be junk) — invalid → default.
+        // Normalize (a preview override could be junk) — invalid → default. `custom` stands only
+        // while the palette holds its six values (custom palette spec §2.1).
+        $palette = $this->palettes?->palette() ?? \Thallo\Contracts\Style\Palette::empty();
         $accent = ThemeColors::normalizeSiteAccent($accent) ?? ThemeColors::DEFAULT_ACCENT;
-        $neutral = ThemeColors::normalizeNeutral($neutral) ?? ThemeColors::DEFAULT_NEUTRAL;
+        $neutral = $neutral === 'custom' && $palette->customNeutral !== null
+            ? 'custom'
+            : (ThemeColors::normalizeNeutral($neutral) ?? ThemeColors::DEFAULT_NEUTRAL);
 
         // Design tokens (website plan phase 1b) ride in the same block, after the colours.
         // A previewed value wins when it is one of the enum's; junk falls through to the saved one.
         $design = $this->appearanceDesignOverride;
-        $css = ThemeColors::css($accent, $neutral) . ThemeDesign::css(
+        $css = ThemeColors::paletteCss($accent, $neutral, $palette, $this->colorModeEnabled) . ThemeDesign::css(
             ThemeDesign::normalizeRadius($design['radius'] ?? '')
                 ?? $this->appearance?->radius() ?? ThemeDesign::DEFAULT_RADIUS,
             $this->effectiveFont(),
             ThemeDesign::normalizeBackground($design['background'] ?? '')
                 ?? $this->appearance?->background() ?? ThemeDesign::DEFAULT_BACKGROUND,
             $neutral,
-            ...array_values($this->effectiveFontRoles()),
+            ...[...array_values($this->effectiveFontRoles()), $palette->customNeutral],
         );
         $html = $css === '' ? '' : "<style>{$css}</style>";
         // A theme whose own layout predates the font library calls this but never asks for the fonts

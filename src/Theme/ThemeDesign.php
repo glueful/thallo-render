@@ -104,8 +104,12 @@ final class ThemeDesign
      * browser's `weight style` for a built-in); their faces are declared by the workspace's fonts
      * stylesheet. Headings without a family follow the Text; no Text leaves the theme's face.
      *
+     * Under a Custom neutral (custom palette spec §2.2) Tinted swaps the six custom values' Background
+     * and Surface, exactly as it swaps a family's.
+     *
      * @param array{stack: string, synthesis: string}|null $text
      * @param array{stack: string, synthesis: string}|null $headings
+     * @param array<string,string>|null $customNeutral the palette's six light values, when Custom
      */
     public static function css(
         string $radius,
@@ -114,6 +118,7 @@ final class ThemeDesign
         string $neutral,
         ?array $text = null,
         ?array $headings = null,
+        ?array $customNeutral = null,
     ): string {
         $tokens = self::RADIUS_TOKENS[$radius] ?? [];
 
@@ -134,7 +139,9 @@ final class ThemeDesign
         }
 
         if ($background === 'tinted') {
-            $light = ThemeColors::neutralTokens($neutral, 'light');
+            $light = $customNeutral !== null && $neutral === 'custom'
+                ? ThemeColors::customVars($customNeutral)
+                : ThemeColors::neutralTokens($neutral, 'light');
             $tokens['--bg'] = $light['--surface'];
             $tokens['--surface'] = $light['--bg'];
         }

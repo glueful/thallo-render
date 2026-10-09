@@ -818,6 +818,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             // style_classes() typefaces and fonts_stylesheet_url() (block typeface spec §3.3–§3.4):
             // the request's library snapshot (no library bound = only the built-ins resolve).
             fontSnapshots: $container->get(\Thallo\Render\Style\RequestFontSnapshot::class),
+            palettes: $container->has(\Thallo\Contracts\Style\PaletteProvider::class)
+                ? $container->get(\Thallo\Contracts\Style\PaletteProvider::class)
+                : null,
             fontsArtifacts: $container->get(\Thallo\Render\Style\FontsArtifacts::class),
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).

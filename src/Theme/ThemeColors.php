@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Theme;
 
+use Thallo\Contracts\Style\Palette;
+
 /**
  * Theme-color config (theme-color-config spec §3): maps a closed accent/neutral
  * family pair to concrete design-token hex, light + dark. Pure + static — no CSS
@@ -24,6 +26,12 @@ final class ThemeColors
 
     /** @var list<string> */
     public const NEUTRALS = ['slate', 'gray', 'zinc', 'neutral', 'stone'];
+
+    /** The palette's custom neutral keys → the variables they set (custom palette spec §3.3). */
+    private const CUSTOM_VARS = [
+        'bg' => '--bg', 'surface' => '--surface', 'surface_2' => '--surface-2',
+        'ink' => '--ink', 'muted' => '--muted', 'line' => '--line',
+    ];
 
     /**
      * Accent fill per family: [light, dark]. A family's accent-ink is always white (a brand
@@ -136,6 +144,75 @@ final class ThemeColors
         }
         return ':root{' . self::declarations(self::tokens($accent, $neutral, 'light')) . '}'
             . 'html[data-theme="dark"]{' . self::declarations(self::tokens($accent, $neutral, 'dark')) . '}';
+    }
+
+    /**
+     * The site's colour declarations including its palette (custom palette spec §3.2, §3.3). An
+     * empty palette over a family neutral is exactly css(), so existing sites are byte-identical
+     * (§7). Under Custom the light block carries the six custom values and the dark block the dark
+     * base family's (slate when unset); a configured brand slot emits its fill and ink in both modes
+     * and an unset one emits nothing. With colour mode off no dark block is written.
+     */
+    public static function paletteCss(string $accent, string $neutral, Palette $palette, bool $colorMode): string
+    {
+        $custom = $neutral === 'custom' && $palette->customNeutral !== null;
+        if (!$custom && array_filter($palette->brands) === []) {
+            return self::css($accent, $neutral === 'custom' ? self::DEFAULT_NEUTRAL : $neutral);
+        }
+        $family = self::normalizeNeutral($neutral) ?? self::DEFAULT_NEUTRAL;
+        $darkFamily = $custom ? ($palette->darkBase ?? self::DEFAULT_NEUTRAL) : $family;
+        $light = ($custom ? self::customVars($palette->customNeutral ?? []) : self::neutralVars($family, 'light'))
+            + self::accentVars($accent, 'light', $darkFamily);
+        $dark = self::neutralVars($darkFamily, 'dark') + self::accentVars($accent, 'dark', $darkFamily);
+        $ground = $dark['--bg'];
+        foreach (Palette::SLOTS as $slot) {
+            $brand = $palette->brand($slot);
+            if ($brand === null) {
+                continue; // an unset slot emits nothing (§3.2)
+            }
+            [$fill, $ink] = self::brandVars($brand->hex, 'light', $ground);
+            $light["--brand-{$slot}"] = $fill;
+            $light["--brand-{$slot}-ink"] = $ink;
+            [$fill, $ink] = self::brandVars($brand->hex, 'dark', $ground);
+            $dark["--brand-{$slot}"] = $fill;
+            $dark["--brand-{$slot}-ink"] = $ink;
+        }
+        $css = ':root{' . self::declarations($light) . '}';
+        return $colorMode ? $css . 'html[data-theme="dark"]{' . self::declarations($dark) . '}' : $css;
+    }
+
+    /**
+     * A brand colour's fill and its black-or-white text colour for one mode (custom palette spec
+     * §2.3): the hex as entered in light mode; in dark mode mixed toward white in 5% steps until it
+     * reaches 4.5:1 against the dark ground, at most 20 steps.
+     *
+     * @return array{0:string,1:string}
+     */
+    public static function brandVars(string $hex, string $mode, string $darkGround): array
+    {
+        $fill = $hex;
+        if ($mode === 'dark') {
+            for ($step = 1; $step <= 20 && self::contrast($fill, $darkGround) < 4.5; $step++) {
+                $fill = self::mix($hex, '#ffffff', $step * 0.05);
+            }
+        }
+        $ink = self::contrast($fill, '#000000') > self::contrast($fill, '#ffffff') ? '#000000' : '#ffffff';
+        return [$fill, $ink];
+    }
+
+    /**
+     * The palette's six custom values as the neutral variables they set.
+     *
+     * @param array<string,string> $six
+     * @return array<string,string>
+     */
+    public static function customVars(array $six): array
+    {
+        $out = [];
+        foreach (self::CUSTOM_VARS as $key => $var) {
+            $out[$var] = $six[$key] ?? '';
+        }
+        return $out;
     }
 
     /**
