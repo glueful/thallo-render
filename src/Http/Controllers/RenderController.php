@@ -1340,6 +1340,7 @@ final class RenderController
             $this->appearanceSession?->accent,
             $this->appearanceSession?->neutral,
             $this->appearanceSession?->design,
+            $this->extension->previewPalette($this->appearanceSession?->palette),
         );
         // Controller-scoped intent, applied per render: every entry point ASSIGNS
         // $annotationScope (non-`none` only for stage renders), so the shared singleton

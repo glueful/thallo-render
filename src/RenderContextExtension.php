@@ -318,6 +318,17 @@ final class RenderContextExtension extends AbstractExtension
     }
 
     /**
+     * The palette a preview session claims (custom palette spec §5.1), or null for no claim: what a
+     * preview render passes to setThemeAppearanceOverride().
+     *
+     * @param array<string,mixed>|null $claim
+     */
+    public function previewPalette(?array $claim): ?\Thallo\Contracts\Style\Palette
+    {
+        return $claim === null ? null : $this->paletteRequest?->preview($claim);
+    }
+
+    /**
      * The font library as this request sees it: one snapshot for the page's typeface utilities, its
      * fonts stylesheet, the link and the page cache's fingerprint (RequestFontSnapshot).
      */

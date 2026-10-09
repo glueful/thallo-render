@@ -40,6 +40,8 @@ final class FragmentRenderer
         array $roots,
         ?string $accent = null,
         ?string $neutral = null,
+        /** @var array<string,mixed>|null a preview session's palette claim (custom palette spec §5.1) */
+        ?array $palette = null,
     ): array {
         $env = $this->twig->environment();
         $loader = $env->getLoader();
@@ -50,7 +52,12 @@ final class FragmentRenderer
         $this->extension->resetPerRenderState();
         $this->extension->setAssetContext(null, null);
         $this->extension->bindTheme($this->themes);
-        $this->extension->setThemeAppearanceOverride($accent, $neutral);
+        $this->extension->setThemeAppearanceOverride(
+            $accent,
+            $neutral,
+            null,
+            $this->extension->previewPalette($palette),
+        );
         $this->extension->setAnnotationScope('entry');
         $this->extension->setPreviewContext(true);
         $this->extension->setLocale($locale);

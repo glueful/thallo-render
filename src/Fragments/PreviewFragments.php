@@ -134,6 +134,7 @@ final class PreviewFragments implements PreviewFragmentRenderer
             $roots,
             $session?->accent,
             $session?->neutral,
+            $session?->palette,
         );
     }
 

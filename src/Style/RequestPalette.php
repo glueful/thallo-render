@@ -33,6 +33,16 @@ final class RequestPalette
         $this->override = $palette;
     }
 
+    /**
+     * The palette a preview claim describes (custom palette spec §5.1), over the saved one.
+     *
+     * @param array<string,mixed> $claim
+     */
+    public function preview(array $claim): Palette
+    {
+        return $this->provider?->preview($claim) ?? Palette::empty();
+    }
+
     public function refresh(): void
     {
         $this->palette = null;
