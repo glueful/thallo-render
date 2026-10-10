@@ -3,6 +3,15 @@
    stored value degrades to h2 instead of emitting an invalid tag. `text` is escaped
    plain text (headings are structural, not rich). Alignment, colour, typography and
    spacing are settings on the `root` target (visual builder spec §2.5) — the helpers
-   emit them; nothing here is inline. Fields: text, level (h1–h6, default h2). #}
+   emit them; nothing here is inline. `url` makes the text a link (through safe_url, so an
+   unsafe one leaves plain text); `new_tab` opens it in a new tab. Fields: text, level
+   (h1–h6, default h2), url, new_tab. #}
 {% set level = {h1: 'h1', h2: 'h2', h3: 'h3', h4: 'h4', h5: 'h5', h6: 'h6'}[data.level|default('h2')] ?? 'h2' %}
-<{{ level }} class="thallo-block thallo-block-heading{{ style_classes('root') }}"{{ style_attrs('root') }}>{{ data.text|default('')|editable_text('text') }}</{{ level }}>
+{% set href = data.url|default('')|safe_url %}
+<{{ level }} class="thallo-block thallo-block-heading{{ style_classes('root') }}"{{ style_attrs('root') }}>
+  {%- if href -%}
+    <a class="thallo-block-heading__link" href="{{ href }}"{% if data.new_tab %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ data.text|default('')|editable_text('text') }}</a>
+  {%- else -%}
+    {{ data.text|default('')|editable_text('text') }}
+  {%- endif -%}
+</{{ level }}>

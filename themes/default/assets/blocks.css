@@ -262,6 +262,9 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
   padding-inline: var(--space-4);
 }
 /* Alignment, colour and typography are settings (t-text-*, t-fg-*, t-size-*). */
+/* A linked heading keeps the heading's own colour; the pointer underlines it. */
+.thallo-block-heading__link { color: inherit; text-decoration: none; }
+.thallo-block-heading__link:hover { text-decoration: underline; text-underline-offset: 0.15em; }
 
 /* container — free-form styled wrapper; per-instance backgrounds come in as
    CSS custom properties on the style attribute (typed validated fields only). */
@@ -407,6 +410,15 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 /* A list reads as a list. The admin's editor writes each item's text as a paragraph
    (<li><p>…</p></li>), so the paragraph's margin would open a gap between items; the items sit a
    short step apart instead, indented by a bullet's width rather than the browser's 40px. */
+/* A linked rich text: a cover link over the block, the body's own links raised above it. The cover
+   is the last child, so the body before it is what closes the block's spacing. On the stage the
+   cover lets clicks through, so a double-click still reaches the text to edit it. */
+.thallo-block-rich_text--linked { position: relative; }
+.thallo-block-rich_text--linked > :nth-last-child(2) { margin-bottom: 0; }
+.thallo-block-link { position: absolute; inset: 0; }
+.thallo-block-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.thallo-block-rich_text--linked a:not(.thallo-block-link) { position: relative; z-index: 1; }
+[data-thallo-canvas] .thallo-block-link { pointer-events: none; }
 .thallo-block-rich_text :is(ul, ol) { padding-inline-start: 1.25em; }
 .thallo-block-rich_text li > p { margin: 0; }
 .thallo-block-rich_text li + li { margin-top: 0.35em; }

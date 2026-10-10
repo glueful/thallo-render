@@ -1,4 +1,10 @@
 {# Rendered through safe_html (sanitizer spec §4): the value was sanitized at
    save, and the filter re-sanitizes at output (fail-closed to escaped text when
-   no sanitizer is bound). Starter templates never use |raw. #}
-<div class="thallo-block thallo-block-rich_text{{ style_classes('root') }}"{{ style_attrs('root') }}>{{ data.body|default('')|safe_html }}</div>
+   no sanitizer is bound). Starter templates never use |raw.
+   `url` makes the whole block a link: a cover over it (an <a> cannot hold the body's own
+   links), named by the block's text, with the body's links raised above it. Through
+   safe_url, so an unsafe one adds nothing; `new_tab` opens it in a new tab. #}
+{% set href = data.url|default('')|safe_url %}
+<div class="thallo-block thallo-block-rich_text{{ href ? ' thallo-block-rich_text--linked' }}{{ style_classes('root') }}"{{ style_attrs('root') }}>{{ data.body|default('')|safe_html }}
+  {%- if href %}<a class="thallo-block-link" href="{{ href }}"{% if data.new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} aria-label="{{ data.body|default('')|replace({'</p>': ' ', '</li>': ' ', '<br>': ' '})|striptags|trim }}"></a>{% endif -%}
+</div>
