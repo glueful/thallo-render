@@ -35,6 +35,9 @@ final class StyleSchemaController
         'transparent' => 'Transparent', 'white' => 'White', 'black' => 'Black',
     ];
 
+    /** Until the palette block lists the configured ids in order (brand colour list plan Task 6). */
+    private const INTERIM_SLOTS = [1, 2, 3];
+
     public function __construct(
         private readonly ThemeLocator $theme,
         private readonly ?RequestPalette $palette = null,
@@ -138,13 +141,13 @@ final class StyleSchemaController
         foreach (self::LABELS as $name => $label) {
             $labels['color.' . $name] = $label;
         }
-        foreach (Palette::SLOTS as $slot) {
+        foreach (self::INTERIM_SLOTS as $slot) {
             $name = $palette->brand($slot)?->name ?? "Brand {$slot}";
             $labels["color.brand-{$slot}"] = $name;
             $labels["color.brand-{$slot}-contrast"] = $name . ' — text';
         }
         $slots = [];
-        foreach (Palette::SLOTS as $slot) {
+        foreach (self::INTERIM_SLOTS as $slot) {
             $brand = $palette->brand($slot);
             $replacing = $statuses[$slot]['replacing'] ?? null;
             $slots["brand-{$slot}"] = [
