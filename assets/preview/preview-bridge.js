@@ -505,7 +505,26 @@
     var m = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(trimmed)
     if (!m) return true // relative: /path, #anchor, ?q, bare path
     var scheme = m[1].toLowerCase()
-    return scheme === 'http' || scheme === 'https' || scheme === 'mailto'
+    return (
+      scheme === 'http' || scheme === 'https' || scheme === 'mailto' ||
+      scheme === 'tel' || scheme === 'sms'
+    )
+  }
+
+  /**
+   * What a person types, as the link they meant (mirrors admin's linkUrl.ts):
+   * `www.example.com` would otherwise be a page on this site. An email gains
+   * mailto:, a phone number tel:, a dotted host https://. A scheme, or a
+   * leading / # ?, is left as typed; so is anything else (a relative `about`).
+   */
+  function normalizeLinkUrl(url) {
+    var s = String(url).replace(/^\s+|\s+$/g, '')
+    if (s === '' || /^[/#?]/.test(s) || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(s)) return s
+    if (/^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(s)) return 'mailto:' + s
+    if (/^\+?[0-9][0-9\s().-]{5,}$/.test(s)) return 'tel:' + s.replace(/[\s().-]/g, '')
+    var host = s.split(/[/?#]/)[0]
+    if (/^[^\s.]+(\.[^\s.]+)+$/.test(host)) return 'https://' + s
+    return s
   }
 
   function runCommand(cmd, value) {
@@ -628,7 +647,7 @@
 
   function applyLink() {
     if (!editing || !linkPanel || !linkPanelOpen) return
-    var url = linkPanel.input.value.replace(/^\s+|\s+$/g, '')
+    var url = normalizeLinkUrl(linkPanel.input.value)
     if (!isSafeLinkUrl(url)) {
       // Invalid (empty included — spec pin: empty is NOT unlink): keep the
       // panel open with the VALUE preserved and focus in the input.

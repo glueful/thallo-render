@@ -1774,7 +1774,7 @@ final class RenderContextExtension extends AbstractExtension
     /**
      * Scheme-allowlisted link value (starter-library spec §4): Twig autoescape does
      * NOT make href="javascript:…" safe. Allows site-relative paths (never //
-     * protocol-relative — they smuggle a host), https, http, and mailto; everything
+     * protocol-relative — they smuggle a host), https, http, mailto, tel and sms; everything
      * else nulls and templates render the label as plain text instead of a link.
      */
     public function safeUrl(mixed $value): ?string
@@ -1789,7 +1789,7 @@ final class RenderContextExtension extends AbstractExtension
         if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
             return $url;
         }
-        return preg_match('#\A(?:https://|http://|mailto:)#i', $url) === 1 ? $url : null;
+        return preg_match('#\A(?:https://|http://|mailto:|tel:|sms:)#i', $url) === 1 ? $url : null;
     }
 
     /**
