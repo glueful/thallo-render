@@ -8,7 +8,8 @@ use Glueful\Http\Contracts\ResponseData;
 
 /**
  * Doc-only schema holder for the style schema's `palette` (custom palette spec §5.2): each brand
- * slot's state, a light swatch per colour name, and every colour name's label. Never constructed at
+ * slot's state, a light swatch per colour name, every colour name's label, the palette generation
+ * and the recent replacement records (§5.3). Never constructed at
  * runtime.
  */
 final class StylePaletteData implements ResponseData
@@ -23,6 +24,13 @@ final class StylePaletteData implements ResponseData
         public readonly array $swatches,
         /** @var array<string,string> `color.<name>` => label (brand slots: the author's name) */
         public readonly array $labels,
+        /** @var int the palette generation the slots were read at */
+        public readonly int $generation,
+        /**
+         * @var array<string,mixed> {after, through, records: list<{id, slot, map, completed_generation}>} —
+         *      every completed replacement in the range, through `generation`
+         */
+        public readonly array $replacements,
     ) {
     }
 }

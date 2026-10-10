@@ -8,6 +8,7 @@ use Glueful\Http\Response;
 use Glueful\Routing\Attributes\ApiOperation;
 use Glueful\Routing\Attributes\ApiResponse;
 use Thallo\Contracts\Style\Palette;
+use Thallo\Contracts\Style\PaletteHistoryReader;
 use Thallo\Contracts\Style\PaletteStatusReader;
 use Thallo\Contracts\Style\StyleSchema;
 use Thallo\Contracts\Style\ValueKind;
@@ -39,6 +40,7 @@ final class StyleSchemaController
         private readonly ?RequestPalette $palette = null,
         private readonly ?ThemeAppearanceSource $appearance = null,
         private readonly ?PaletteStatusReader $statuses = null,
+        private readonly ?PaletteHistoryReader $history = null,
     ) {
     }
 
@@ -78,8 +80,29 @@ final class StyleSchemaController
                 'domains' => $domains,
                 'values' => $this->theme->vocabulary()->values(),
             ],
-            'palette' => $this->palette(),
+            'palette' => $this->consistentPalette(),
         ], 'Style schema retrieved.');
+    }
+
+    /**
+     * The palette with its generation and the recent replacement records (custom palette spec §5.3),
+     * all read at one moment: a replacement completing mid-read makes the slots be read again.
+     *
+     * @return array<string,mixed>
+     */
+    private function consistentPalette(): array
+    {
+        if ($this->history === null) {
+            return $this->palette() + [
+                'generation' => 0,
+                'replacements' => ['after' => 0, 'through' => 0, 'records' => []],
+            ];
+        }
+        [$palette, $generation, $replacements] = $this->history->read(function (): array {
+            $this->palette?->refresh();
+            return $this->palette();
+        });
+        return $palette + ['generation' => $generation, 'replacements' => $replacements];
     }
 
     /**

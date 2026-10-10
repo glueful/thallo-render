@@ -337,6 +337,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             $container->has(\Thallo\Contracts\Style\PaletteStatusReader::class)
                 ? $container->get(\Thallo\Contracts\Style\PaletteStatusReader::class)
                 : null,
+            $container->has(\Thallo\Contracts\Style\PaletteHistoryReader::class)
+                ? $container->get(\Thallo\Contracts\Style\PaletteHistoryReader::class)
+                : null,
         );
     }
 
