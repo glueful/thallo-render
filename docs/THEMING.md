@@ -823,6 +823,29 @@ for free. Defaults emit nothing. Every choice is in the cache fingerprint (§9.4
 `render:{theme}:{accent}-{neutral}-{radius}-{font}-{background}:{path}`) and a change
 dispatches `ThemeAppearanceChanged`.
 
+### 9.7 The site's palette (Custom neutral, brand colours)
+
+The operator can also give the site colours of its own (`Thallo\Contracts\Style\Palette`, stored
+as `theme_neutral_custom`, `theme_dark_base` and `theme_brand_1` … `theme_brand_3`):
+
+- **A Custom neutral** (`theme_neutral: custom`): six light-mode values — `--bg`, `--surface`,
+  `--surface-2`, `--ink`, `--muted`, `--line` — emitted on `:root`; dark mode is built from the
+  `theme_dark_base` family as before.
+- **Brand colours**: up to three named colours. Each emits `--brand-N` and `--brand-N-ink` (black or
+  white, whichever reads on it) in light mode, and a derived value, lightened in its hue until it
+  can be seen on the dark ground, under `html[data-theme="dark"]`.
+
+The six vocabulary names `color.brand-1` … `color.brand-3` and their `-contrast` text colours are
+**site-controlled** (`Vocabulary::SITE_CONTROLLED`): the compiler maps them to the site's
+`--brand-N` / `--brand-N-ink`, a theme cannot remap them — a `theme.json` mapping for one is ignored
+and `thallo doctor` warns — and a theme never has to supply them. Everything else a theme maps as
+before.
+
+A brand colour the site has not configured is **unavailable**: the renderer emits no utility class
+for it, so a block naming one renders as if it never set that colour (a class's value or the theme's
+shows through; a hover colour leaves the resting colour). The palette is in the page-cache
+fingerprint, and changing it dispatches `ThemeAppearanceChanged`.
+
 ## 10. Style block (scoped accent/neutral)
 
 The **Style** block (`slug: style`, category Layout) re-skins a group of blocks
