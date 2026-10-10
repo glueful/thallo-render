@@ -41,6 +41,8 @@ final class StyleSchemaController
         private readonly ?ThemeAppearanceSource $appearance = null,
         private readonly ?PaletteStatusReader $statuses = null,
         private readonly ?PaletteHistoryReader $history = null,
+        /** Whether the site renders a dark mode (`theme.color_mode.enabled`): the dark base matters only then. */
+        private readonly bool $colorMode = true,
     ) {
     }
 
@@ -166,6 +168,6 @@ final class StyleSchemaController
             $this->appearance?->background() ?? 'plain',
             $palette,
         )->swatches();
-        return ['slots' => $slots, 'swatches' => $swatches, 'labels' => $labels];
+        return ['slots' => $slots, 'swatches' => $swatches, 'labels' => $labels, 'color_mode' => $this->colorMode];
     }
 }

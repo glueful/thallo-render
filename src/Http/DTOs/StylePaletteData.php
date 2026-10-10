@@ -24,6 +24,8 @@ final class StylePaletteData implements ResponseData
         public readonly array $swatches,
         /** @var array<string,string> `color.<name>` => label (brand slots: the author's name) */
         public readonly array $labels,
+        /** @var bool whether the site renders a dark mode: the dark base applies only then */
+        public readonly bool $color_mode,
         /** @var int the palette generation the slots were read at */
         public readonly int $generation,
         /**
