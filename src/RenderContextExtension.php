@@ -304,6 +304,8 @@ final class RenderContextExtension extends AbstractExtension
         private readonly ?\Thallo\Render\Style\FontsArtifacts $fontsArtifacts = null,
         /** Soft-bound (custom palette spec §2, §3.2): the palette this request sees. */
         private readonly ?\Thallo\Render\Style\RequestPalette $paletteRequest = null,
+        /** The workspace's colours stylesheets (custom palette spec §3.4): null → none is linked. */
+        private readonly ?\Thallo\Render\Style\ColorsArtifacts $colorsArtifacts = null,
     ) {
         $this->locale = $defaultLocale;
     }
@@ -354,6 +356,23 @@ final class RenderContextExtension extends AbstractExtension
         }
         $file = \Thallo\Render\Style\FontsArtifacts::fileName($artifact['hash']);
         return ($this->assetBase ?? '/theme-assets') . '/' . $file;
+    }
+
+    /**
+     * The colours stylesheet for this render's configured brand ids (custom palette spec §3.4),
+     * published before it is returned; null when no colour is configured (nothing to link).
+     */
+    public function colorsStylesheetUrl(?\Thallo\Contracts\Style\Palette $palette = null): ?string
+    {
+        if ($this->colorsArtifacts === null) {
+            return null;
+        }
+        $artifact = $this->colorsArtifacts->forIds(($palette ?? $this->palette())->ids());
+        if ($artifact['css'] === '') {
+            return null;
+        }
+        return ($this->assetBase ?? '/theme-assets') . '/'
+            . \Thallo\Render\Style\ColorsArtifacts::fileName($artifact['hash']);
     }
 
     /** The generation of the style class snapshot this request renders from (spec §4.3). */
@@ -806,8 +825,7 @@ final class RenderContextExtension extends AbstractExtension
             return '';
         }
         $valid = $def->tokenDomain !== null
-            ? str_starts_with($value, $def->tokenDomain . '.')
-                && in_array(substr($value, strlen($def->tokenDomain) + 1), Vocabulary::names($def->tokenDomain), true)
+            ? str_starts_with($value, $def->tokenDomain . '.') && Vocabulary::isBaseline($value)
             : in_array($value, $def->choices ?? [], true);
         // A colour naming an unconfigured brand slot applies nothing (custom palette spec §3.2).
         if ($valid && $def->tokenDomain === 'color' && $this->palette()->isUnavailable($value)) {
@@ -1094,6 +1112,12 @@ final class RenderContextExtension extends AbstractExtension
             if ($url !== null) {
                 $html = '<link rel="stylesheet" href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">' . $html;
             }
+        }
+        // The brand utilities (custom palette spec §3.4): every theme layout calls this after the
+        // compiled stylesheet, so the colours stylesheet needs no template of its own.
+        $colors = $this->colorsStylesheetUrl($palette);
+        if ($colors !== null) {
+            $html = '<link rel="stylesheet" href="' . htmlspecialchars($colors, ENT_QUOTES, 'UTF-8') . '">' . $html;
         }
         return new \Twig\Markup($html, 'UTF-8');
     }

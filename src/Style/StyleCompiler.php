@@ -38,7 +38,9 @@ final class StyleCompiler
     // 22: typography.line_height `relaxed` 1.65 → 1.75 (1.65 is the theme's body line height).
     // 23: feature.align.
     // 24: the six site-controlled brand colour tokens (custom palette spec §3.1).
-    public const VERSION = 24;
+    // 25: brand colours leave the per-theme artifact for each workspace's colours stylesheet (custom
+    //     palette spec §3.4).
+    public const VERSION = 25;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -279,6 +281,48 @@ final class StyleCompiler
     public static function variable(string $token): string
     {
         return '--t-' . str_replace('.', '-', $token);
+    }
+
+    /**
+     * The colour utilities for some colour names (custom palette spec §3.4): each colour property's
+     * resting rule and each colour hover rule, from the same property table and declarations
+     * compile() writes — so the colours stylesheet and the per-theme artifact cannot drift — then
+     * the surface opacity rules again, because a modifier must follow the utility it modifies.
+     * Colour properties are not responsive: one breakpoint is all there is.
+     *
+     * @param list<string> $names colour names, e.g. `brand-4`
+     */
+    public static function colorUtilities(array $names): string
+    {
+        $tokens = array_map(static fn (string $name): string => "color.{$name}", $names);
+        $out = '';
+        foreach (StyleSchema::properties() as $path => $def) {
+            if ($def->tokenDomain !== 'color' || $def->responsive || StyleSchema::restingPathOf($path) !== null) {
+                continue;
+            }
+            foreach ($tokens as $value) {
+                $out .= ClassNames::selector(ClassNames::for($path, $value))
+                    . ' { ' . self::declarations($path, $value) . " }\n";
+            }
+        }
+        foreach (StyleSchema::property('colors.surface_opacity')?->choices ?? [] as $value) {
+            $out .= ClassNames::selector(ClassNames::for('colors.surface_opacity', $value))
+                . ' { ' . self::declarations('colors.surface_opacity', $value) . " }\n";
+        }
+        $pointer = '';
+        $other = '';
+        foreach (StyleSchema::HOVER as $hover => $resting) {
+            if (StyleSchema::property($hover)?->tokenDomain !== 'color') {
+                continue;
+            }
+            foreach ($tokens as $value) {
+                $selector = ClassNames::selector(ClassNames::for($hover, $value));
+                $declarations = self::declarations($resting, $value);
+                $pointer .= "{$selector}:hover { {$declarations} }\n";
+                $other .= "{$selector}:focus-visible, {$selector}[data-thallo-hover] { {$declarations} }\n";
+            }
+        }
+        return $out . "@media (hover: hover) {\n{$pointer}}\n{$other}";
     }
 
     private static function rules(string $bp): string

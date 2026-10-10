@@ -184,6 +184,11 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 'shared' => true,
                 'factory' => [self::class, 'makeFontsArtifacts'],
             ],
+            // Each workspace's brand colour utilities (custom palette spec §3.4).
+            \Thallo\Render\Style\ColorsArtifacts::class => [
+                'shared' => true,
+                'factory' => [self::class, 'makeColorsArtifacts'],
+            ],
             // Asked by whoever saves a block type's style declaration: does its template honour it?
             BlockTemplateTargetCheck::class => [
                 'shared' => true,
@@ -553,6 +558,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 : null,
             $container->get(\Thallo\Render\Style\FontsArtifacts::class),
             $container->get(\Thallo\Render\Style\RequestFontSnapshot::class),
+            $container->get(\Thallo\Render\Style\ColorsArtifacts::class),
         );
     }
 
@@ -666,6 +672,17 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
         return new \Thallo\Render\Style\FontsArtifacts(
             $context->getBasePath() . '/storage/cache/fonts',
             static fn (): string => trim($segment->segment($context, 'fonts'), ':') ?: 'site',
+        );
+    }
+
+    public static function makeColorsArtifacts(ContainerInterface $container): \Thallo\Render\Style\ColorsArtifacts
+    {
+        $context = $container->get(ApplicationContext::class);
+        $segment = $container->get(TenantCacheSegment::class);
+        // One directory per workspace, under the style cache: `site` on a single-site install.
+        return new \Thallo\Render\Style\ColorsArtifacts(
+            $context->getBasePath() . '/storage/cache/style/colors',
+            static fn (): string => trim($segment->segment($context, 'colors'), ':') ?: 'site',
         );
     }
 
@@ -847,6 +864,7 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
             fontSnapshots: $container->get(\Thallo\Render\Style\RequestFontSnapshot::class),
             paletteRequest: $container->get(\Thallo\Render\Style\RequestPalette::class),
             fontsArtifacts: $container->get(\Thallo\Render\Style\FontsArtifacts::class),
+            colorsArtifacts: $container->get(\Thallo\Render\Style\ColorsArtifacts::class),
             // media_image() (storefront-performance spec §3): soft-bound; null = plain
             // media() URL with srcset null (no MIME knowledge).
             mediaVariants: $container->has(MediaVariantUrlResolver::class)

@@ -56,8 +56,13 @@ final class ThemeVocabulary
         }
         $vocabulary += Vocabulary::LITERAL_DEFAULTS; // a theme's own mapping wins; the literal fills a gap
         // The brand colours are the site's (custom palette spec §3.1): a theme's mapping is ignored.
-        $ignored = array_values(array_intersect(array_keys(Vocabulary::SITE_CONTROLLED), array_keys($vocabulary)));
-        $vocabulary = Vocabulary::SITE_CONTROLLED + $vocabulary;
+        $ignored = array_values(array_filter(
+            array_map('strval', array_keys($vocabulary)),
+            static fn (string $token): bool => Vocabulary::siteControlled($token) !== null,
+        ));
+        foreach ($ignored as $token) {
+            unset($vocabulary[$token]);
+        }
         $missing = [];
         foreach (Vocabulary::all() as $token) {
             if (!array_key_exists($token, $vocabulary)) {

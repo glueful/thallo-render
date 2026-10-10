@@ -118,6 +118,8 @@ final class RenderController
         private readonly ?\Thallo\Render\Style\FontsArtifacts $fontsArtifacts = null,
         /** The request's font library snapshot: a preview reads the current stylesheet from it. */
         private readonly ?\Thallo\Render\Style\RequestFontSnapshot $fontSnapshots = null,
+        /** The workspace's colours stylesheets (custom palette spec §3.4), served by hash. */
+        private readonly ?\Thallo\Render\Style\ColorsArtifacts $colorsArtifacts = null,
     ) {
     }
 
@@ -935,12 +937,15 @@ final class RenderController
         $hash = ThemeStylesheetArtifact::hashFromFileName($path);
         $compiled = CompiledStyleArtifacts::hashFromFileName($path);
         $fonts = \Thallo\Render\Style\FontsArtifacts::hashFromFileName($path);
-        if ($hash !== null || $compiled !== null || $fonts !== null) {
-            // The workspace's fonts stylesheet (block typeface spec §3.4): its own directory, so a
-            // workspace only ever serves its own; an old hash serves the bytes it was published with.
+        $colors = \Thallo\Render\Style\ColorsArtifacts::hashFromFileName($path);
+        if ($hash !== null || $compiled !== null || $fonts !== null || $colors !== null) {
+            // The workspace's fonts and colours stylesheets (block typeface spec §3.4, custom palette
+            // spec §3.4): their own directories, so a workspace only ever serves its own; an old hash
+            // serves the bytes it was published with.
             $css = match (true) {
                 $hash !== null => $this->themeArtifacts?->read($hash),
                 $compiled !== null => $this->compiledArtifacts?->read($compiled),
+                $colors !== null => $this->colorsArtifacts?->read($colors),
                 default => $this->fontsArtifacts?->read((string) $fonts),
             };
             if ($css === null && $fonts !== null && $this->fontsArtifacts !== null) {
@@ -948,6 +953,11 @@ final class RenderController
                 // the current library's stylesheet is published on demand; any other hash stays 404.
                 $this->extension->fontsStylesheetUrl();
                 $css = $this->fontsArtifacts->read($fonts);
+            }
+            if ($css === null && $colors !== null && $this->colorsArtifacts !== null) {
+                // Likewise the current palette's colours stylesheet.
+                $this->extension->colorsStylesheetUrl();
+                $css = $this->colorsArtifacts->read($colors);
             }
             return $css === null
                 ? ApiResponse::error('Not Found', 404)
@@ -1014,10 +1024,19 @@ final class RenderController
         $hash = ThemeStylesheetArtifact::hashFromFileName($path);
         $compiled = CompiledStyleArtifacts::hashFromFileName($path);
         $fonts = \Thallo\Render\Style\FontsArtifacts::hashFromFileName($path);
-        if ($hash !== null || $compiled !== null || $fonts !== null) {
+        $colors = \Thallo\Render\Style\ColorsArtifacts::hashFromFileName($path);
+        if ($hash !== null || $compiled !== null || $fonts !== null || $colors !== null) {
             // The preview theme's artifacts: built for the preview render, read back by hash.
             $css = null;
-            if ($fonts !== null) {
+            if ($colors !== null) {
+                // The colours stylesheet is the workspace's too: the published file, else the current
+                // palette's (published as it is linked).
+                $css = $this->colorsArtifacts?->read($colors);
+                if ($css === null && $this->colorsArtifacts !== null) {
+                    $this->extension->colorsStylesheetUrl();
+                    $css = $this->colorsArtifacts->read($colors);
+                }
+            } elseif ($fonts !== null) {
                 // The fonts stylesheet is the workspace's, not the theme's: the published file, or
                 // the current snapshot's (published as it is read).
                 $snapshot = $this->fontSnapshots?->current();
