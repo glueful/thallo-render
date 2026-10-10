@@ -346,6 +346,9 @@ final class RenderServiceProvider extends ServiceProvider implements DeclaresLoa
                 ? $container->get(\Thallo\Contracts\Style\PaletteHistoryReader::class)
                 : null,
             (bool) config($container->get(ApplicationContext::class), 'theme.color_mode.enabled', true),
+            $container->has(\Thallo\Contracts\Authorization\PermissionRequirementAuthority::class)
+                ? $container->get(\Thallo\Contracts\Authorization\PermissionRequirementAuthority::class)
+                : null,
         );
     }
 

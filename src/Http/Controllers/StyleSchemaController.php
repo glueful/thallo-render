@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Thallo\Render\Http\Controllers;
 
+use Symfony\Component\HttpFoundation\Request;
 use Glueful\Http\Response;
 use Glueful\Routing\Attributes\ApiOperation;
 use Glueful\Routing\Attributes\ApiResponse;
@@ -35,9 +36,6 @@ final class StyleSchemaController
         'transparent' => 'Transparent', 'white' => 'White', 'black' => 'Black',
     ];
 
-    /** Until the palette block lists the configured ids in order (brand colour list plan Task 6). */
-    private const INTERIM_SLOTS = [1, 2, 3];
-
     public function __construct(
         private readonly ThemeLocator $theme,
         private readonly ?RequestPalette $palette = null,
@@ -46,19 +44,23 @@ final class StyleSchemaController
         private readonly ?PaletteHistoryReader $history = null,
         /** Whether the site renders a dark mode (`theme.color_mode.enabled`): the dark base matters only then. */
         private readonly bool $colorMode = true,
+        /** Whether a reader may manage brand colours (`content.manage`): the pickers' Manage link. */
+        private readonly ?\Thallo\Contracts\Authorization\PermissionRequirementAuthority $permissions = null,
     ) {
     }
 
     #[ApiOperation(
         summary: 'The style schema and the active theme vocabulary',
         description: 'The managed property table (paths, kinds, responsiveness, choices), the breakpoints, '
-            . 'the advanced paths, the active theme\'s vocabulary values and the workspace\'s palette (brand slot '
-            . 'states, swatches, labels). Any style editor may read it: `content.edit`, `content.manage`, '
+            . 'the advanced paths, the active theme\'s vocabulary values (with the configured brand colours, in '
+            . 'order) and the workspace\'s palette: its limit, the brand colours in order with their states, '
+            . 'removed colours by name, swatches, labels and whether the reader may manage it. Any style '
+            . 'editor may read it: `content.edit`, `content.manage`, '
             . '`templates.manage` or `styles.manage`.',
         tags: ['Thallo Templates'],
     )]
     #[ApiResponse(200, schema: StyleSchemaData::class, description: 'The style schema.')]
-    public function show(): Response
+    public function show(?Request $request = null): Response
     {
         $properties = [];
         foreach (StyleSchema::properties() as $def) {
@@ -75,6 +77,14 @@ final class StyleSchemaController
         foreach (Vocabulary::domains() as $domain) {
             $domains[$domain] = Vocabulary::names($domain);
         }
+        $palette = $this->consistentPalette();
+        // The configured brand colours join the colour names, in the author's order (custom palette spec §3.1).
+        foreach ($palette['order'] as $name) {
+            $domains['color'][] = $name;
+            $domains['color'][] = $name . '-contrast';
+        }
+        $palette['can_manage'] = $request !== null
+            && $this->permissions?->allows($request, ['content.manage']) === true;
         return Response::success([
             'version' => StyleSchema::VERSION,
             'breakpoints' => StyleSchema::BREAKPOINT_MIN_WIDTH,
@@ -85,7 +95,7 @@ final class StyleSchemaController
                 'domains' => $domains,
                 'values' => $this->theme->vocabulary()->values(),
             ],
-            'palette' => $this->consistentPalette(),
+            'palette' => $palette,
         ], 'Style schema retrieved.');
     }
 
@@ -97,7 +107,8 @@ final class StyleSchemaController
      */
     public function paletteBlock(): array
     {
-        return $this->consistentPalette();
+        // Only content.manage can make the palette change this answers.
+        return $this->consistentPalette() + ['can_manage' => true];
     }
 
     /**
@@ -122,15 +133,20 @@ final class StyleSchemaController
     }
 
     /**
-     * The workspace's palette for the pickers (custom palette spec §5.2): each brand slot's state
-     * (unset, configured or replacing), whether a running replacement reserves it and where a slot
-     * being replaced is going; a light swatch for every other colour name; and every colour name's
-     * label.
+     * The workspace's palette for the pickers (custom palette spec §5.2): the limit; the configured
+     * (and replacing) brand colours in the author's order, each with its state, whether a running
+     * replacement reserves it and where one being replaced is going; removed colours by the name they
+     * had (a never-issued id is absent; at limit 0 only the removed are listed); a light swatch for
+     * every other colour name; and every colour name's label, stored and removed brand colours
+     * included.
      *
      * @return array{
+     *     limit: int,
+     *     order: list<string>,
      *     slots: array<string, array<string,mixed>>,
      *     swatches: array<string,string>,
      *     labels: array<string,string>,
+     *     color_mode: bool,
      * }
      */
     private function palette(): array
@@ -141,20 +157,20 @@ final class StyleSchemaController
         foreach (self::LABELS as $name => $label) {
             $labels['color.' . $name] = $label;
         }
-        foreach (self::INTERIM_SLOTS as $slot) {
-            $name = $palette->brand($slot)?->name ?? "Brand {$slot}";
-            $labels["color.brand-{$slot}"] = $name;
-            $labels["color.brand-{$slot}-contrast"] = $name . ' — text';
+        foreach (array_keys($palette->brands + $palette->removed) as $id) {
+            $labels["color.brand-{$id}"] = $palette->labelOf($id);
+            $labels["color.brand-{$id}-contrast"] = $palette->labelOf($id) . ' — text';
         }
         $slots = [];
-        foreach (self::INTERIM_SLOTS as $slot) {
-            $brand = $palette->brand($slot);
-            $replacing = $statuses[$slot]['replacing'] ?? null;
-            $slots["brand-{$slot}"] = [
-                'name' => $brand?->name,
-                'hex' => $brand?->hex,
-                'state' => $brand === null ? 'unset' : ($replacing !== null ? 'replacing' : 'configured'),
-                'reserved' => (bool) ($statuses[$slot]['reserved'] ?? false),
+        $order = [];
+        foreach ($palette->configured() as $id => $brand) {
+            $replacing = $statuses[$id]['replacing'] ?? null;
+            $order[] = "brand-{$id}";
+            $slots["brand-{$id}"] = [
+                'name' => $brand->name,
+                'hex' => $brand->hex,
+                'state' => $replacing !== null ? 'replacing' : 'configured',
+                'reserved' => (bool) ($statuses[$id]['reserved'] ?? false),
                 'replacing' => $replacing === null ? null : [
                     'to' => $replacing['to'],
                     'to_label' => $labels[$replacing['to']] ?? $replacing['to'],
@@ -165,12 +181,22 @@ final class StyleSchemaController
                 ],
             ];
         }
+        foreach ($palette->removed as $id => $name) {
+            $slots["brand-{$id}"] ??= ['name' => $name, 'state' => 'removed'];
+        }
         $swatches = EffectivePalette::of(
             $this->appearance?->accent() ?? ThemeColors::DEFAULT_ACCENT,
             $this->appearance?->neutral() ?? ThemeColors::DEFAULT_NEUTRAL,
             $this->appearance?->background() ?? 'plain',
             $palette,
         )->swatches();
-        return ['slots' => $slots, 'swatches' => $swatches, 'labels' => $labels, 'color_mode' => $this->colorMode];
+        return [
+            'limit' => $palette->limit,
+            'order' => $order,
+            'slots' => $slots,
+            'swatches' => $swatches,
+            'labels' => $labels,
+            'color_mode' => $this->colorMode,
+        ];
     }
 }
