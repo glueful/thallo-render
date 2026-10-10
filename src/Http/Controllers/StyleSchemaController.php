@@ -85,6 +85,17 @@ final class StyleSchemaController
     }
 
     /**
+     * The schema's palette block as it stands now — what a palette change answers with, so the
+     * Appearance page and the pickers need no second request.
+     *
+     * @return array<string,mixed>
+     */
+    public function paletteBlock(): array
+    {
+        return $this->consistentPalette();
+    }
+
+    /**
      * The palette with its generation and the recent replacement records (custom palette spec §5.3),
      * all read at one moment: a replacement completing mid-read makes the slots be read again.
      *
