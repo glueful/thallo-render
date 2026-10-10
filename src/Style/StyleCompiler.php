@@ -42,7 +42,8 @@ final class StyleCompiler
     //     palette spec §3.4).
     // 26: a hover utility also shows on the keyboard focus of its block's cover link (`.thallo-block-link`).
     // 27: border.sides takes any set of sides; corners, which corners the Corners size rounds.
-    public const VERSION = 27;
+    // 28: hover.typography.weight and hover.typography.decoration.
+    public const VERSION = 28;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
