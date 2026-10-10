@@ -826,19 +826,23 @@ dispatches `ThemeAppearanceChanged`.
 ### 9.7 The site's palette (Custom neutral, brand colours)
 
 The operator can also give the site colours of its own (`Thallo\Contracts\Style\Palette`, stored
-as `theme_neutral_custom`, `theme_dark_base` and `theme_brand_1` … `theme_brand_3`):
+as `theme_neutral_custom`, `theme_dark_base` and the brand colour list `theme_brand_colors`):
 
 - **A Custom neutral** (`theme_neutral: custom`): six light-mode values — `--bg`, `--surface`,
   `--surface-2`, `--ink`, `--muted`, `--line` — emitted on `:root`; dark mode is built from the
   `theme_dark_base` family as before.
-- **Brand colours**: up to three named colours. Each emits `--brand-N` and `--brand-N-ink` (black or
-  white, whichever reads on it) in light mode, and a derived value, lightened in its hue until it
-  can be seen on the dark ground, under `html[data-theme="dark"]`.
+- **Brand colours**: named colours the author adds, up to the host's limit (`THALLO_BRAND_COLORS_MAX`,
+  default 3), each with a permanent id `N` that is never reused. Each emits `--brand-N` and
+  `--brand-N-ink` (black or white, whichever reads on it) in light mode, and a derived value,
+  lightened in its hue until it can be seen on the dark ground, under `html[data-theme="dark"]`.
 
-The six vocabulary names `color.brand-1` … `color.brand-3` and their `-contrast` text colours are
-**site-controlled** (`Vocabulary::SITE_CONTROLLED`): the compiler maps them to the site's
-`--brand-N` / `--brand-N-ink`, a theme cannot remap them — a `theme.json` mapping for one is ignored
-and `thallo doctor` warns — and a theme never has to supply them. Everything else a theme maps as
+The vocabulary names `color.brand-N` and `color.brand-N-contrast` (any `N` from 1 to 9999) are a
+family, not a list (`Vocabulary::isBrandColor()`), and **site-controlled**
+(`Vocabulary::siteControlled()`): they always resolve to the site's `--brand-N` / `--brand-N-ink`,
+a theme cannot remap them — a `theme.json` mapping for one is ignored and `thallo doctor` warns —
+and a theme never has to supply them. Their utilities are not in the theme's compiled stylesheet:
+each workspace gets a colours stylesheet (`colors-{hash}.css`) for the ids it configures, linked by
+`theme_colors_style()`, so a theme layout needs nothing new. Everything else a theme maps as
 before.
 
 A brand colour the site has not configured is **unavailable**: the renderer emits no utility class
