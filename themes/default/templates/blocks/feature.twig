@@ -8,7 +8,8 @@
      variant (plain|outline|soft|subtle — plain is the inline leaf, the rest are cards),
      orientation (horizontal|vertical — the marker beside the text, or above it).
    Style: the marker target also takes its colour, background and size; the root takes the gap
-   between the marker and the text; the description is the `description` part. #}
+   between the marker and the text; the description is the `description` part, and a number
+   badge's lettering (typeface, style, weight, transform) the `number` part. #}
 {% set url = data.url|default('')|safe_url %}
 {% set variant = {plain: 'plain', outline: 'outline', soft: 'soft', subtle: 'subtle'}[data.variant|default('')] ?? 'plain' %}
 {% set orientation = {horizontal: 'horizontal', vertical: 'vertical'}[data.orientation|default('')] ?? 'horizontal' %}
@@ -29,7 +30,7 @@
 <div class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
   {#- The marker is its own style target: its corners and shadow (Style tab → Marker) land here,
       while the block's radius and shadow stay the card's, on the root. -#}
-  {% if marker == 'number' and data.number|default('') %}<span class="{{ markerClass }}{{ style_classes('marker') }}"{{ style_attrs('marker') }}>{{ data.number }}</span>{% elseif marker == 'icon' and data.icon %}<span class="{{ markerClass }} thallo-block-feature__icon{{ style_classes('marker') }}"{{ style_attrs('marker') }} aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
+  {% if marker == 'number' and data.number|default('') %}<span class="{{ markerClass }}{{ style_classes('marker') }}{{ style_classes('number') }}"{{ style_attrs('marker') }}>{{ data.number }}</span>{% elseif marker == 'icon' and data.icon %}<span class="{{ markerClass }} thallo-block-feature__icon{{ style_classes('marker') }}"{{ style_attrs('marker') }} aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
   <div class="thallo-block-feature__body">
     {% if data.title %}<h3 class="thallo-block-feature__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>{% endif %}
     {% if data.description %}<p class="thallo-block-feature__description{{ style_classes('description') }}">{{ data.description|editable_text('description') }}</p>{% endif %}
