@@ -49,13 +49,10 @@ final class EffectivePalette
             }
             $modes[$mode]['white'] = '#ffffff';
             $modes[$mode]['black'] = '#000000';
-            foreach (Palette::SLOTS as $slot) {
-                $brand = $palette->brand($slot);
-                if ($brand !== null) {
-                    [$fill, $ink] = ThemeColors::brandVars($brand->hex, $mode, $ground);
-                    $modes[$mode]["brand-{$slot}"] = $fill;
-                    $modes[$mode]["brand-{$slot}-contrast"] = $ink;
-                }
+            foreach ($palette->configured() as $slot => $brand) {
+                [$fill, $ink] = ThemeColors::brandVars($brand->hex, $mode, $ground);
+                $modes[$mode]["brand-{$slot}"] = $fill;
+                $modes[$mode]["brand-{$slot}-contrast"] = $ink;
             }
         }
         return new self($modes, $palette);
@@ -78,11 +75,9 @@ final class EffectivePalette
         }
         $pairs[] = ['accent', 'background'];
         $pairs[] = ['accent-contrast', 'accent'];
-        foreach (Palette::SLOTS as $slot) {
-            if ($this->palette->isConfigured($slot)) {
-                $pairs[] = ["brand-{$slot}", 'background'];
-                $pairs[] = ["brand-{$slot}-contrast", "brand-{$slot}"];
-            }
+        foreach ($this->palette->ids() as $slot) {
+            $pairs[] = ["brand-{$slot}", 'background'];
+            $pairs[] = ["brand-{$slot}-contrast", "brand-{$slot}"];
         }
         $rows = [];
         foreach (['light', 'dark'] as $mode) {

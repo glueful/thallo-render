@@ -150,13 +150,14 @@ final class ThemeColors
      * The site's colour declarations including its palette (custom palette spec §3.2, §3.3). An
      * empty palette over a family neutral is exactly css(), so existing sites are byte-identical
      * (§7). Under Custom the light block carries the six custom values and the dark block the dark
-     * base family's (slate when unset); a configured brand slot emits its fill and ink in both modes
-     * and an unset one emits nothing. With colour mode off no dark block is written.
+     * base family's (slate when unset); each configured brand colour emits its fill and ink in both
+     * modes, in the author's order, and a removed or never-issued id emits nothing. With colour mode
+     * off no dark block is written.
      */
     public static function paletteCss(string $accent, string $neutral, Palette $palette, bool $colorMode): string
     {
         $custom = $neutral === 'custom' && $palette->customNeutral !== null;
-        if (!$custom && array_filter($palette->brands) === []) {
+        if (!$custom && $palette->configured() === []) {
             return self::css($accent, $neutral === 'custom' ? self::DEFAULT_NEUTRAL : $neutral);
         }
         $family = self::normalizeNeutral($neutral) ?? self::DEFAULT_NEUTRAL;
@@ -165,11 +166,8 @@ final class ThemeColors
             + self::accentVars($accent, 'light', $darkFamily);
         $dark = self::neutralVars($darkFamily, 'dark') + self::accentVars($accent, 'dark', $darkFamily);
         $ground = $dark['--bg'];
-        foreach (Palette::SLOTS as $slot) {
-            $brand = $palette->brand($slot);
-            if ($brand === null) {
-                continue; // an unset slot emits nothing (§3.2)
-            }
+        // In the author's order; a removed or never-issued id emits nothing (§3.2).
+        foreach ($palette->configured() as $slot => $brand) {
             [$fill, $ink] = self::brandVars($brand->hex, 'light', $ground);
             $light["--brand-{$slot}"] = $fill;
             $light["--brand-{$slot}-ink"] = $ink;
