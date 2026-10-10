@@ -40,7 +40,8 @@ final class StyleCompiler
     // 24: the six site-controlled brand colour tokens (custom palette spec §3.1).
     // 25: brand colours leave the per-theme artifact for each workspace's colours stylesheet (custom
     //     palette spec §3.4).
-    public const VERSION = 25;
+    // 26: a hover utility also shows on the keyboard focus of its block's cover link (`.thallo-block-link`).
+    public const VERSION = 26;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -319,7 +320,8 @@ final class StyleCompiler
                 $selector = ClassNames::selector(ClassNames::for($hover, $value));
                 $declarations = self::declarations($resting, $value);
                 $pointer .= "{$selector}:hover { {$declarations} }\n";
-                $other .= "{$selector}:focus-visible, {$selector}[data-thallo-hover] { {$declarations} }\n";
+                $other .= "{$selector}:focus-visible, {$selector}[data-thallo-hover] { {$declarations} }\n"
+                    . self::coverFocusRule($selector, $declarations);
             }
         }
         return $out . "@media (hover: hover) {\n{$pointer}}\n{$other}";
@@ -385,11 +387,22 @@ final class StyleCompiler
                 $selector = ClassNames::selector(ClassNames::for($hover, $value));
                 $declarations = self::declarations($resting, $value);
                 $pointer .= "{$selector}:hover { {$declarations} }\n";
-                $other .= "{$selector}:focus-visible, {$selector}[data-thallo-hover] { {$declarations} }\n";
+                $other .= "{$selector}:focus-visible, {$selector}[data-thallo-hover] { {$declarations} }\n"
+                    . self::coverFocusRule($selector, $declarations);
             }
             $other .= ClassNames::selector(ClassNames::reset($hover)) . " { }\n";
         }
         return "@media (hover: hover) {\n{$pointer}}\n{$other}";
+    }
+
+    /**
+     * A block covered by a link (`.thallo-block-link`: a Rich text block made a link) cannot take
+     * focus; its cover does. So its hover look shows on the cover's keyboard focus too. A rule of
+     * its own: a browser without :has() drops only this one, never the focus and forced branches.
+     */
+    private static function coverFocusRule(string $selector, string $declarations): string
+    {
+        return "{$selector}:has(> .thallo-block-link:focus-visible) { {$declarations} }\n";
     }
 
     /**

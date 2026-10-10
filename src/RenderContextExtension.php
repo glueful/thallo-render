@@ -594,10 +594,13 @@ final class RenderContextExtension extends AbstractExtension
      * with a leading space so it drops straight after a template's own class list. Empty
      * outside a block, for a type without declared targets, and when nothing is set.
      *
+     * `hover: false` leaves out the target's hover look, for an element that is a link only
+     * sometimes: a Rich text block without a link keeps its colour under the pointer.
+     *
      * @throws RuntimeError for a target the block type does not declare (the lint refuses
      *         it at save; a declaration edited out from under a template still fails loudly)
      */
-    public function styleClasses(string $target, ?string $over = null): string
+    public function styleClasses(string $target, ?string $over = null, bool $hover = true): string
     {
         [$frame, $targets] = $this->styleFrame($target);
         if ($frame === null || $targets === null) {
@@ -619,6 +622,7 @@ final class RenderContextExtension extends AbstractExtension
             $this->classRefsFor($frame['settings']['classes'] ?? null),
             $this->fontSnapshot(),
             $this->palette(),
+            $hover,
         );
         // On the stage only, the element names itself, so the preview bridge can read what a target
         // or part renders in (block typeface plan Task 10). A public page never carries it.

@@ -31,6 +31,8 @@ final class BlockStyleEmitter
      *        typeface ID resolves (block typeface spec §3.3); without one, only built-ins resolve
      * @param Palette|null $palette the render's palette: a colour naming an unconfigured brand slot
      *        contributes nothing (custom palette spec §3.2); without one, nothing is filtered
+     * @param bool $hover false leaves out the hover state: an element that is not a link this render
+     *        (a Rich text block without one) has no look under the pointer, whatever is set
      * @return list<string>
      */
     public function classesFor(
@@ -40,6 +42,7 @@ final class BlockStyleEmitter
         array $classDefinitions = [],
         ?FontLibrarySnapshotView $fonts = null,
         ?Palette $palette = null,
+        bool $hover = true,
     ): array {
         $classes = [];
         if ($targets->isPart($target)) {
@@ -58,7 +61,7 @@ final class BlockStyleEmitter
         }
         foreach ($paths as $path) {
             $def = StyleSchema::property($path);
-            if ($def === null) {
+            if ($def === null || (!$hover && StyleSchema::restingPathOf($path) !== null)) {
                 continue;
             }
             // An unavailable brand colour is taken out of every layer first (custom palette spec §3.2),

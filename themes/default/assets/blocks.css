@@ -262,9 +262,14 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
   padding-inline: var(--space-4);
 }
 /* Alignment, colour and typography are settings (t-text-*, t-fg-*, t-size-*). */
-/* A linked heading keeps the heading's own colour; the pointer underlines it. */
-.thallo-block-heading__link { color: inherit; text-decoration: none; }
-.thallo-block-heading__link:hover { text-decoration: underline; text-underline-offset: 0.15em; }
+/* A linked heading keeps the heading's own colour; the pointer underlines it — as do keyboard focus
+   and the stage's forced preview, never a tap (hover state spec §4.3). */
+.thallo-block-heading__link { color: inherit; text-decoration: none; text-underline-offset: 0.15em; }
+@media (hover: hover) {
+  .thallo-block-heading__link:hover { text-decoration: underline; }
+}
+.thallo-block-heading__link:focus-visible,
+.thallo-block-heading__link[data-thallo-hover] { text-decoration: underline; }
 
 /* container — free-form styled wrapper; per-instance backgrounds come in as
    CSS custom properties on the style attribute (typed validated fields only). */
@@ -419,6 +424,14 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .thallo-block-rich_text--linked a:not(.thallo-block-link) { position: relative; z-index: 1; }
 [data-thallo-canvas] .thallo-block-link { pointer-events: none; }
+/* Under the pointer the text underlines, as a linked heading does; on its cover's keyboard focus and
+   in the stage's forced preview too, never on a tap. */
+.thallo-block-rich_text--linked { text-underline-offset: 0.15em; }
+@media (hover: hover) {
+  .thallo-block-rich_text--linked:hover { text-decoration: underline; }
+}
+.thallo-block-rich_text--linked:has(> .thallo-block-link:focus-visible) { text-decoration: underline; }
+.thallo-block-rich_text--linked[data-thallo-hover] { text-decoration: underline; }
 .thallo-block-rich_text :is(ul, ol) { padding-inline-start: 1.25em; }
 .thallo-block-rich_text li > p { margin: 0; }
 .thallo-block-rich_text li + li { margin-top: 0.35em; }

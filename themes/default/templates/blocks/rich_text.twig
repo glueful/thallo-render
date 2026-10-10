@@ -3,8 +3,9 @@
    no sanitizer is bound). Starter templates never use |raw.
    `url` makes the whole block a link: a cover over it (an <a> cannot hold the body's own
    links), named by the block's text, with the body's links raised above it. Through
-   safe_url, so an unsafe one adds nothing; `new_tab` opens it in a new tab. #}
+   safe_url, so an unsafe one adds nothing; `new_tab` opens it in a new tab. The block's hover look
+   is drawn only while it is a link: plain text keeps its colour under the pointer. #}
 {% set href = data.url|default('')|safe_url %}
-<div class="thallo-block thallo-block-rich_text{{ href ? ' thallo-block-rich_text--linked' }}{{ style_classes('root') }}"{{ style_attrs('root') }}>{{ data.body|default('')|safe_html }}
+<div class="thallo-block thallo-block-rich_text{{ href ? ' thallo-block-rich_text--linked' }}{{ style_classes('root', hover: href is not empty) }}"{{ style_attrs('root') }}>{{ data.body|default('')|safe_html }}
   {%- if href %}<a class="thallo-block-link" href="{{ href }}"{% if data.new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} aria-label="{{ data.body|default('')|replace({'</p>': ' ', '</li>': ' ', '<br>': ' '})|striptags|trim }}"></a>{% endif -%}
 </div>
