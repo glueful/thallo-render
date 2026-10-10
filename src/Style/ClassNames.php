@@ -67,6 +67,7 @@ final class ClassNames
         'footer.divider_width' => 'fdivw',
         'footer.divider_style' => 'fdivs',
         'border.sides' => 'bsides',
+        'corners' => 'corners',
         'colors.surface_opacity' => 'bgo',
         'backdrop.blur' => 'blur',
         'typography.line_height' => 'leading',

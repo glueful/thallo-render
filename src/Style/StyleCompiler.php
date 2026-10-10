@@ -41,7 +41,8 @@ final class StyleCompiler
     // 25: brand colours leave the per-theme artifact for each workspace's colours stylesheet (custom
     //     palette spec §3.4).
     // 26: a hover utility also shows on the keyboard focus of its block's cover link (`.thallo-block-link`).
-    public const VERSION = 26;
+    // 27: border.sides takes any set of sides; corners, which corners the Corners size rounds.
+    public const VERSION = 27;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -76,12 +77,21 @@ final class StyleCompiler
 
     /**
      * Modifiers: properties that adjust what ANOTHER property declares — the border's sides, the
-     * surface's opacity. Theirs is the later rule, so they win over the utility they modify; and
+     * surface's opacity, the corners a radius rounds. Theirs is the later rule, so they win over the
+     * utility they modify; and
      * their reset rule is EMPTY, because reverting the declarations they share would undo that
      * utility too. Absent, reset, or `all`: the modified property stands as it is — but every
      * class the emitter can write has a rule, so the empty ones are written.
      */
-    private const MODIFIERS = ['border.sides', 'colors.surface_opacity'];
+    private const MODIFIERS = ['border.sides', 'corners', 'colors.surface_opacity'];
+
+    /** A corner's name in `corners` → its border-radius longhand. */
+    private const CORNER_PROPERTY = [
+        'tl' => 'border-top-left-radius',
+        'tr' => 'border-top-right-radius',
+        'br' => 'border-bottom-right-radius',
+        'bl' => 'border-bottom-left-radius',
+    ];
 
     /**
      * Properties whose utilities carry NO declaration for some or all values, and whose reset is
@@ -573,12 +583,21 @@ final class StyleCompiler
         if ($path === 'motion.ken_burns') {
             return isset(self::KEN_BURNS[$value]) ? 'overflow: clip;' : '';
         }
-        if ($path === 'border.sides' && $value === 'all') {
-            return ''; // what the width utility declares already
+        // A set of sides or corners (`top-bottom`, `tl-bl`): the width or radius stays on those, and
+        // the others are taken back to none. `all` is what the width or radius declares already.
+        if (($path === 'border.sides' || $path === 'corners') && $value === 'all') {
+            return '';
         }
         if ($path === 'border.sides') {
-            $others = array_diff(['top', 'right', 'bottom', 'left'], [$value]);
+            $others = array_diff(StyleSchema::SIDES, explode('-', $value));
             return implode(' ', array_map(static fn (string $side): string => "border-{$side}-width: 0;", $others));
+        }
+        if ($path === 'corners') {
+            $others = array_diff(StyleSchema::CORNERS, explode('-', $value));
+            return implode(' ', array_map(
+                static fn (string $corner): string => self::CORNER_PROPERTY[$corner] . ': 0;',
+                $others,
+            ));
         }
         // The colour the element shows is the one chosen for it, else the one the theme names for
         // it (--t-surface-default), else none — so an opacity alone changes nothing a theme did
