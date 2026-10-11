@@ -97,6 +97,8 @@ final class ClassNames
         'feature.gap' => 'fgap',
         // Where a Feature's marker sits against its text (settings version 17).
         'feature.align' => 'falign',
+        // The room inside a Feature's marker (settings version 20).
+        'marker.padding' => 'mpad',
     ];
 
     /**

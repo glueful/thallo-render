@@ -1,14 +1,16 @@
 {# feature — maps to refs.md `pageFeature`. A marker + title + description leaf block; drop
    several into a `grid`. Authored in the theme's BEM/hand-authored-CSS convention (see
    navigation.twig / separator.twig) — the matching rules live in assets/blocks.css.
-   Fields (all optional but title): icon, title, description, url,
+   Fields (all optional but title): icon, headline (a short line above the title), title,
+     description, url,
      marker (icon|number|none — what shows before the title), number (the badge's text),
      marker_background / marker_color (theme colour tokens; unset keeps the marker's default),
      marker_size (sm|md|lg|xl; unset is md),
      variant (plain|outline|soft|subtle — plain is the inline leaf, the rest are cards),
      orientation (horizontal|vertical — the marker beside the text, or above it).
-   Style: the marker target also takes its colour, background and size; the root takes the gap
-   between the marker and the text; the description is the `description` part, and a number
+   Style: the marker target also takes its colour, background, size and padding; the root takes the gap
+   between the marker and the text; the headline is the `headline` part, the description the
+   `description` part, and a number
    badge's lettering (typeface, style, weight, transform) the `number` part. #}
 {% set url = data.url|default('')|safe_url %}
 {% set variant = {plain: 'plain', outline: 'outline', soft: 'soft', subtle: 'subtle'}[data.variant|default('')] ?? 'plain' %}
@@ -32,6 +34,7 @@
       while the block's radius and shadow stay the card's, on the root. -#}
   {% if marker == 'number' and data.number|default('') %}<span class="{{ markerClass }}{{ style_classes('marker') }}{{ style_classes('number') }}"{{ style_attrs('marker') }}>{{ data.number }}</span>{% elseif marker == 'icon' and data.icon %}<span class="{{ markerClass }} thallo-block-feature__icon{{ style_classes('marker') }}"{{ style_attrs('marker') }} aria-hidden="true">{{ icon(data.icon) ?? data.icon }}</span>{% endif %}
   <div class="thallo-block-feature__body">
+    {% if data.headline|default('') %}<p class="thallo-block-feature__headline{{ style_classes('headline') }}">{{ data.headline|editable_text('headline') }}</p>{% endif %}
     {% if data.title %}<h3 class="thallo-block-feature__title{{ style_classes('title') }}"{{ style_attrs('title') }}>{% if url %}<a href="{{ url }}">{{ data.title|editable_text('title') }}</a>{% else %}{{ data.title|editable_text('title') }}{% endif %}</h3>{% endif %}
     {% if data.description %}<p class="thallo-block-feature__description{{ style_classes('description') }}">{{ data.description|editable_text('description') }}</p>{% endif %}
   </div>

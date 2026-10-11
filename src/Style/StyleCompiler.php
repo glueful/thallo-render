@@ -43,7 +43,8 @@ final class StyleCompiler
     // 26: a hover utility also shows on the keyboard focus of its block's cover link (`.thallo-block-link`).
     // 27: border.sides takes any set of sides; corners, which corners the Corners size rounds.
     // 28: hover.typography.weight and hover.typography.decoration.
-    public const VERSION = 28;
+    // 29: marker.padding.
+    public const VERSION = 29;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -210,6 +211,8 @@ final class StyleCompiler
         'marker.color' => 'color',
         'marker.background' => 'background',
         'marker.size' => 'font-size',
+        // The room inside it, all four sides of the chip or badge.
+        'marker.padding' => 'padding',
         // The space between a Feature's marker and its text, beside or above it.
         'feature.gap' => 'gap',
         // A tab strip's corners, likewise: the bar's and the tab's, beside the panels area's.

@@ -506,7 +506,14 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-feature__marker--number.thallo-block-feature__marker--size-sm { min-width: 2rem; height: 2rem; font-size: 0.75rem; }
 .thallo-block-feature__marker--number.thallo-block-feature__marker--size-lg { min-width: 3rem; height: 3rem; font-size: 1rem; }
 .thallo-block-feature__marker--number.thallo-block-feature__marker--size-xl { min-width: 3.75rem; height: 3.75rem; font-size: 1.25rem; }
+/* A badge given a padding (Style tab → Marker) is its number and that padding, not a fixed box. */
+.thallo-block-feature__marker--number[class*="t-mpad-"] { min-width: 0; height: auto; line-height: 1.2; }
 .thallo-block-feature__body { min-width: 0; flex: 1; }
+/* the headline: a short, spaced-out line in the accent above the title */
+.thallo-block-feature__headline {
+  margin: 0 0 var(--space-2); color: var(--accent);
+  font-size: 0.75rem; font-weight: 600; line-height: 1.4; letter-spacing: 0.16em; text-transform: uppercase;
+}
 .thallo-block-feature__title { margin: 0; font-size: 1.05rem; text-wrap: pretty; }
 .thallo-block-feature__title a { color: inherit; text-decoration: none; }
 .thallo-block-feature__title a:hover { color: var(--accent); }
