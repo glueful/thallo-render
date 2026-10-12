@@ -44,7 +44,8 @@ final class StyleCompiler
     // 27: border.sides takes any set of sides; corners, which corners the Corners size rounds.
     // 28: hover.typography.weight and hover.typography.decoration.
     // 29: marker.padding.
-    public const VERSION = 29;
+    // 30: layout.order, layout.push and menu_button.size.
+    public const VERSION = 30;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -184,6 +185,16 @@ final class StyleCompiler
         'feature.align' => ['align-items' => [
             'start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end',
         ]],
+        // An item moved to the front or the back of its row; Default puts it back in place.
+        'layout.order' => ['order' => ['first' => '-1', 'default' => '0', 'last' => '1']],
+        // Which side of an item the row's free space goes to. It writes the property Placement
+        // (alignment.self) writes and is emitted after it, so on a block with both the push wins; None
+        // takes the theme's own push away.
+        'layout.push' => ['margin-inline' => [
+            'none' => '0', 'before' => 'auto 0', 'after' => '0 auto', 'both' => 'auto',
+        ]],
+        // A Navigation block's menu button: its icon's size, read by the theme's glyph.
+        'menu_button.size' => ['--thallo-menu-icon' => ['sm' => '1rem', 'md' => '1.375rem', 'lg' => '1.75rem']],
     ];
 
     /** Track presets: the class value => its `grid-template-columns` and its track count. */

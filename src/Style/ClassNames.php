@@ -99,6 +99,11 @@ final class ClassNames
         'feature.align' => 'falign',
         // The room inside a Feature's marker (settings version 20).
         'marker.padding' => 'mpad',
+        // Where an item sits in its row, which side of it takes the row's free space, and a menu
+        // button's icon size (settings version 21).
+        'layout.order' => 'order',
+        'layout.push' => 'push',
+        'menu_button.size' => 'mbsize',
     ];
 
     /**

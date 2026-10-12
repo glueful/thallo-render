@@ -152,17 +152,20 @@
 .thallo-block-navigation__hamburger::-webkit-details-marker { display: none; }
 /* The hamburger glyph: three CSS bars morphing to an X while open. Accessible
    name comes from the visually hidden "Menu" label beside it. */
+/* Its size is the Menu button section's Size (--thallo-menu-icon, settings version 21); the bars
+   and the gaps between them grow with it. */
 .thallo-block-navigation__hamburger-icon {
+  --bar: max(2px, calc(var(--thallo-menu-icon, 1.125rem) / 9));
   position: relative; display: inline-block;
-  width: 1.125rem; height: 2px; border-radius: 1px; background: currentColor;
+  width: var(--thallo-menu-icon, 1.125rem); height: var(--bar); border-radius: 1px; background: currentColor;
 }
 .thallo-block-navigation__hamburger-icon::before,
 .thallo-block-navigation__hamburger-icon::after {
-  content: ""; position: absolute; left: 0; width: 100%; height: 2px;
+  content: ""; position: absolute; left: 0; width: 100%; height: var(--bar);
   border-radius: 1px; background: currentColor;
 }
-.thallo-block-navigation__hamburger-icon::before { top: -5px; }
-.thallo-block-navigation__hamburger-icon::after { top: 5px; }
+.thallo-block-navigation__hamburger-icon::before { top: calc(var(--thallo-menu-icon, 1.125rem) * -0.28); }
+.thallo-block-navigation__hamburger-icon::after { top: calc(var(--thallo-menu-icon, 1.125rem) * 0.28); }
 details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__hamburger-icon { background: transparent; }
 details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__hamburger-icon::before { top: 0; transform: rotate(45deg); }
 details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__hamburger-icon::after { top: 0; transform: rotate(-45deg); }
@@ -185,16 +188,37 @@ details[open] > .thallo-block-navigation__hamburger .thallo-block-navigation__ha
   .thallo-block-navigation__hamburger { display: flex; }
   .thallo-block-navigation__mobile:not([open]) > .thallo-block-navigation__list,
   .site-nav__mobile:not([open]) > .site-nav__list { display: none; }
-  /* Header placement: the hamburger sits at the far right of the header row;
-     while open, the nav container claims the full row so the list stacks
-     beneath the header line (in flow — content is pushed, never overlaid).
-     Browsers without :has() keep the in-row expansion — degraded, not broken. */
+  /* Header placement: the row's free space goes after the logo, so the logo and anything moved
+     before it start the row and the rest ends it; a header with no logo pushes its menu to the end.
+     A block's own Order and Push (layout.order, layout.push) win over this: the settings layer comes
+     after the theme's. On the stage each block sits in a display: contents wrapper. */
   .site-header__inner { flex-wrap: wrap; }
+  /* On a wide screen a region's nav grows into the space between the logo and the actions (below);
+     on a phone it is only its button, so the free space is the row's to place. */
+  .thallo-region .site-header__inner :where(.thallo-block-navigation, thallo-navigation) { flex: 0 1 auto; }
   .site-header__inner :where(.thallo-block-navigation, thallo-navigation),
-  .site-header__inner > .site-nav { margin-left: auto; }
-  .site-header__inner :where(.thallo-block-navigation, thallo-navigation):has(.thallo-block-navigation__mobile[open]),
+  .site-header__inner > .site-nav { margin-inline-start: auto; }
+  .site-header__inner:has(> .thallo-block-logo, > .thallo-preview-block > .thallo-block-logo)
+    :where(.thallo-block-navigation, thallo-navigation) { margin-inline-start: 0; }
+  .site-header__inner:has(.thallo-block-navigation, thallo-navigation) > :where(.thallo-block-logo),
+  .site-header__inner:has(.thallo-block-navigation, thallo-navigation) > .thallo-preview-block > :where(.thallo-block-logo) {
+    margin-inline-end: auto;
+  }
+  /* The built-in header's nav is always last: it opens in flow, claiming the full row. */
   .site-header__inner > .site-nav:has(.site-nav__mobile[open]) { flex-basis: 100%; }
-  .thallo-block-navigation__hamburger { margin-left: auto; width: max-content; }
+  /* A Navigation block in the header opens as a panel under the header row, over the page, so the
+     row — the button, the logo, the icons — stays where it is wherever the button sits. The panel is
+     the header's colour: its own Background if it has one, else the bar's. */
+  .site-header { --thallo-header-panel: var(--t-surface, var(--t-surface-default, var(--bg))); }
+  .site-header__inner { --thallo-menu-panel: var(--t-surface, var(--thallo-header-panel)); }
+  .site-header .thallo-block-navigation__mobile[open] > .thallo-block-navigation__list {
+    position: absolute; inset-inline: 0; top: 100%; z-index: 1;
+    max-height: 75vh; overflow-y: auto;
+    padding: var(--space-2) var(--space-4) var(--space-3);
+    background: var(--thallo-menu-panel, var(--bg));
+    border-bottom: 1px solid var(--line); box-shadow: var(--shadow-lg);
+  }
+  .thallo-block-navigation__hamburger { margin-inline-start: auto; width: max-content; }
   /* Open list: a full-width stacked menu with touch-sized, separated rows. */
   .thallo-block-navigation__list { flex-direction: column; align-items: stretch; gap: 0; }
   .site-nav__mobile > .site-nav__list {
