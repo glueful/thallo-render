@@ -104,6 +104,8 @@ final class ClassNames
         'layout.order' => 'order',
         'layout.push' => 'push',
         'menu_button.size' => 'mbsize',
+        'overlay.tone' => 'ovtone',
+        'overlay.opacity' => 'ovopacity',
     ];
 
     /**

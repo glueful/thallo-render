@@ -302,19 +302,25 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-container__bg--pos-bottom { object-position: bottom; }
 .thallo-block-container__bg--pos-left { object-position: left; }
 .thallo-block-container__bg--pos-right { object-position: right; }
-/* overlay — schema enum: none | light | dark, with an opacity step 25 | 50 | 75 */
+/* overlay — schema enum: none | light | dark, with an opacity step 25 | 50 | 75. The block's
+   Overlay field sets the two variables here, in the theme layer; the Style tab's Overlay
+   (overlay.tone, overlay.opacity) sets them per width in the settings layer, which wins. */
 .thallo-block-container__overlay {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   border-radius: inherit;
+  background: var(--thallo-overlay-bg, transparent);
+  opacity: var(--thallo-overlay-opacity, 0.5);
 }
-.thallo-block-container--overlay-light .thallo-block-container__overlay { background: #fff; }
-.thallo-block-container--overlay-dark .thallo-block-container__overlay { background: #000; }
-.thallo-block-container--overlay-25 .thallo-block-container__overlay { opacity: 0.25; }
-.thallo-block-container--overlay-50 .thallo-block-container__overlay { opacity: 0.5; }
-.thallo-block-container--overlay-75 .thallo-block-container__overlay { opacity: 0.75; }
+/* Each container starts from no overlay: a nested container's layer must not take its parent's. */
+.thallo-block-container { --thallo-overlay-bg: transparent; --thallo-overlay-opacity: 0.5; }
+.thallo-block-container--overlay-light { --thallo-overlay-bg: #fff; }
+.thallo-block-container--overlay-dark { --thallo-overlay-bg: #000; }
+.thallo-block-container--overlay-25 { --thallo-overlay-opacity: 0.25; }
+.thallo-block-container--overlay-50 { --thallo-overlay-opacity: 0.5; }
+.thallo-block-container--overlay-75 { --thallo-overlay-opacity: 0.75; }
 /* Layout defaults (container-layout spec §3.4–§3.8). Everything here is a THEME default: the
    compiled settings layer outranks it, so an authored or class-supplied value always wins and a
    reset (revert-layer) lands back on these rules. */

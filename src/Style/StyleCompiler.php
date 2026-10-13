@@ -45,7 +45,8 @@ final class StyleCompiler
     // 28: hover.typography.weight and hover.typography.decoration.
     // 29: marker.padding.
     // 30: layout.order, layout.push and menu_button.size.
-    public const VERSION = 30;
+    // 31: overlay.tone and overlay.opacity.
+    public const VERSION = 31;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -195,6 +196,10 @@ final class StyleCompiler
         ]],
         // A Navigation block's menu button: its icon's size, read by the theme's glyph.
         'menu_button.size' => ['--thallo-menu-icon' => ['sm' => '1rem', 'md' => '1.375rem', 'lg' => '1.75rem']],
+        // A Container's overlay, read by the theme's overlay layer. Set on the root, where the block's
+        // own Overlay field sets them in the theme layer, so a width's value here wins over it.
+        'overlay.tone' => ['--thallo-overlay-bg' => ['none' => 'transparent', 'light' => '#fff', 'dark' => '#000']],
+        'overlay.opacity' => ['--thallo-overlay-opacity' => ['25' => '0.25', '50' => '0.5', '75' => '0.75']],
     ];
 
     /** Track presets: the class value => its `grid-template-columns` and its track count. */

@@ -40,7 +40,11 @@
   'thallo-block-container__bg--pos-' ~ ({center: 'center', top: 'top', bottom: 'bottom', left: 'left', right: 'right'}[data.bg_position|default('center')] ?? 'center'),
 ]|join(' ') %}
 
-<{{ tag }} class="{{ rootClass }}{{ style_classes('root') }}"{{ style_attrs('root') }}>
+{# The overlay per width (overlay.tone, overlay.opacity) comes in as classes on the root, from the
+   block's style or a style class: they need the layer even when the Overlay field is None. #}
+{% set rootStyle = style_classes('root') %}
+{% set overlay = overlay or 't-ovtone-' in rootStyle %}
+<{{ tag }} class="{{ rootClass }}{{ rootStyle }}"{{ style_attrs('root') }}>
   {% if videoSrc %}<video class="thallo-block-container__video" src="{{ videoSrc }}" autoplay muted loop playsinline></video>
   {% elseif vidEmbed %}<div class="thallo-block-container__video-cover">
     {%- if vidEmbed.provider == 'youtube' -%}
