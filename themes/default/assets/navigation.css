@@ -146,7 +146,8 @@
   display: none; cursor: pointer; list-style: none;
   min-height: 44px; min-width: 44px; align-items: center; justify-content: center;
   gap: var(--space-2); padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line); border-radius: 0.5rem; color: var(--ink);
+  /* The bars are this colour: the text colour around it, so a dark header's button is light. */
+  border: 1px solid var(--line); border-radius: 0.5rem; color: inherit;
 }
 .thallo-block-navigation__hamburger:hover { border-color: var(--muted); }
 .thallo-block-navigation__hamburger::-webkit-details-marker { display: none; }
