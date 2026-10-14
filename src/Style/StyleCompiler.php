@@ -46,7 +46,8 @@ final class StyleCompiler
     // 29: marker.padding.
     // 30: layout.order, layout.push and menu_button.size.
     // 31: overlay.tone and overlay.opacity.
-    public const VERSION = 31;
+    // 32: overlay.tone `color` and overlay.color.
+    public const VERSION = 32;
 
     /** The built-in typefaces' synthesis: the browser's default (an uploaded family's is `style`). */
     private const BUILT_IN_SYNTHESIS = 'weight style';
@@ -198,7 +199,10 @@ final class StyleCompiler
         'menu_button.size' => ['--thallo-menu-icon' => ['sm' => '1rem', 'md' => '1.375rem', 'lg' => '1.75rem']],
         // A Container's overlay, read by the theme's overlay layer. Set on the root, where the block's
         // own Overlay field sets them in the theme layer, so a width's value here wins over it.
-        'overlay.tone' => ['--thallo-overlay-bg' => ['none' => 'transparent', 'light' => '#fff', 'dark' => '#000']],
+        'overlay.tone' => ['--thallo-overlay-bg' => [
+            'none' => 'transparent', 'light' => '#fff', 'dark' => '#000',
+            'color' => 'var(--thallo-overlay-color, transparent)',
+        ]],
         'overlay.opacity' => ['--thallo-overlay-opacity' => ['25' => '0.25', '50' => '0.5', '75' => '0.75']],
     ];
 
@@ -246,6 +250,8 @@ final class StyleCompiler
         'colors.text' => 'color',
         'colors.border' => 'border-color',
         'footer.divider_color' => 'border-bottom-color',
+        // The colour a Container's overlay set to Colour takes (overlay.tone reads it).
+        'overlay.color' => '--thallo-overlay-color',
         'layout.gap.column' => 'column-gap',
         'layout.gap.row' => 'row-gap',
         'layout.gutter' => 'padding-inline',

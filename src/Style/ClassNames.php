@@ -106,6 +106,7 @@ final class ClassNames
         'menu_button.size' => 'mbsize',
         'overlay.tone' => 'ovtone',
         'overlay.opacity' => 'ovopacity',
+        'overlay.color' => 'ovcolor',
     ];
 
     /**

@@ -304,7 +304,8 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
 .thallo-block-container__bg--pos-right { object-position: right; }
 /* overlay — schema enum: none | light | dark, with an opacity step 25 | 50 | 75. The block's
    Overlay field sets the two variables here, in the theme layer; the Style tab's Overlay
-   (overlay.tone, overlay.opacity) sets them per width in the settings layer, which wins. */
+   (overlay.tone, overlay.opacity) sets them per width in the settings layer, which wins. Its
+   Colour tone reads --thallo-overlay-color, which the Overlay colour (overlay.color) sets. */
 .thallo-block-container__overlay {
   position: absolute;
   inset: 0;
@@ -315,7 +316,9 @@ html[data-theme="dark"] .thallo-block-hero--gradient-rose { --hero-gradient: #f4
   opacity: var(--thallo-overlay-opacity, 0.5);
 }
 /* Each container starts from no overlay: a nested container's layer must not take its parent's. */
-.thallo-block-container { --thallo-overlay-bg: transparent; --thallo-overlay-opacity: 0.5; }
+.thallo-block-container {
+  --thallo-overlay-bg: transparent; --thallo-overlay-opacity: 0.5; --thallo-overlay-color: transparent;
+}
 .thallo-block-container--overlay-light { --thallo-overlay-bg: #fff; }
 .thallo-block-container--overlay-dark { --thallo-overlay-bg: #000; }
 .thallo-block-container--overlay-25 { --thallo-overlay-opacity: 0.25; }
